@@ -42,5 +42,11 @@ def numericalSort(value):
 
 files = sorted(glob.glob('/data/lrs2/mvlrs_v1/pretrain/*/*.mp4'), key=numericalSort) + sorted(glob.glob('/data/lrs2/mvlrs_v1/main/*/*.mp4'), key=numericalSort)
 
+c = 0
 for item in files:
     get_wav(item)
+    c = c+1
+    if c%100 == 0:
+#        print('.wav files extracted for ' +  str(c) + '/' + str(len(files)) + ' .mp4 files \n')
+        with open("/data/AV-speech-separation/data_preparation/log_create_wav.txt", "a") as myfile:
+            myfile.write('.wav files extracted for ' +  str(c) + '/' + str(len(files)) + ' .mp4 files \n')

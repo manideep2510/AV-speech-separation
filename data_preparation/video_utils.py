@@ -22,10 +22,14 @@ from scipy.io import wavfile
 import math
 import matplotlib.pyplot as plt
 from pathlib import Path
+import cv2
 import shutil
 home = str(Path.home())
 # Avoid printing TF log messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor('/data/AV-speech-separation/shape_predictor_68_face_landmarks.dat')
 
 def get_frames_mouth(detector, predictor, frames):
         MOUTH_WIDTH = 100
@@ -72,26 +76,56 @@ def get_frames_mouth(detector, predictor, frames):
 
             mouth_frames.append(mouth_crop_image)
         return mouth_frames
-    
-    
-def get_video_frames(path):
+
+'''def get_video_frames(path):
         videogen = skvideo.io.vreader(path)
         frames = np.array([frame for frame in videogen])
         return frames
+'''
     
+def get_video_frames(path):
+
+    cap = cv2.VideoCapture(path)
+    frames = []
+
+    while True:
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+        if ret == True:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frames.append(frame)
+
+        # Break the loop
+        else: 
+            break
+
+    cap.release()
+    return np.asarray(frames)
+
+
 def get_cropped_video(input_vid, output_dest, detector = detector, predictor = predictor):
     
     frames=get_video_frames(input_vid)
-    shape_input = frames.shape
-    
+    shape_input = frames.shape    
     mouth=get_frames_mouth(detector, predictor, frames)
-    outputdata = np.asarray(mouth)
-    shape_output = outputdata.shape
-    
-    if shape_input != shape_output:
-        writer = skvideo.io.FFmpegWriter(output_dest)
-        for i in range(outputdata.shape[0]):
-                writer.writeFrame(outputdata[i, :, :, :])
-        writer.close()
+    '''s = True
+    if len(mouth) == 133:
+        print(mouth[-12].shape)
+    for i in mouth:
+        if not len(i.shape) == 3 and i.shape[0]==50 and i.shape[1] == 100 and i.shape[2] == 3:
+            s = False
+    print(s)'''
+
+    try:
         
-  
+        outputdata = np.asarray(mouth)
+        shape_output = outputdata.shape
+    
+        if shape_input != shape_output and len(shape_output) == 4:
+            writer = skvideo.io.FFmpegWriter(output_dest)
+            for i in range(outputdata.shape[0]):
+                    writer.writeFrame(outputdata[i, :, :, :])
+            writer.close()
+        
+    except ValueError:
+        pass

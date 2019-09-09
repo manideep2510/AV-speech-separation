@@ -18,7 +18,7 @@ from pathlib import Path
 import shutil
 home = str(Path.home())
 
-from audio_utils import compare_lengths, compute_spectrograms, audios_sum
+from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ibm
 
 
 # From all the existing files, pick certain number files randomly and pair certain number of them together. (Just the file names)
@@ -102,7 +102,7 @@ def pair_files(files, combination_no=1, count=10):
     return combined_list
 
 
-# Generate training folders for one combination (Modified)
+'''# Generate training folders for one combination (Modified)
 
 def gen_comb_folders(combined_pairs, dest_folder):
     
@@ -178,12 +178,93 @@ def gen_comb_folders(combined_pairs, dest_folder):
         shutil.copy2(lips_file, save_path)
             
         # Save the mask
-            
-        '''mask_file = save_path + '/' + 'mask.npy'
-        # Computes the Target binary mask and save it in destination.
-        save_target_binary_mask_speaker(audio_file, mask_file = mask_file)'''
-        
+                 
         shutil.copy2(mask_file, save_path)
             
         # Save the mixed spectrogram
         np.save(save_path + '/' + 'mixed_spectrogram.png',mixed_spectogram)
+'''
+
+# Generate training folders for one combination (Modified)
+
+def gen_comb_folders(combined_pairs, dest_folder):
+    
+    try:
+        os.mkdir(dest_folder)
+    except OSError:
+        pass
+
+    videos = combined_pairs
+    audios = []
+    
+    for item in videos:
+        audio = item[:-9] + '.wav'
+        audios.append(audio)
+    
+    
+    folder_name_list = []
+    for path in audios:
+        split_ = path.split('/')
+        fold = split_[-2] + '_' + split_[-1][:-4]
+        folder_name_list.append(fold)
+        
+    folder_name = '/'.join(folder_name_list)
+    folder_path = dest_folder + '/' + folder_name
+    
+    ## Now mix the audios and compute the spectrogram of mixed audio
+    
+    mix_audio_folder = home + '/mixed_audio_files'
+        
+    # Filename to save the mixed audio  file
+    mixed_audio_filename = folder_name + '.wav'             
+        
+    mixed_audio_filepath = mix_audio_folder + '/' + mixed_audio_filename
+        
+    try:
+        os.mkdir(mix_audio_folder)
+    except OSError:
+        pass
+    
+    mixed_samples = audios_sum(audios, mixed_audio_filepath)
+        
+    # Compute the spectrogram of mised audio
+    s,n=compute_spectrograms(mixed_audio_filepath)
+    mixed_spectogram =s[0][:,:1000]                     # Useful frames
+        
+    # Save the mixed spectrogram
+    np.save(folder_path + '/' + 'mixed_spectrogram.png',mixed_spectogram)
+
+    for p in range(len(videos)):
+
+        audio_file = audios[p]
+        lips_file = videos[p]
+        mask_file = masks[p]
+        
+        save_path = folder_path
+        
+        try:
+            os.mkdir(save_path)
+        except OSError:
+            pass
+            
+        # Save lips.mp4
+        
+        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_lips.mp4'
+            
+        shutil.copy(lips_file, save_path + '/' + file_name)
+            
+        # Save the mask
+        
+        s, n = compute_spectrograms(audio_file)
+        s_use=s[:, :1000]
+        
+        mask = ibm(spec_mix = mixed_spectogram,spec_signal = s_use,threshold=1)
+        
+        audio_file_split = audio_file.split('/')
+        
+        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_mask.npy'
+        
+        np.save(save_path + '/' + file_name, mask)
+        
+        shutil.copy(mask_file, save_path)
+            

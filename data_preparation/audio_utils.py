@@ -6,6 +6,7 @@ import shutil
 import numpy as np
 from pydub import AudioSegment
 import tensorflow as tf
+import scipy
 from scipy.io import wavfile
 from scipy import signal
 import math
@@ -93,7 +94,7 @@ def downsampling(samples, sample_rate, downsample_rate):
     return signal.resample(samples, num_samples)
 
 
-def compute_spectrograms(audio_file, max_audio_length=500000, sample_rate=16e3, n_fft=512, window_size=25, step_size=10):
+'''def compute_spectrograms(audio_file, max_audio_length=500000, sample_rate=16e3, n_fft=512, window_size=25, step_size=10):
     
     
     
@@ -123,7 +124,7 @@ def compute_spectrograms(audio_file, max_audio_length=500000, sample_rate=16e3, 
             specs = sess.run(specs_tensor)
 
     return specs, num_frames
-
+'''
 
 # TF constants definition
 TF_INTRA_OP_PT = int(os.getenv('TF_INTRA_OP', 0))
@@ -249,7 +250,7 @@ def save_target_binary_mask_speaker(audio_file, mask_file, mask_factor=0.5, samp
         
         print(audio_file)
         garb = np.asarray([0])
-        np.save('garbage.npy', garb)
+        np.save('/data/AV-speech-separation/data_preparation/garbage.npy', garb)
         
         
 # Extract audio and save as .wav files 
@@ -258,7 +259,7 @@ def get_wav(mp4_file):
     
     out_path = mp4_file[:-3]+"wav"
     #print(out_path)
-    command = "ffmpeg -i " + mp4_file + ' -codec:a' + ' pcm_s16le' + ' -ac' + ' 1 ' + out_path
+    command = "ffmpeg -i " + mp4_file + ' -codec:a' + ' pcm_s16le' + ' -ac' + ' 1 ' +'-y '+ out_path
     subprocess.call(command, shell=True)
     
 
@@ -269,3 +270,124 @@ def compare_lengths(file_1_path, file_2_path, max_duration_diff=2000):
    
     return abs(len(s1) - len(s2)) < max_duration_diff
 
+
+#Returns spectrogram, number of useful frames, complex_stft
+def compute_spectrograms(audio_file, max_audio_length=500000, sample_rate=16e3, n_fft=512, window_size=25, step_size=10):
+
+
+
+    window_frame_size = int(round(window_size / 1e3 * sample_rate))
+    step_frame_size = int(round(step_size  / 1e3 * sample_rate))
+    overlap_samples=window_frame_size-step_frame_size
+
+    audio_samples = np.zeros(( max_audio_length + n_fft//2))
+
+
+    rate, samples = wavfile.read(audio_file)
+    if(sample_rate!=rate):samples = downsampling(samples, rate, sample_rate)
+    audio_samples[ n_fft//2: len(samples) + n_fft//2] = samples
+    num_frames = math.ceil(float(len(samples) + n_fft//2) / step_frame_size)
+
+
+    spec_1=scipy.signal.stft(audio_samples, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, detrend=False, return_onesided=True, boundary='zeros', padded=True, axis=-1)
+    #power_law_compression
+    specs=((abs(spec_1[2]))**0.3)
+
+
+    return specs, num_frames, spec_1[2]
+
+
+
+def split_spectrogram(spec_signal,rate=16e3,step_size=10,time=10):
+
+    step_frame_size = int(round(step_size  / 1e3 * rate))
+    n=(rate*time)/step_frame_size
+
+    return spec_signal[:,0:n]
+
+
+
+def ibm(spec_mix,spec_signal,threshold=1):
+
+    signal_power=np.square(spec_signal)
+    mixed_power=np.square(spec_mix)
+
+    snr=np.divide(signal_power,mixed_power)
+
+
+    mask2 = np.around(snr, 0)
+    mask2[np.isnan(mask2)] = 1
+    mask2[mask2 > threshold] = 1
+    mask2
+
+    return mask2
+
+
+
+def irm(spec_mix,spec_signal):
+
+    signal_power=np.square(spec_signal)
+    mixed_power=np.square(spec_mix)
+    noise_power=mixed_power-signal_power
+
+    noise_power=noise_power*(noise_power>0)+0.0
+    power_sum=signal_power+noise_power
+    snr=np.divide(signal_power,power_sum)
+    soft_mask=np.sqrt(np.nan_to_num(snr))
+
+    return soft_mask
+
+
+
+
+def tbm(spec_signal,mask_factor=0.5):
+
+    mean_spec = spec_signal.mean()
+    stdev_spec = spec_signal.std()
+    threshold_freq = (mean_spec + stdev_spec * mask_factor) ** (1 / 0.3)
+
+    spec=spec_signal**(1/0.3)
+    mask=spec>threshold_freq
+
+    return mask
+
+
+
+
+def retrieve_samples(spec_signal,complex_stft,mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10):
+
+    window_frame_size = int(round(window_size / 1e3 * sample_rate))
+    step_frame_size = int(round(step_size  / 1e3 * sample_rate))
+    overlap_samples=window_frame_size-step_frame_size
+
+
+    spec_predicted=spec_signal*mask
+
+    phase=np.angle(complex_stft)
+    p = np.cos(phase) + 1.j * np.sin(phase)
+
+    stft=p*(spec_predicted**(10/3))
+    predicted_samples=scipy.signal.istft(stft, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, input_onesided=True, boundary=True, time_axis=-1, freq_axis=-2)
+    samples=np.asarray(list(map(int, predicted_samples[1])),dtype='int16')
+
+    return samples
+
+
+
+def visualize_overlap(predicted_samples,groundtruth_samples):
+
+    fig = plt.figure()
+    plt.plot( groundtruth_samples, color="red", alpha = 0.6)
+    plt.plot( predicted_samples, color="blue", alpha = 0.4)
+    plt.title("Recovery for speaker 1")
+    plt.xlabel('Time [sec]')
+    plt.ylabel('Signal')
+    plt.legend(['Original', 'Recovered via STFT'])
+
+
+    plt.show()
+    plt.close(fig)
+
+
+def save_audio(samples,rate,file):
+    wavfile.write(file,rate,samples)
