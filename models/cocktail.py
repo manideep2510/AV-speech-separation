@@ -47,13 +47,9 @@ class VideoModel():
         
         ip = Input(shape = (self.audio_ip_shape[0], self.audio_ip_shape[1],self.audio_ip_shape[2]))#shape(batch,257,500,2)
         
-        
-        
-        
         ip_embeddings_1 = Input(shape = (int(self.video_ip_shape[0]), int(self.video_ip_shape[1]),int(self.video_ip_shape[2]), int(self.video_ip_shape[3])))
         ip_embeddings_2 = Input(shape = (int(self.video_ip_shape[0]), int(self.video_ip_shape[1]),int(self.video_ip_shape[2]),int(self.video_ip_shape[3]))); 
       
-
         #audio_stream = self.AudioModel(ip)
         conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
                       activation = "relu")(ip) ; print("conv ", conv.shape)
@@ -102,11 +98,12 @@ class VideoModel():
         
         #lipnet_model = LipNet(input_shape = (125,50,100,3), pretrained=lipnet_pretrained)
         lipnet_model = LipNet(input_shape = self.video_ip_shape, pretrained=lipnet_pretrained)
-        x1=lipnet_model.input(ip_embeddings_1)
-        x1 = lipnet_model.output
         
-        x2=lipnet_model.input(ip_embeddings_2)
-        x2=lipnet_model.output
+        x1=lipnet_model(ip_embeddings_1)
+        #x1=x1.output
+        
+        x2=lipnet_model(ip_embeddings_2)
+        #x2=x2.output
         
         
         x1 = Dense(128, kernel_initializer='he_normal', name='dense2')(x1)
@@ -114,8 +111,8 @@ class VideoModel():
         x1 = self.conv7(x1)
         video_stream_1 = self.conv8(x1)
         
-        x2 = Dense(128, kernel_initializer='he_normal', name='dense2')(x2)
-        x2 = Dense(256, kernel_initializer='he_normal', name='dense3')(x2)
+        x2 = Dense(128, kernel_initializer='he_normal', name='dense2_1')(x2)
+        x2 = Dense(256, kernel_initializer='he_normal', name='dense3_1')(x2)
         x2 = self.conv7(x2)
         video_stream_2 = self.conv8(x2)
 
@@ -141,9 +138,6 @@ class VideoModel():
 
         
         model=Model([ip, ip_embeddings_1, ip_embeddings_2], [mask_1, mask_2])
-        
-        #ip-stack magnitude and phase spectrograms while sending input
-        #returns masks
 
         return model
     
