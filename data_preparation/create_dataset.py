@@ -18,7 +18,7 @@ from pathlib import Path
 import shutil
 home = str(Path.home())
 
-from audio_utils import compare_lengths, compute_spectrograms, audios_sum
+from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ib
 from file_utils import pair_files, gen_comb_folders
 import glob
 
@@ -27,10 +27,14 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 
 parser.add_argument('-dataset_type', action="store", dest="dataset_type", default="train")
+parser.add_argument('-each_comb', action="store", dest="combination_no", type=int)
+parser.add_argument('-num_combs', action="store", dest="count", type=int)
 
 args = parser.parse_args()
 
 dataset_type = args.dataset_type
+combination_no = args.combination_no
+count = args.count
 
 # To read the images in numerical order
 import re
@@ -41,7 +45,7 @@ def numericalSort(value):
     return parts
 
 if dataset_type == "train":
-    files = sorted(glob.glob('/data/lrs2/mvlrs_v1/pretrain/*/*.mp4'), key=numericalSort)
+    files = sorted(glob.glob('/data/lrs2/mvlrs_v1/pretrain/*/*_lips.mp4'), key=numericalSort)
     
     try:
         os.mkdir('/data/lrs2/train')
@@ -51,7 +55,7 @@ if dataset_type == "train":
     dest_folder = '/data/lrs2/train'
     
 elif dataset_type == "val":
-    files = sorted(glob.glob('/data/lrs2/mvlrs_v1/main/*/*.mp4'), key=numericalSort)
+    files = sorted(glob.glob('/data/lrs2/mvlrs_v1/main/*/*_lips.mp4'), key=numericalSort)
     
     try:
         os.mkdir('/data/lrs2/val')
@@ -61,7 +65,7 @@ elif dataset_type == "val":
     dest_folder = '/data/lrs2/val'
     
 # Make combinations
-combinations_list = pair_files(files_audio_7to10, combination_no=1, count=5)
+combinations_list = pair_files(files_audio_7to10, combination_no = combination_no, count = count)
 
 # Create training folders
 

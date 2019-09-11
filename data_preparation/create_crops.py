@@ -22,6 +22,7 @@ from scipy.io import wavfile
 import math
 import matplotlib.pyplot as plt
 from pathlib import Path
+import cv2
 import shutil
 home = str(Path.home())
 # Avoid printing TF log messages
@@ -40,11 +41,28 @@ def numericalSort(value):
 
 files = sorted(glob.glob('/data/lrs2/mvlrs_v1/pretrain/*/*.mp4'), key=numericalSort) + sorted(glob.glob('/data/lrs2/mvlrs_v1/main/*/*.mp4'), key=numericalSort)
 
+#files = np.loadtxt('/data/AV-speech-separation/data_preparation/files_4_to_10secs.txt', dtype='object')
+#files = files.tolist()
+files = files[:38000]
+#files = files[13200:]
 # Calculate Lip crops for all the videos
 
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor('../shape_predictor_68_face_landmarks.dat')
+predictor = dlib.shape_predictor('/data/AV-speech-separation/shape_predictor_68_face_landmarks.dat')
 
+c = 0
+times = []
+start = time.time()
+times.append(start)
 for video in files:
     output_path = video[:-4]+'_lips.mp4'
     get_cropped_video(video, output_path, detector = detector, predictor = predictor)
+
+    c = c+1
+    if c%100 == 0:
+        #print(c, '/', len(files), 'lip crops created')
+        b = time.time()
+        times.append(b)
+        print(c, '/', len(files), 'lip crops created in', times[-1]-times[-2], 'seconds')
+        with open("/data/AV-speech-separation/data_preparation/log_create_crops.txt", "a") as myfile:
+            myfile.write(str(c) + ' / ' +  str(len(files)) + ' lip crops created in ' +  str(times[-1]-times[-2]) + ' seconds \n')
