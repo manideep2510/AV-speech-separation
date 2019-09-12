@@ -56,7 +56,7 @@ def numericalSort(value):
 # Read training folders
 folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 
-model = VideoModel(256,96,(298,257,2),(500,50,100,3)).FullModel(lipnet_pretrained = True)
+model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = True)
 
 # Compile the model
 lrate = args.lrate
