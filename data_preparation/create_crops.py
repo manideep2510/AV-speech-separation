@@ -40,11 +40,13 @@ def numericalSort(value):
     return parts
 
 files = sorted(glob.glob('/data/lrs2/mvlrs_v1/pretrain/*/*.mp4'), key=numericalSort) + sorted(glob.glob('/data/lrs2/mvlrs_v1/main/*/*.mp4'), key=numericalSort)
+files_lips = sorted(glob.glob('/home/gpudata/avinash/lrs2/mvlrs_v1/pretrain/*/*_lips.mp4'), key=numericalSort) + sorted(glob.glob('/home/gpudata/avinash/lrs2/mvlrs_v1/main/*/*_lips.mp4'), key=numericalSort)
+files = [x for x in files if x not in files_lips]
 
 #files = np.loadtxt('/data/AV-speech-separation/data_preparation/files_4_to_10secs.txt', dtype='object')
 #files = files.tolist()
 files = files[:38000]
-#files = files[13200:]
+files = files[33600:]
 # Calculate Lip crops for all the videos
 
 detector = dlib.get_frontal_face_detector()

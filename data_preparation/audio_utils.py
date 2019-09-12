@@ -57,12 +57,18 @@ def audios_sum(audio_filenames_list,file_sum_name, volume_reduction=0):
     
     # Lenghts of audios
     s_len = []
-    for i in s:
-        l = len(i)
-        s_len.append(l)
-        
+    for i in audio_filenames_list:
+        ps = AudioSegment.from_file(i)
+        s_len.append(len(ps))
+    
+    max_index = s_len.index(max(s_len))
+
+    s_max = s[max_index]
+    del s[max_index]
+    s.insert(0, s_max)
+
     # Sort elements in s according to their length
-    s = [x for _,x in sorted(zip(s_len,s), reverse=True)]
+    #s = [x for _,x in sorted(zip(s_len,s), reverse=True)]
     
     s_shift = []
     for i, item in enumerate(s):
@@ -265,6 +271,9 @@ def get_wav(mp4_file):
 
 def compare_lengths(file_1_path, file_2_path, max_duration_diff=2000):
     # max_duration_diff in milliseconds
+    #print(file_1_path, 'and', file_1_path)
+    file_1_path = file_1_path[:-9]+'.wav'
+    file_2_path = file_2_path[:-9]+'.wav'
     s1 = AudioSegment.from_file(file_1_path)
     s2 = AudioSegment.from_file(file_2_path)
    

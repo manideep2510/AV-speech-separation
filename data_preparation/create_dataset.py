@@ -18,9 +18,10 @@ from pathlib import Path
 import shutil
 home = str(Path.home())
 
-from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ib
+from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ibm
 from file_utils import pair_files, gen_comb_folders
 import glob
+import cv2
 
 from argparse import ArgumentParser
 
@@ -63,12 +64,50 @@ elif dataset_type == "val":
         pass
     
     dest_folder = '/data/lrs2/val'
-    
+
+print('Total files: ', len(files))
+
+import cv2
+
+def get_frames(fi):
+    video = cv2.VideoCapture(fi)
+    fps = video.get(cv2.CAP_PROP_FRAME_COUNT)
+    video.release()
+    return fps
+
+files_req = []
+for item in files:
+    frames = get_frames(item)
+    #sh = frames.shape[0]
+    if frames>=75 and frames<325:
+        files_req.append(item)
+
+print('Files > 3 secs', len(files_req))
+
 # Make combinations
-combinations_list = pair_files(files_audio_7to10, combination_no = combination_no, count = count)
+a = time.time()
+combinations_list = pair_files(files_req, combination_no = combination_no, count = count)
+b = time.time()
+
+np.savetxt('/data/lrs2/combinations_list.txt', combinations_list, fmt='%s')
+
+with open("/data/AV-speech-separation/data_preparation/log_create_dataset.txt", "w") as myfile:
+    myfile.write(str(len(combinations_list)) + ' pairs generated in ' + str(b-a) + ' seconds \n')
+
+print(len(combinations_list), 'pairs generated in', b-a, 'seconds')
 
 # Create training folders
-
+c = 0
+times = []
+start = time.time()
+times.append(start)
 for combination in combinations_list:
     
     gen_comb_folders(combination, dest_folder = dest_folder)
+    c = c+1
+    if c%100 == 0:
+        b = time.time()
+        times.append(b)
+        print(c, '/', len(combinations_list), 'folders created in ', times[-1] - times[-2], 'seconds')
+        with open("/data/AV-speech-separation/data_preparation/log_create_dataset.txt", "a") as myfile:
+            myfile.write(str(c) + ' / ' + str(len(combinations_list)) + ' folders created in ' + str(times[-1] - times[-2]) + ' seconds \n')
