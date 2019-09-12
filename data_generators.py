@@ -37,9 +37,102 @@ def numericalSort(value):
     parts[1::2] = map(int, parts[1::2])
     return parts
 
+def crop_pad_frames(frames, req_frames, fps, seconds):
+
+    req_frames = fps*seconds
+
+    num_frames = frames.shape[0]
+
+    # Delete or add frames to make the video to 10 seconds
+    if num_frames > req_frames:
+        frames = frames[:req_frames, :, :, :]
+
+    elif num_frames < req_frames:
+        pad_len = req_frames - num_frames
+        frames = np.pad(frames, ((0,pad_len),(0,0), (0,0), (0,0)), 'constant')
+
+    elif num_frames == req_frames:
+        frames = frames
+
+    return frames
+
 # DataGenerator 
 
-def DataGenerator(folderlist, batch_size):
+def DataGenerator(lips_filelist, masks_filelist, spects_filelist, batch_size):
+
+    L = len(files)
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+            limit = min(batch_end, L)
+            
+            lips = lips_filelist[batch_start:limit]
+            
+            X_mask = np.asarray([cv2.imread(fname, cv2.IMREAD_UNCHANGED) for fname in masks_filelist[batch_start:limit]])
+            
+            X_spect = np.asarray([np.load(fname) for fname in spects_filelist[batch_start:limit]])
+            
+            #spect_len = X_spect.shape[1]
+            #mask_len = X_mask.shape[1]
+            #frames = X_lips.shape[0]
+            
+            '''# Pad or crop spectrogram to 10 seconds
+            if spect_len > 1000:
+                X_spect = X_spect[:, :1000]
+                
+            elif spect_len < 1000:
+                pad_len = 1000 - spect_len
+                X_spect = np.pad(X_spect, ((0,0),(0,pad_len)), 'constant')
+                
+            elif spect_len == 1000:
+                X_spect = X_spect
+                
+            # Pad or crop mask to 10 seconds
+            if mask_len > 1000:
+                X_mask = X_mask[:, :1000]
+                
+            elif mask_len < 1000:
+                pad_len = 1000 - mask_len
+                X_mask = np.pad(X_mask, ((0,0),(0,pad_len)), 'constant')
+                
+            elif mask_len == 1000:
+                X_mask = X_mask
+                
+            # Delete or add frames to make the video to 10 seconds
+            if frames > frames_10s:
+                X_lips = X_lips[:frames_10s, :, :, :]
+                
+            elif frames < 1000:
+                pad_len = frames_10s - frames
+                X_lips = np.pad(X_lips, ((0,pad_len),(0,0), (0,0), (0,0)), 'constant')
+                
+            elif frames == 1000:
+                X_lips = X_lips'''
+
+            X_lips = []
+
+            for i in range(len(lips)):
+
+                x_lips = cv2.imread(lips[i], cv2.IMREAD_UNCHANGED)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                X_lips.append(x_lips)
+
+            X_lips = np.asarray(X_lips)
+            
+            #X = seq.augment_images(X)
+            
+            yield X_lips, X_spect, X_mask
+
+            batch_start += batch_size
+            batch_end += batch_size
+
+# DataGenerator 
+
+def DataGenerator_siamese(folderlist, batch_size):
 
     L = len(folderlist)
 
@@ -82,11 +175,9 @@ def DataGenerator(folderlist, batch_size):
             X_spect = np.asarray([np.load(fname) for fname in spect])
             
             '''spect_len = X_spect.shape[1]
-            mask_len = X_mask.shape[1]'''
-            fps = 25
-            frames_5s = fps*5
+            mask_len = X_mask.shape[1]
             
-            '''# Pad or crop spectrogram to 10 seconds
+            # Pad or crop spectrogram to 10 seconds
             if spect_len > 1000:
                 X_spect = X_spect[:, :1000]
                 
@@ -114,11 +205,11 @@ def DataGenerator(folderlist, batch_size):
             for i in range(len(lips1)):
 
                 x_lips1 = cv2.imread(lips1[i], cv2.IMREAD_UNCHANGED)
-                x_lips1 = crop_pad_frames(frames = x_lips1, req_frames = frames_5s)
+                x_lips1 = crop_pad_frames(frames = x_lips1, fps = 25, seconds = 5)
                 X_lips1.append(x_lips1)
 
                 x_lips2 = cv2.imread(lips2[i], cv2.IMREAD_UNCHANGED)
-                x_lips2 = crop_pad_frames(frames = x_lips2, req_frames = frames_5s)
+                x_lips2 = crop_pad_frames(frames = x_lips2, fps = 25, seconds = 5)
                 X_lips2.append(x_lips2)
 
             X_lips1 = np.asarray(X_lips1)
@@ -130,24 +221,5 @@ def DataGenerator(folderlist, batch_size):
 
             batch_start += batch_size
             batch_end += batch_size
-
-
-def crop_pad_frames(frames, req_frames):
-
-    num_frames = frames.shape[0]
-
-    # Delete or add frames to make the video to 10 seconds
-    if num_frames > req_frames:
-        frames = frames[:req_frames, :, :, :]
-        
-    elif num_frames < req_frames:
-        pad_len = req_frames - num_frames
-        frames = np.pad(frames, ((0,pad_len),(0,0), (0,0), (0,0)), 'constant')
-        
-    elif num_frames == req_frames:
-        frames = frames
-
-    return frames
-    
     
             
