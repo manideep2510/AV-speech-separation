@@ -223,3 +223,59 @@ def DataGenerator_siamese(folderlist, batch_size):
             batch_end += batch_size
     
             
+# DataGenerator 
+
+def DataGenerator_train(folderlist, batch_size):
+
+    L = len(folderlist)
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            mask = []
+            spect = []
+            
+            for folder in folders_batch:
+
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                masks_ = sorted(glob.glob(folder + '/*_mask.png'), key=numericalSort)
+                spect_ = folder + '/mixed_spectrogram.npy'
+
+                lips.append(lips_[0])
+                lips.append(lips_[1])
+
+                mask.append(mask_[0])
+                mask.append(mask_[1])
+
+                spect.append(spect_)
+                spect.append(spect_)
+            
+            X_mask = np.asarray([cv2.imread(fname, cv2.IMREAD_UNCHANGED) for fname in mask])
+            
+            X_spect = np.asarray([np.load(fname) for fname in spect])
+            
+            X_lips = []
+            
+            for i in range(len(lips)):
+
+                x_lips = get_video_frames(lips[i])
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                X_lips.append(x_lips)
+
+
+            X_lips = np.asarray(X_lips)
+
+            #X = seq.augment_images(X)
+
+            yield X_lips, X_spect, X_mask
+
+            batch_start += batch_size
+            batch_end += batch_size
