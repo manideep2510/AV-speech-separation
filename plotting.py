@@ -14,40 +14,40 @@ from funcsigs import signature
 
 def plot_loss_and_acc(history, path):
 
-    #loss_train = []
+    loss_train = []
     loss_val = []
     acc_val = []
-    #acc_train = []
+    acc_train = []
 
-    #loss_train.append(history.history['loss'])
+    loss_train.append(history.history['loss'])
     loss_val.append(history.history['val_loss'])
-    #acc_train.append(history.history['acc'])
+    acc_train.append(history.history['acc'])
     acc_val.append(history.history['val_acc'])
 
     # Accuracy plots
 
-    #plt.plot(acc_train[0])
+    plt.plot(acc_train[0])
     plt.plot(acc_val[0])
     plt.title('Model accuracy')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
-    plt.legend(['validation'], loc='upper left')
+    plt.legend(['train', 'validation'], loc='upper left')
     #plt.show()
-    plt.savefig('/User/manideepkolla/AV-speech-separation/results/' + path + '/accuracy.png')
+    plt.savefig('/data/AV-speech-separation/results/' + path + '/accuracy.png')
     plt.close()
 
     print ('Saved Accuracy plot')
 
     # Loss plots
 
-    #plt.plot(loss_train[0])
+    plt.plot(loss_train[0])
     plt.plot(loss_val[0])
     plt.title('Model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
-    plt.legend(['validation'])
+    plt.legend(['train', 'validation'])
     #plt.show()
-    plt.savefig('/User/manideepkolla/AV-speech-separation/results/' + path + '/loss.png')
+    plt.savefig('/data/AV-speech-separation/results/' + path + '/loss.png')
     plt.close()
 
     print ('Saved Loss plot')

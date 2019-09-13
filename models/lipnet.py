@@ -1,4 +1,5 @@
-# Ignore warnings
+# Ignore warning
+import os
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -12,7 +13,7 @@ from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
 from callbacks import Metrics, learningratescheduler, earlystopping, reducelronplateau
 from plotting import plot_loss_and_acc
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+#os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 def LipNet(input_shape, pretrained=None, output_size = 28, absolute_max_string_len=32):
         
@@ -63,5 +64,5 @@ def LipNet(input_shape, pretrained=None, output_size = 28, absolute_max_string_l
         model = Model(inputs=input_data, outputs=y_pred)
         
         if pretrained == True:
-            model.load_weights('/Users/manideepkolla/Downloads/unseen-weights178.h5')
+            model.load_weights('/data/LipNet/evaluation/models/unseen-weights178.h5')
         return model

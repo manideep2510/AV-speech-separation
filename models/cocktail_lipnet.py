@@ -1,4 +1,5 @@
 # Ignore warnings
+import os
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -9,12 +10,12 @@ import keras.backend as K
 from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
-from callbacks import Metrics, learningratescheduler, earlystopping, reducelronplateau
-from plotting import plot_loss_and_acc
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+#from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
+#from callbacks import Metrics, learningratescheduler, earlystopping, reducelronplateau
+#from plotting import plot_loss_and_acc
+#os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
-from lipnet import LipNet
+from .lipnet import LipNet
 
 '''
 Usage: 
@@ -60,18 +61,18 @@ class VideoModel():
         self.bn6 = BatchNormalization(axis=-1)
     
 
-        self.conv7 = Lambda(lambda x : tf.expand_dims(x, axis = -1))
+        self.conv7 = Lambda(lambda x : tf.expand_dims(x, axis = -1), name='lambda1')
 
-        self.conv8 = Lambda(lambda x: tf.image.resize_nearest_neighbor(x, size = (500, x.shape[-2])))
-        self.conv_transpose = Lambda(lambda x: tf.transpose(x, perm=[0, 2, 1, 3]))
+        self.conv8 = Lambda(lambda x: tf.image.resize_nearest_neighbor(x, size = (500, x.shape[-2])), name='lambda2')
+        self.conv_transpose = Lambda(lambda x: tf.transpose(x, perm=[0, 2, 1, 3]), name='lambda3')
         
     def FullModel(self, lipnet_pretrained):
 
         ip = Input(shape = (self.audio_ip_shape[0], self.audio_ip_shape[1], 2)) #; print("input_audio", ip.shape) 
         ip_embeddings_1 = Input(shape = (int(self.video_ip_shape[0]), int(self.video_ip_shape[1]),int(self.video_ip_shape[2]), int(self.video_ip_shape[3])))#; print("ip video", ip_embeddings_1.shape)  #[75, 512]
 
-        ip_magnitude = Lambda(lambda x : x[:,:,:,0],name="ip_mag")(ip)#; print("ip_mag ", ip_magnitude.shape)  #takes magnitude from stack[magnitude,phase]
-        ip_phase = Lambda(lambda x : tf.expand_dims(x[:,:,:,1], axis = -1),name="ip_phase")(ip)#; print("ip_phase ", ip_phase.shape)  #takes phase from stack[magnitude,phase]
+#        ip_magnitude = Lambda(lambda x : x[:,:,:,0],name="ip_mag")(ip)#; print("ip_mag ", ip_magnitude.shape)  #takes magnitude from stack[magnitude,phase]
+#        ip_phase = Lambda(lambda x : tf.expand_dims(x[:,:,:,1], axis = -1),name="ip_phase")(ip)#; print("ip_phase ", ip_phase.shape)  #takes phase from stack[magnitude,phase]
 
         ip_embeddings_1_expanded = Lambda(lambda x : tf.expand_dims(x, axis = -1))(ip_embeddings_1)
 
@@ -87,23 +88,23 @@ class VideoModel():
                       activation = "relu")(conv) ; print("conv ", conv.shape)
         conv = BatchNormalization(axis=-1)(conv)
         
-        conv = Conv2D(filters = self.filters_audio* 2, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
+        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
                       activation = "relu")(conv) ; print("conv ", conv.shape)
         conv = BatchNormalization(axis=-1)(conv)
         
-        conv = Conv2D(filters = self.filters_audio* 2, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
+        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
                       activation = "relu")(conv) ; print("conv ", conv.shape)
         conv = BatchNormalization(axis=-1)(conv)
         
-        conv = Conv2D(filters = self.filters_audio* 3, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
+        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
                       activation = "relu")(conv) ; print("conv ", conv.shape)
         conv = BatchNormalization(axis=-1)(conv)
         
-        conv = Conv2D(filters = self.filters_audio* 3, kernel_size = (5,5), strides = (1,1), padding = "same", dilation_rate = (1,1),
+        conv = Conv2D(filters = self.filters_audio, kernel_size = (5,5), strides = (1,1), padding = "same", dilation_rate = (1,1),
                       activation = "relu")(conv) ; print("conv ", conv.shape)
         conv = BatchNormalization(axis=-1)(conv)
         
-        conv = Conv2D(filters = self.filters_audio* 3, kernel_size = (5,5), strides = (1,1), padding = "same", dilation_rate = (1,1),
+        conv = Conv2D(filters = self.filters_audio, kernel_size = (5,5), strides = (1,1), padding = "same", dilation_rate = (1,1),
                       activation = "relu")(conv) ; print("conv ", conv.shape)
         conv = BatchNormalization(axis=-1)(conv)
         
@@ -137,18 +138,19 @@ class VideoModel():
 
         dense = Dense(100, activation = "relu")(flatten)
 
-        dense = Dense(2 * self.audio_ip_shape[0] * self.audio_ip_shape[1], activation = "sigmoid")(dense) 
+        dense = Dense(self.audio_ip_shape[0] * self.audio_ip_shape[1])(dense) 
 
-        combo_mask = Reshape([2 , self.audio_ip_shape[0], self.audio_ip_shape[1]])(dense) 
-        mask_1 = Lambda(lambda x : x[:,0])(combo_mask) 
+        mask = Reshape([self.audio_ip_shape[0], self.audio_ip_shape[1]])(dense)
+        print("mask", mask.shape) 
+#        mask = Lambda(lambda x : x[:,0], name='lambda_out')(combo_mask) 
 
-        output_mag_1 = Lambda(lambda x : tf.multiply(x[0], x[1]), name = "mask_multiply_1")([ip_magnitude, mask_1])#; print("output_mag_1", output_mag_1.shape)
+#        output_mag_1 = Lambda(lambda x : tf.multiply(x[0], x[1]), name = "mask_multiply_1")([ip_magnitude, mask_1])#; print("output_mag_1", output_mag_1.shape)
 
-        output_mag_1 = Lambda(lambda x : tf.expand_dims(x, axis= -1), name= "expand_dim_1")(output_mag_1)#; print("output_mag_expand_1", output_mag_1.shape)
+#        output_mag_1 = Lambda(lambda x : tf.expand_dims(x, axis= -1), name= "expand_dim_1")(output_mag_1)#; print("output_mag_expand_1", output_mag_1.shape)
 
-        output_final_1 = Lambda(lambda x : tf.concat(values=[x[0], x[1]], axis = -1),name="concat_mag_phase_1")([output_mag_1, ip_phase]) 
+#        output_final_1 = Lambda(lambda x : tf.concat(values=[x[0], x[1]], axis = -1),name="concat_mag_phase_1")([output_mag_1, ip_phase]) 
         
-        model = Model([ip, lipnet_model.input], [output_final_1])
+        model = Model(inputs = [ip, lipnet_model.input], outputs = mask)
 
         return model
     

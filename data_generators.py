@@ -23,9 +23,11 @@ import math
 import matplotlib.pyplot as plt
 from pathlib import Path
 import shutil
+import cv2
+
 home = str(Path.home())
 # Avoid printing TF log messages
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from data_preparation.video_utils import get_video_frames
 
@@ -37,7 +39,7 @@ def numericalSort(value):
     parts[1::2] = map(int, parts[1::2])
     return parts
 
-def crop_pad_frames(frames, req_frames, fps, seconds):
+def crop_pad_frames(frames, fps, seconds):
 
     req_frames = fps*seconds
 
@@ -242,25 +244,41 @@ def DataGenerator_train(folderlist, batch_size):
             lips = []
             mask = []
             spect = []
+            phase = []
             
             for folder in folders_batch:
 
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 masks_ = sorted(glob.glob(folder + '/*_mask.png'), key=numericalSort)
                 spect_ = folder + '/mixed_spectrogram.npy'
+                phase_ = folder + '/phase_spectrogram.npy'
 
                 lips.append(lips_[0])
                 lips.append(lips_[1])
 
-                mask.append(mask_[0])
-                mask.append(mask_[1])
+                mask.append(masks_[0])
+                mask.append(masks_[1])
 
                 spect.append(spect_)
                 spect.append(spect_)
+
+                phase.append(phase_)
+                phase.append(phase_)
             
             X_mask = np.asarray([cv2.imread(fname, cv2.IMREAD_UNCHANGED) for fname in mask])
+#            print('mask', X_mask.shape)
             
-            X_spect = np.asarray([np.load(fname) for fname in spect])
+            X_spect = [np.load(fname) for fname in spect]
+            X_phase = [np.load(fname) for fname in phase]
+            
+            X_spect_phase = []
+            for i in range(len(X_spect)):
+                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+                X_spect_phase.append(x_spect_phase)
+
+            X_spect_phase = np.asarray(X_spect_phase)
+
+#            print("X_spect_phase", X_spect_phase.shape)
             
             X_lips = []
             
@@ -275,7 +293,7 @@ def DataGenerator_train(folderlist, batch_size):
 
             #X = seq.augment_images(X)
 
-            yield X_lips, X_spect, X_mask
+            yield [X_spect_phase, X_lips], X_mask
 
             batch_start += batch_size
             batch_end += batch_size
