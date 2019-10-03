@@ -69,7 +69,8 @@ def audios_sum(audio_filenames_list,file_sum_name, volume_reduction=0):
 
     # Sort elements in s according to their length
     #s = [x for _,x in sorted(zip(s_len,s), reverse=True)]
-    '''s_shift = []
+    
+    s_shift = []
     for i, item in enumerate(s):
         
         if i == 0:
@@ -78,7 +79,7 @@ def audios_sum(audio_filenames_list,file_sum_name, volume_reduction=0):
             
         else:
             s_shift1 = (len(s[0])-len(item)) / 2 if len(s[0]) > len(item) else 0
-            s_shift.append(s_shift1)'''
+            s_shift.append(s_shift1)
             
     for i in range(len(s)):
         
@@ -86,7 +87,7 @@ def audios_sum(audio_filenames_list,file_sum_name, volume_reduction=0):
             audio_sum = s[0]
             
         elif i > 0:
-            audio_sum = audio_sum.overlay(s[i], position=0)
+            audio_sum = audio_sum.overlay(s[i], position=s_shift[i])
 
     audio_sum.export(file_sum_name, format='wav')
 
@@ -399,3 +400,27 @@ def visualize_overlap(predicted_samples,groundtruth_samples):
 
 def save_audio(samples,rate,file):
     wavfile.write(file,rate,samples)
+
+def retrieve_samples(spec_signal,phase_spect,mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10):
+
+    window_frame_size = int(round(window_size / 1e3 * sample_rate))
+    step_frame_size = int(round(step_size  / 1e3 * sample_rate))
+    overlap_samples=window_frame_size-step_frame_size
+
+
+    spec_predicted=spec_signal*mask
+
+    phase=phase_spect
+    p = np.cos(phase) + 1.j * np.sin(phase)
+
+    stft=p*(spec_predicted**(10/3))
+    predicted_samples=scipy.signal.istft(stft, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, input_onesided=True, boundary=True, time_axis=-1, freq_axis=-2)
+    #print('predicted_samples[1]', predicted_samples[1].shape)
+    samples=np.asarray(list(map(int, predicted_samples[1])),dtype='int16')
+    #samples = predicted_samples[1][1]
+    #print('samples', samples.shape)
+    #print('predicted_samples', len(predicted_samples))
+    #print('samples1', samples[1, 500:510])
+    #print('samples2', samples[5, 500:510])
+
+    return samples

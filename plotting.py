@@ -14,19 +14,25 @@ from funcsigs import signature
 
 def plot_loss_and_acc(history, path):
 
+
+    try:
+        os.mkdir('/data/results/'+ path)
+    except OSError:
+        pass
+
     loss_train = []
     loss_val = []
-    acc_val = []
-    acc_train = []
+    #acc_val = []
+    #acc_train = []
 
     loss_train.append(history.history['loss'])
     loss_val.append(history.history['val_loss'])
-    acc_train.append(history.history['acc'])
-    acc_val.append(history.history['val_acc'])
+    #acc_train.append(history.history['acc'])
+    #acc_val.append(history.history['val_acc'])
 
     # Accuracy plots
 
-    plt.plot(acc_train[0])
+    '''plt.plot(acc_train[0])
     plt.plot(acc_val[0])
     plt.title('Model accuracy')
     plt.ylabel('accuracy')
@@ -36,7 +42,7 @@ def plot_loss_and_acc(history, path):
     plt.savefig('/data/AV-speech-separation/results/' + path + '/accuracy.png')
     plt.close()
 
-    print ('Saved Accuracy plot')
+    print ('Saved Accuracy plot')'''
 
     # Loss plots
 
@@ -47,7 +53,7 @@ def plot_loss_and_acc(history, path):
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'])
     #plt.show()
-    plt.savefig('/data/AV-speech-separation/results/' + path + '/loss.png')
+    plt.savefig('/data/results/' + path + '/loss.png')
     plt.close()
 
     print ('Saved Loss plot')

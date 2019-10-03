@@ -24,10 +24,10 @@ from callbacks import Logger, learningratescheduler, earlystopping, reducelronpl
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
-from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy
+from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
 from models.lipnet import LipNet
-from models.cocktail_lipnet import VideoModel
-from data_generators import DataGenerator_train, DataGenerator_sampling
+from models.cocktail_lipnet_unet_softmask import VideoModel
+from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask
 
 '''from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
@@ -35,7 +35,7 @@ config.gpu_options.per_process_gpu_memory_fraction = 1
 set_session(tf.Session(config=config))
 '''
 from keras.utils import multi_gpu_model
-from metrics import sdr_metric, Metrics
+from metrics import sdr_metric, Metrics_softmask
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -58,12 +58,12 @@ def numericalSort(value):
 # Read training folders
 folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 
-folders_list_train = folders_list[:10000]
+folders_list_train = folders_list[:90000]
 import random
 random.shuffle(folders_list_train)
-folders_list_val = folders_list[12000:13000]
+folders_list_val = folders_list[92000:93000] + folders_list[236000:236500]
 random.seed(20)
-folders_list_val = random.sample(folders_list_val, 100)
+#folders_list_val = random.sample(folders_list_val, 100)
 
 print('Training data:', len(folders_list_train)*2)
 print('Validation data:', len(folders_list_val)*2)
@@ -75,26 +75,32 @@ print('Validation data:', len(folders_list_val)*2)
 #spects_filelist = sorted(glob.glob('/data/lrs2/train/*/mixed_spectrogram.npy'), key=numericalSort)
 
 model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = True)
+from io import StringIO
+
+tmp_smry = StringIO()
+model.summary(print_fn=lambda x: tmp_smry.write(x + '\n'))
+summary = tmp_smry.getvalue()
+summary_split = summary.split('\n')
+summary_params = summary_split[-6:]
+summary_params = '\n'.join(summary_params)
+print('\n'+summary_params)
 
 # Compile the model
 lrate = args.lrate
 
+model.load_weights('/data/models/softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-10-188.9557.hdf5')
+
 model = multi_gpu_model(model, gpus=2)
 
-model.load_weights('/data/models/test_Lipnet+cocktail_1in_1out_20k-train_valSDR_epochs20_lr1e-4_0.322decay5epochs/weights-12-0.4127.hdf5')
+#model.load_weights('/data/models/test_Lipnet+cocktail_1in_1out_20k-train_valSDR_epochs20_lr1e-4_0.322decay5epochs/weights-12-0.4127.hdf5')
 
-#try:
-#    model = multi_gpu_model(model, gpus=2)
-#except:
-#    pass
-
-model.compile(optimizer = Adam(lr=lrate), loss = cross_entropy_loss)
+model.compile(optimizer = Adam(lr=lrate), loss = l2_loss)
 
 batch_size = args.batch_size
 epochs = args.epochs
 
 # callcack
-metrics_sdr = Metrics(model = model, val_folders = folders_list_val, batch_size = batch_size)
+metrics_sdr = Metrics_softmask(model = model, val_folders = folders_list_val, batch_size = batch_size)
 learningratescheduler = learningratescheduler()
 earlystopping = earlystopping()
 reducelronplateau = reducelronplateau()
@@ -102,7 +108,7 @@ reducelronplateau = reducelronplateau()
 
 # Path to save model checkpoints
 
-path = 'test_Lipnet+cocktail_1in_1out_20k-train_valSDR_epochs12to22_lr1e-5_0.322decay5epochs'
+path = 'softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs10to20_lr1e-5_0.1decay10epochs'
 
 try:
     os.mkdir('/data/models/'+ path)
@@ -114,10 +120,12 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 # Fit Generator
 
-history = model.fit_generator(DataGenerator_train(folders_list_train, batch_size),
-                steps_per_epoch = np.ceil((len(folders_list_train))/float(batch_size)),
+folders_per_epoch = 30000
+
+history = model.fit_generator(DataGenerator_sampling_softmask(folders_list_train, folders_per_epoch, batch_size),
+                steps_per_epoch = np.ceil((folders_per_epoch)/float(batch_size)),
                 epochs=epochs,
-                validation_data=DataGenerator_train(folders_list_val, batch_size), 
+                validation_data=DataGenerator_train_softmask(folders_list_val, batch_size), 
                 validation_steps = np.ceil((len(folders_list_val))/float(batch_size)),
                 callbacks=[metrics_sdr, earlystopping, learningratescheduler, checkpoint_save_weights], verbose = 1)
 

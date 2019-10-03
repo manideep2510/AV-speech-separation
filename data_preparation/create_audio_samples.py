@@ -19,13 +19,13 @@ import shutil
 home = str(Path.home())
 
 from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ibm
-from file_utils import pair_files, gen_comb_folders
+from file_utils import pair_files, gen_comb_folders, gen_comb_folders_audios
 import glob
 import cv2
 
 combinations_list = np.loadtxt('/data/lrs2/combinations_list.txt', dtype='object')
 
-with open("/data/AV-speech-separation/data_preparation/log_create_dataset.txt", "w") as myfile:
+with open("/data/AV-speech-separation/data_preparation/log_create_audio_samples.txt", "w") as myfile:
     myfile.write(str(len(combinations_list)) + ' pairs generated')
 
 print(len(combinations_list), 'pairs generated')
@@ -43,5 +43,5 @@ for combination in combinations_list:
         b = time.time()
         times.append(b)
         print(c, '/', len(combinations_list), 'folders created in ', times[-1] - times[-2], 'seconds')
-        with open("/data/AV-speech-separation/data_preparation/log_create_dataset.txt", "a") as myfile:
+        with open("/data/AV-speech-separation/data_preparation/log_create_audio_samples.txt", "a") as myfile:
             myfile.write(str(c) + ' / ' + str(len(combinations_list)) + ' folders created in ' + str(times[-1] - times[-2]) + ' seconds \n')

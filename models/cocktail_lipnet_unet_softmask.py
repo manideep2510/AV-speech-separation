@@ -82,41 +82,70 @@ class VideoModel():
 
         ip_embeddings_1_expanded = Lambda(lambda x : tf.expand_dims(x, axis = -1))(ip_embeddings_1)
 
-        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(input_spects) ; print("conv ", conv.shape)
-        conv = BatchNormalization(axis=-1)(conv)
-        
-        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(conv) ; print("conv ", conv.shape)
-        conv = BatchNormalization(axis=-1)(conv)
-        
-        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(conv) ; print("conv ", conv.shape)
-        conv = BatchNormalization(axis=-1)(conv)
-        
-        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(conv) ; print("conv ", conv.shape)
-        conv = BatchNormalization(axis=-1)(conv)
-        
-        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(conv) ; print("conv ", conv.shape)
-        conv = BatchNormalization(axis=-1)(conv)
-        
-        conv = Conv2D(filters = self.filters_audio, kernel_size = (3,3), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(conv) ; print("conv ", conv.shape)
-        conv = BatchNormalization(axis=-1)(conv)
-        
-        conv = Conv2D(filters = self.filters_audio, kernel_size = (5,5), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(conv) ; print("conv ", conv.shape)
-        conv = BatchNormalization(axis=-1)(conv)
-        
-        conv = Conv2D(filters = self.filters_audio, kernel_size = (5,5), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(conv) ; print("conv ", conv.shape)
-        conv = BatchNormalization(axis=-1)(conv)
-        
-        conv = Conv2D(filters = self.filters_audio//12, kernel_size = (5,5), strides = (1,1), padding = "same", dilation_rate = (1,1),
-                      activation = "relu")(conv) ; print("conv ", conv.shape)
-        audio_stream = BatchNormalization(axis=-1)(conv)
+        conv1 = Conv2D(16, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(input_spects)
+        conv1 = Conv2D(16, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv1)
+        conv1 = BatchNormalization()(conv1)
+        pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+        conv2 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(pool1)
+        conv2 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv2)
+        conv2 = BatchNormalization()(conv2)
+        pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+        conv3 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(pool2)
+        conv3 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv3)
+        conv3 = BatchNormalization()(conv3)
+        pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+        conv4 = Conv2D(266, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(pool3)
+        conv4 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv4)
+        conv4 = BatchNormalization()(conv4)
+        drop4 = Dropout(0.5)(conv4)
+        pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
+    
+        # Bottom of the U-Net
+        conv5 = Conv2D(512, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(pool4)
+        conv5 = Conv2D(512, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv5)
+        conv5 = BatchNormalization()(conv5)
+        drop5 = Dropout(0.5)(conv5)
+    
+        # Upsampling Starts, right side of the U-Net
+        up6 = Conv2D(256, 2, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(UpSampling2D(size = (2,2))(drop5))
+        merge6 = concatenate([drop4,up6], axis = 3)
+        conv6 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(merge6)
+        conv6 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv6)
+        conv6 = BatchNormalization()(conv6)
+        print('conv6', conv6.shape)
+
+        up7 = Conv2D(128, 2, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(UpSampling2D(size = (2,2))(conv6))
+        print('up7', up7.shape)
+        # Padding to match concat chape
+        up7_pad = ZeroPadding2D(padding=((0, 0), (0, 1)))(up7)
+        merge7 = concatenate([conv3,up7_pad], axis = 3)
+        conv7 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(merge7)
+        conv7 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv7)
+        conv7 = BatchNormalization()(conv7)
+
+        up8 = Conv2D(32, 2, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(UpSampling2D(size = (2,2))(conv7))
+        merge8 = concatenate([conv2,up8], axis = 3)
+        conv8 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(merge8)
+        conv8 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv8)
+        conv8 = BatchNormalization()(conv8)
+    
+        up9 = Conv2D(16, 2, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(UpSampling2D(size = (2,2))(conv8))
+        deconv9 = Conv2DTranspose(16, (2,1), strides=(1, 1), padding='valid', activation = 'relu')(up9)
+        print('deconv9', deconv9.shape)
+        merge9 = concatenate([conv1,deconv9], axis = 3)
+        conv9 = Conv2D(16, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(merge9)
+        conv9 = Conv2D(16, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv9)    ## Shape = (None, 256, 500, 16)
+        print('conv9', conv9.shape)
+        #conv9 = Conv2D(16, 3, activation = 'relu', padding = 'same', kernel_initializer = 'random_normal')(conv9)
+        #deconv9 = Conv2DTranspose(16, (2,1), strides=(1, 1), padding='valid', activation = 'relu')(conv9)
+        #print('deconv9', deconv9.shape)
+        conv9 = BatchNormalization()(deconv9)
+
+        # Output layer of the U-Net with 8 channels
+        conv10 = Conv2D(8, 1, activation = 'relu', padding = 'same')(conv9) 
+        print('conv10', conv10.shape)
+
+        audio_stream = BatchNormalization(axis=-1)(conv10)
         audio_stream = self.conv_transpose(audio_stream)
         print('audio_stream', audio_stream.shape)
 
@@ -144,13 +173,13 @@ class VideoModel():
 
         dense = Dense(100, activation = "relu")(flatten)
 
-        dense = Dense(2*self.audio_ip_shape[0] * self.audio_ip_shape[1], activation = 'softmax')(dense) 
+        dense = Dense(self.audio_ip_shape[0] * self.audio_ip_shape[1], activation = 'sigmoid')(dense) 
 
-        mask = Reshape([self.audio_ip_shape[0], self.audio_ip_shape[1], 2])(dense)
+        mask = Reshape([self.audio_ip_shape[0], self.audio_ip_shape[1], 1])(dense)
         print("mask", mask.shape)
-        output_mask_specs = concatenate([mask, input_spects], axis=3)
+        output_mask_specs = concatenate([mask, input_spects], axis=3, name='concat1')
         print('output_mask_specs', output_mask_specs.shape)
-        output_mask_specs_samples = concatenate([output_mask_specs, input_samples], axis=3) 
+        output_mask_specs_samples = concatenate([output_mask_specs, input_samples], axis=3, name='concat2') 
         print('output_mask_specs_samples', output_mask_specs_samples.shape)
 #        mask = Lambda(lambda x : x[:,0], name='lambda_out')(combo_mask) 
 

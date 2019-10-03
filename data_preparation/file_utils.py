@@ -18,7 +18,7 @@ from pathlib import Path
 import shutil
 home = '/data'
 
-from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ibm
+from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ibm, irm
 import cv2
 
 # From all the existing files, pick certain number files randomly and pair certain number of them together. (Just the file names)
@@ -273,7 +273,7 @@ def gen_comb_folders(combined_pairs, dest_folder):
             
         # Save the mask
         
-        s, n, _ = compute_spectrograms(audio_file)
+        s, n, c_ = compute_spectrograms(audio_file)
         s_use=s[:, :500]
         
         mask = ibm(spec_mix = mixed_spectogram,spec_signal = s_use,threshold=1)
@@ -283,6 +283,190 @@ def gen_comb_folders(combined_pairs, dest_folder):
         file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_mask.png'
         
         cv2.imwrite(save_path + '/' + file_name, mask)
+
+        mask1 = irm(spec_mix = mixed_spectogram,spec_signal = s_use)
+        mask1=np.asarray(mask1, dtype='float16')
+        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_softmask.npy'
+
+        np.save(save_path + '/' + file_name, mask1)
+
+        '''# Save phase spect
+
+        phase_=np.angle(c_)
+        phase_=phase_[:,:500]
+        phase_ = np.asarray(phase_, dtype='float16')
+
+        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_phase.npy'
         
+        np.save(save_path + '/' + file_name, phase_)'''
+
 #        shutil.copy(mask_file, save_path)
+
+def gen_comb_folders_audios(combined_pairs, dest_folder):
+    
+    try:
+        os.mkdir(dest_folder)
+    except OSError:
+        pass
+
+    videos = combined_pairs
+    audios = []
+    
+    for item in videos:
+        audio = item[:-9] + '.wav'
+        audios.append(audio)
+    
+    
+    folder_name_list = []
+    for path in audios:
+        split_ = path.split('/')
+        fold = split_[-2] + '_' + split_[-1][:-4]
+        folder_name_list.append(fold)
+        
+    folder_name = '_'.join(folder_name_list) + '_' + str(len(videos))
+    folder_path = dest_folder + '/' + folder_name
+    
+    try:
+        os.mkdir(folder_path)
+    except OSError:
+        pass
+
+    ## Now mix the audios and compute the spectrogram of mixed audio
+    
+    mix_audio_folder = home + '/mixed_audio_files'
+        
+    # Filename to save the mixed audio  file
+    mixed_audio_filename = folder_name + '.wav'             
+        
+    mixed_audio_filepath = mix_audio_folder + '/' + mixed_audio_filename
+        
+    try:
+        os.mkdir(mix_audio_folder)
+    except OSError:
+        pass
+    
+    #mixed_samples = audios_sum(audios, mixed_audio_filepath)
+        
+    # Compute the spectrogram of mised audio
+    #s, n, c = compute_spectrograms(mixed_audio_filepath)
+    #mixed_spectogram =s[:,:500]  # Useful frames
+
+    #phase=np.angle(c)
+    #phase=phase[:,:500]
+
+    #mixed_spectogram = np.asarray(mixed_spectogram, dtype='float16')
+    
+    #phase_spectogram = np.asarray(phase, dtype='float16')
+
+    # Save the mixed spectrogram
+    #np.save(folder_path + '/' + 'mixed_spectrogram.npy',mixed_spectogram)
+    #np.save(folder_path + '/' + 'phase_spectrogram.npy',phase_spectogram)
+
+    for p in range(len(videos)):
+
+        audio_file = audios[p]
+        lips_file = videos[p]
+       # mask_file = masks[p]
+        
+        save_path = folder_path
+        
+        try:
+            os.mkdir(save_path)
+        except OSError:
+            pass
+        
+        audio_file_split = audio_file.split('/')
+
+        # Save lips.mp4
+        
+        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_samples.npy'
+        rate, audio_samples = wavfile.read(audio_file)
+        np.save(save_path + '/' + file_name, audio_samples)
+        
             
+def gen_comb_folders_text(combined_pairs, dest_folder):
+    
+    try:
+        os.mkdir(dest_folder)
+    except OSError:
+        pass
+
+    videos = combined_pairs
+    audios = []
+    texts = []
+    
+    for item in videos:
+        audio = item[:-9] + '.wav'
+        audios.append(audio)
+    
+    for item in videos:
+        txt = item[:-9] + '.txt'
+        texts.append(txt)
+    
+    folder_name_list = []
+    for path in audios:
+        split_ = path.split('/')
+        fold = split_[-2] + '_' + split_[-1][:-4]
+        folder_name_list.append(fold)
+        
+    folder_name = '_'.join(folder_name_list) + '_' + str(len(videos))
+    folder_path = dest_folder + '/' + folder_name
+    
+    try:
+        os.mkdir(folder_path)
+    except OSError:
+        pass
+
+    ## Now mix the audios and compute the spectrogram of mixed audio
+    
+    mix_audio_folder = home + '/mixed_audio_files'
+        
+    # Filename to save the mixed audio  file
+    mixed_audio_filename = folder_name + '.wav'             
+        
+    mixed_audio_filepath = mix_audio_folder + '/' + mixed_audio_filename
+        
+    try:
+        os.mkdir(mix_audio_folder)
+    except OSError:
+        pass
+    
+    #mixed_samples = audios_sum(audios, mixed_audio_filepath)
+        
+    # Compute the spectrogram of mised audio
+    #s, n, c = compute_spectrograms(mixed_audio_filepath)
+    #mixed_spectogram =s[:,:500]  # Useful frames
+
+    #phase=np.angle(c)
+    #phase=phase[:,:500]
+
+    #mixed_spectogram = np.asarray(mixed_spectogram, dtype='float16')
+    
+    #phase_spectogram = np.asarray(phase, dtype='float16')
+
+    # Save the mixed spectrogram
+    #np.save(folder_path + '/' + 'mixed_spectrogram.npy',mixed_spectogram)
+    #np.save(folder_path + '/' + 'phase_spectrogram.npy',phase_spectogram)
+
+    for p in range(len(videos)):
+
+        audio_file = audios[p]
+        text = texts[p]
+       # mask_file = masks[p]
+        
+        save_path = folder_path
+        
+        try:
+            os.mkdir(save_path)
+        except OSError:
+            pass
+        
+        audio_file_split = audio_file.split('/')
+
+        # Save lips.mp4
+        
+        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '.txt'
+        shutil.copy(text, save_path + '/' + file_name)
+        
+            
+        

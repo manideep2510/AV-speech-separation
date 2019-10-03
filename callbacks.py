@@ -10,7 +10,7 @@ import cv2
 import matplotlib.pyplot as plt
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, precision_recall_curve, average_precision_score, accuracy_score
-
+import sys
 
 
 class Metrics(Callback):
@@ -70,8 +70,8 @@ class LoggingCallback(Callback):
 
 def step_decay(epoch):
     initial_lrate = 0.0001
-    drop = 0.32
-    epochs_drop = 5
+    drop = 0.1
+    epochs_drop = 10
     lrate = initial_lrate * math.pow(drop,
            math.floor((1+epoch)/epochs_drop))
     return lrate
@@ -87,3 +87,37 @@ def earlystopping():
 def reducelronplateau():
     reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, min_lr = 0.00000001)
     return reducelronplateau
+
+class Logger(object):
+    """ Logger class to enable logging to file and terminal together """
+    def __init__(self, logsdir):
+        self.terminal = sys.stdout
+        self.log = open(os.path.join(logsdir, 'log.txt'), "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        pass
+
+class LearningRateSchedulerPerBatch(LearningRateScheduler):
+    """ Callback class to modify the default learning rate scheduler to operate each batch"""
+    def __init__(self, schedule, verbose=0):
+        super(LearningRateSchedulerPerBatch, self).__init__(schedule, verbose)
+        self.count = 0  # Global batch index (the regular batch argument refers to the batch index within the epoch)
+
+    def on_epoch_begin(self, epoch, logs=None):
+        pass
+
+    def on_epoch_end(self, epoch, logs=None):
+        pass
+
+    def on_batch_begin(self, batch, logs=None):
+        super(LearningRateSchedulerPerBatch, self).on_epoch_begin(self.count, logs)
+
+    def on_batch_end(self, batch, logs=None):
+        super(LearningRateSchedulerPerBatch, self).on_epoch_end(self.count, logs)
+        self.count += 1
+
+
