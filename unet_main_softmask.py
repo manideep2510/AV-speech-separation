@@ -58,10 +58,10 @@ def numericalSort(value):
 # Read training folders
 folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 
-folders_list_train = folders_list[:90000]
+folders_list_train = folders_list[:91500] +folders_list[93000:238089]
 import random
 random.shuffle(folders_list_train)
-folders_list_val = folders_list[92000:93000] + folders_list[236000:236500]
+folders_list_val = folders_list[91500:93000] + folders_list[238089:]
 random.seed(20)
 #folders_list_val = random.sample(folders_list_val, 100)
 
@@ -88,7 +88,7 @@ print('\n'+summary_params)
 # Compile the model
 lrate = args.lrate
 
-model.load_weights('/data/models/softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-10-188.9557.hdf5')
+#model.load_weights('/data/models/softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-10-188.9557.hdf5')
 
 model = multi_gpu_model(model, gpus=2)
 
@@ -108,7 +108,7 @@ reducelronplateau = reducelronplateau()
 
 # Path to save model checkpoints
 
-path = 'softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs10to20_lr1e-5_0.1decay10epochs'
+path = 'softmask_unet_Lipnet+cocktail_1in_1out_236k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs'
 
 try:
     os.mkdir('/data/models/'+ path)
@@ -120,7 +120,7 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 # Fit Generator
 
-folders_per_epoch = 30000
+folders_per_epoch = len(folders_list_train)
 
 history = model.fit_generator(DataGenerator_sampling_softmask(folders_list_train, folders_per_epoch, batch_size),
                 steps_per_epoch = np.ceil((folders_per_epoch)/float(batch_size)),
