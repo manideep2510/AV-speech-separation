@@ -841,3 +841,133 @@ def DataGenerator_test_softmask(folderlist, batch_size):
             batch_start += batch_size
             batch_end += batch_size
 
+def DataGenerator_train_unet(folderlist, batch_size):
+
+    L = len(folderlist)
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+            
+            mask = []
+            spect = []
+            phase = []
+            
+            for folder in folders_batch:
+
+                masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
+                spect_ = folder + '/mixed_spectrogram.npy'
+                phase_ = folder + '/phase_spectrogram.npy'
+
+                mask1 = np.load(masks_[0])
+                mask2 = np.load(masks_[1])
+                mask.append(np.stack([mask1, mask2], axis=2))
+
+                spect.append(spect_)
+
+                phase.append(phase_)
+
+            zipped = list(zip(mask, spect, phase))
+            random.shuffle(zipped)
+            mask, spect, phase = zip(*zipped)
+            
+            X_mask = np.asarray(mask)
+            
+            X_spect = [np.load(fname) for fname in spect]
+            
+            X_phase = [np.load(fname) for fname in phase]
+
+            X_spect_phase = []
+            for i in range(len(X_spect)):
+                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+                X_spect_phase.append(x_spect_phase)
+
+            X_spect_phase = np.asarray(X_spect_phase)
+
+#            print("X_spect_phase", X_spect_phase.shape)
+
+            yield X_spect_phase, X_mask
+
+            batch_start += batch_size
+            batch_end += batch_size
+
+def DataGenerator_sampling_unet(folderlist_all, folders_per_epoch, batch_size):
+    
+    epoch_number = 0
+    L = folders_per_epoch
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            if batch_start==0:
+                epoch_number += 1
+
+                if epoch_number%3 == 1:
+                    indices = []
+                    for ind in range(len(folderlist_all)):
+                        indices.append(ind)
+
+                pick_indices = random.sample(indices, L)
+
+                for item in pick_indices:
+                    indices.remove(item)
+
+                folderlist = []
+                for index in pick_indices:
+                    folderlist.append(folderlist_all[index])
+
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            mask = []
+            spect = []
+            phase = []
+            
+            for folder in folders_batch:
+
+                masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
+                spect_ = folder + '/mixed_spectrogram.npy'
+                phase_ = folder + '/phase_spectrogram.npy'
+
+                mask1 = np.load(masks_[0])
+                mask2 = np.load(masks_[1])
+                mask.append(np.stack([mask1, mask2], axis=2))
+
+                spect.append(spect_)
+
+                phase.append(phase_)
+
+            zipped = list(zip(mask, spect, phase))
+            random.shuffle(zipped)
+            mask, spect, phase = zip(*zipped)
+            
+            X_mask = np.asarray(mask)
+            
+            X_spect = [np.load(fname) for fname in spect]
+            
+            X_phase = [np.load(fname) for fname in phase]
+
+            X_spect_phase = []
+            for i in range(len(X_spect)):
+                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+                X_spect_phase.append(x_spect_phase)
+
+            X_spect_phase = np.asarray(X_spect_phase)
+
+#            print("X_spect_phase", X_spect_phase.shape)
+
+            yield X_spect_phase, X_mask
+
+            batch_start += batch_size
+            batch_end += batch_size
