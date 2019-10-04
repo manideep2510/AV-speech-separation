@@ -26,7 +26,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy
 from models.lipnet import LipNet
-from models.cocktail_lipnet import VideoModel
+from models.cocktail_lipnet_unet_softmask import VideoModel
 from data_generators import DataGenerator_train, DataGenerator_test
 
 from audio_utils import retrieve_samples
@@ -44,7 +44,7 @@ from metrics import sdr_metric, Metrics
 from argparse import ArgumentParser
 
 from mir_eval.separation import bss_eval_sources
-
+from metrics import metric_eval
 #parser = ArgumentParser()
 
 #parser.add_argument('-epochs', action="store", dest="fi")
@@ -82,9 +82,9 @@ folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 folders_list_train = folders_list[:24]
 import random
 random.shuffle(folders_list_train)
-folders_list_val = folders_list[12000:13000]
+folders_list_val = folders_list[91500:93000] + folders_list[238089:]
 random.seed(20)
-folders_list_val = random.sample(folders_list_val, 12)
+#folders_list_val = random.sample(folders_list_val, 12)
 print(folders_list_val[4])
 
 # Read the mixed spectrogram
@@ -105,28 +105,72 @@ print(folders_list_val[4])
 #lips = crop_pad_frames(lips, fps = 25, seconds = 5)
 
 model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = True)
-model = multi_gpu_model(model, gpus=2)
+#model = multi_gpu_model(model, gpus=2)
 #print(model.summary())
 #model = load_model('/data/models/Lipnet+cocktail_1in_1out_20k-train_epochs20_lr1e-4_0.322decay5epochs/weights-03-1.0565-0.9780.hdf5')
-model.load_weights('/data/models/test_Lipnet+cocktail_1in_1out_20k-train_valSDR_epochs20_lr1e-4_0.322decay5epochs/weights-12-0.4127.hdf5')
+model.load_weights('/data/models/softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-06-191.7395.hdf5')
 print('Weights Loaded')
 #mask = model.predict([mixed_spect_phase, lips])
 
 #true_samples = np.load('/data/lrs2/train/6277199500760946671_00100_6092785631109560111_00060_2/6092785631109560111_00060_samples.npy')
 #true_samples = np.pad(true_samples, (0, 128500), mode = 'constant')[:128500]
 #mask = model.predict([mixed_spect_phase.reshape(1, 257,500,2), lips.reshape(1,125,50,100,3), true_samples.reshape(1, 128500)], batch_size = None, steps=1)
-batch_size = 2
-masks = np.asarray(model.predict_generator(DataGenerator_test(folders_list_val, batch_size), steps = np.ceil((len(folders_list_val))/float(batch_size))))
-mask = masks[9,:,:,:2]
-mixed_spect = masks[9,:,:,2]
-mixed_phase = masks[9,:,:,3]
-true_samples = masks[9,:,:,4]
-true_samples = true_samples.reshape(-1,)
-print(mask.shape)
-mask = np.argmax(mask, axis=2)
-pred_samples = retrieve_samples(spec_signal = mixed_spect,phase_spect = mixed_phase,mask = mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10)
+sdr_list = []
+batch_size = 20
+num = len(folders_list_val)
+num_100s = num//100
+if num>100:
+    for n in range(num_100s):
+        val_folders_100 = folders_list_val[n*100:(n+1)*100]
+        val_predict = np.asarray(model.predict_generator(DataGenerator_test(val_folders_100, batch_size), steps = np.ceil((len(val_folders_100))/float(batch_size))))
+        mixed_spect = val_predict[:,:,:,1]
+        mixed_phase = val_predict[:,:,:,2]
+        val_targ = val_predict[:,:,:,3]
+        batch = val_targ.shape[0]
+        val_targ = val_targ.reshape(batch, -1)
+#       val_targ = val_targ[:, :80000]
 
-# Save predicted samples
+        masks = val_predict[:,:,:,0]
+
+        samples_pred = []
+        for i in range(masks.shape[0]):
+            mask = masks[i]
+            #print('mask', mask.shape)
+            mixed_spect_ = mixed_spect[i]
+            #print('mixed_spect_' ,mixed_spect_.shape)
+            mixed_phase_ = mixed_phase[i]
+            #print('mixed_phase_', mixed_phase_.shape)
+            samples = retrieve_samples(spec_signal = mixed_spect_,phase_spect = mixed_phase_,mask = mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10)
+
+            #print('samples', samples.shape)
+            samples_pred.append(samples[256:])
+            
+        val_targ1 = []
+        for i in range(batch):
+            length_pred = len(samples_pred[i])
+            #print('length_pred', length_pred)
+            val_targ_ = val_targ[i, :length_pred]
+            #val_targ_ = val_targ_.reshape(1, -1)
+            #print('val_targ_', val_targ_.shape)
+            val_targ1.append(val_targ_)
+
+        val_targ = val_targ1
+
+        samples_pred = np.asarray(samples_pred)
+        #print('samples_pred', samples_pred.shape)
+        val_targ = np.asarray(val_targ)
+
+        _val_sdr1, _ = metric_eval(target_samples = val_targ, predicted_samples = samples_pred)
+        sdr_list.append(_val_sdr1)
+    print('sdr_list length:', len(sdr_list))
+    print('sdrs:', sdr_list)
+
+    sdr_list = np.asarray(sdr_list)
+    sdr = np.mean(sdr_list)
+
+print('SDR:', sdr)
+
+'''# Save predicted samples
 
 scipy.io.wavfile.write('/data/predict2.wav', 16000, pred_samples)
 
@@ -138,4 +182,4 @@ sdr, sir, sar, _ = bss_eval_sources(true_samples, pred_samples, compute_permutat
 
 print('SDR:', sdr)
 print('SIR', sir)
-print('SAR', sar)
+print('SAR', sar)'''

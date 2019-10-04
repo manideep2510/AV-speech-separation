@@ -25,8 +25,8 @@ from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
-from models.lipnet import LipNet
-from models.cocktail_lipnet_unet_softmask import VideoModel
+#from models.lipnet import LipNet
+from models.unet import VideoModel
 from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask
 
 '''from keras.backend.tensorflow_backend import set_session
@@ -74,7 +74,7 @@ print('Validation data:', len(folders_list_val)*2)
 
 #spects_filelist = sorted(glob.glob('/data/lrs2/train/*/mixed_spectrogram.npy'), key=numericalSort)
 
-model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = True)
+model = VideoModel(256,96,(257,500,2)).FullModel()
 from io import StringIO
 
 tmp_smry = StringIO()
@@ -90,7 +90,7 @@ lrate = args.lrate
 
 #model.load_weights('/data/models/softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-10-188.9557.hdf5')
 
-model = multi_gpu_model(model, gpus=2)
+#model = multi_gpu_model(model, gpus=2)
 
 #model.load_weights('/data/models/test_Lipnet+cocktail_1in_1out_20k-train_valSDR_epochs20_lr1e-4_0.322decay5epochs/weights-12-0.4127.hdf5')
 
@@ -100,7 +100,7 @@ batch_size = args.batch_size
 epochs = args.epochs
 
 # callcack
-metrics_sdr = Metrics_softmask(model = model, val_folders = folders_list_val, batch_size = batch_size)
+#metrics_sdr = Metrics_softmask(model = model, val_folders = folders_list_val, batch_size = batch_size)
 learningratescheduler = learningratescheduler()
 earlystopping = earlystopping()
 reducelronplateau = reducelronplateau()
@@ -108,7 +108,7 @@ reducelronplateau = reducelronplateau()
 
 # Path to save model checkpoints
 
-path = 'softmask_unet_Lipnet+cocktail_1in_1out_236k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs'
+path = 'pretrain_unet_236k-train_1to3ratio_epochs20_lr1e-4_0.32decay5epochs'
 
 try:
     os.mkdir('/data/models/'+ path)
@@ -122,16 +122,16 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 folders_per_epoch = int(len(folders_list_train)/3)
 
-history = model.fit_generator(DataGenerator_sampling_softmask(folders_list_train, folders_per_epoch, batch_size),
+history = model.fit_generator(DataGenerator_sampling_unet(folders_list_train, folders_per_epoch, batch_size),
                 steps_per_epoch = np.ceil((folders_per_epoch)/float(batch_size)),
                 epochs=epochs,
-                validation_data=DataGenerator_train_softmask(folders_list_val, batch_size), 
+                validation_data=DataGenerator_train_unet(folders_list_val, batch_size), 
                 validation_steps = np.ceil((len(folders_list_val))/float(batch_size)),
-                callbacks=[metrics_sdr, earlystopping, learningratescheduler, checkpoint_save_weights], verbose = 1)
+                callbacks=[earlystopping, learningratescheduler, checkpoint_save_weights], verbose = 1)
 
 # Plots
 plot_loss_and_acc(history, path)
 
 # Logs
-command = "kubectl logs pods/train | egrep -E -i -e 'val|epoch' > /data/results/" + path + "/logs.txt"
+command = "kubectl logs pods/train1 | egrep -E -i -e 'val|epoch' > /data/results/" + path + "/logs.txt"
 os.system(command)

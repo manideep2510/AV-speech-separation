@@ -762,3 +762,82 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
             batch_start += batch_size
             batch_end += batch_size
 
+def DataGenerator_test_softmask(folderlist, batch_size):
+
+    L = len(folderlist)
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+           # mask = []
+            spect = []
+            phase = []
+            samples = []
+            for folder in folders_batch:
+
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
+                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                spect_ = folder + '/mixed_spectrogram.npy'
+                phase_ = folder + '/phase_spectrogram.npy'
+
+                lips.append(lips_[0])
+                lips.append(lips_[1])
+
+                samples.append(samples_[0])
+                samples.append(samples_[1])
+
+              #  mask.append(masks_[0])
+             #   mask.append(masks_[1])
+
+                spect.append(spect_)
+                spect.append(spect_)
+
+                phase.append(phase_)
+                phase.append(phase_)
+            
+            #X_mask = np.asarray([to_onehot(cv2.imread(fname, cv2.IMREAD_UNCHANGED)) for fname in mask])
+            #print(X_mask.shape)
+#            print('mask', X_mask.shape)
+            
+            X_spect = [np.load(fname) for fname in spect]
+            
+            X_phase = [np.load(fname) for fname in phase]
+
+            X_samples = np.asarray([np.pad(np.load(fname), (0, 128500), mode='constant')[:128500] for fname in samples])
+            
+            X_spect_phase = []
+            for i in range(len(X_spect)):
+                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+                X_spect_phase.append(x_spect_phase)
+
+            X_spect_phase = np.asarray(X_spect_phase)
+
+#            print("X_spect_phase", X_spect_phase.shape)
+            
+            X_lips = []
+            
+            for i in range(len(lips)):
+
+                x_lips = get_video_frames(lips[i])
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                X_lips.append(x_lips)
+
+
+            X_lips = np.asarray(X_lips)
+#            print(X_samples.shape)
+            #X = seq.augment_images(X)
+
+            yield [X_spect_phase, X_lips, X_samples]
+
+            batch_start += batch_size
+            batch_end += batch_size
+
