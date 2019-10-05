@@ -132,6 +132,4 @@ history = model.fit_generator(DataGenerator_sampling_softmask(folders_list_train
 # Plots
 plot_loss_and_acc(history, path)
 
-# Logs
-command = "kubectl logs pods/train | egrep -E -i -e 'val|epoch' > /data/results/" + path + "/logs.txt"
-os.system(command)
+

@@ -27,7 +27,7 @@ import cv2
 from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
 #from models.lipnet import LipNet
 from models.unet import VideoModel
-from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask
+from data_generators import DataGenerator_train_unet, DataGenerator_sampling_unet
 
 '''from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
@@ -57,13 +57,13 @@ def numericalSort(value):
 
 # Read training folders
 folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
-
-folders_list_train = folders_list[:91500] +folders_list[93000:238089]
 import random
+folders_list_train = folders_list[:91500] +folders_list[93000:238089]
+#folders_list_train = random.sample(folders_list_train, 200)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
-random.seed(20)
-#folders_list_val = random.sample(folders_list_val, 100)
+#random.seed(20)
+#folders_list_val = random.sample(folders_list_val, 150)
 
 print('Training data:', len(folders_list_train)*2)
 print('Validation data:', len(folders_list_val)*2)
@@ -132,6 +132,3 @@ history = model.fit_generator(DataGenerator_sampling_unet(folders_list_train, fo
 # Plots
 plot_loss_and_acc(history, path)
 
-# Logs
-command = "kubectl logs pods/train1 | egrep -E -i -e 'val|epoch' > /data/results/" + path + "/logs.txt"
-os.system(command)
