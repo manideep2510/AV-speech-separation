@@ -20,7 +20,7 @@ from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
-from callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau
+from ...callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
@@ -105,7 +105,8 @@ lrate = args.lrate
 #model.load_weights('/data/models/softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-10-188.9557.hdf5')
 lip=LipNet()
 adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-model = multi_gpu_model(lip.model, gpus=2)
+#model = multi_gpu_model(lip.model, gpus=2)
+model = lip.model
 model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=adam)
 
 #model.load_weights('/data/models/test_Lipnet+cocktail_1in_1out_20k-train_valSDR_epochs20_lr1e-4_0.322decay5epochs/weights-12-0.4127.hdf5')

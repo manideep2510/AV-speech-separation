@@ -24,7 +24,8 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import shutil
 import cv2
-
+import sys
+sys.path.append('/data/AV-speech-separation/LipNet')
 from lipnet.lipreading.helpers import text_to_labels
 from lipnet.lipreading.aligns import Align
 from keras import backend as K
@@ -79,9 +80,9 @@ def DataGenerator(lips_filelist, masks_filelist, spects_filelist, batch_size):
         batch_end = batch_size
         while batch_start < L:
             limit = min(batch_end, L)
-
+            
             lips = lips_filelist[batch_start:limit]
-
+#            print(lips)
             X_mask = np.asarray([cv2.imread(fname, cv2.IMREAD_UNCHANGED) for fname in masks_filelist[batch_start:limit]])
 
             X_spect = np.asarray([np.load(fname) for fname in spects_filelist[batch_start:limit]])
@@ -337,47 +338,57 @@ def DataGenerator_test(folderlist, batch_size):
             spect = []
             phase = []
             samples = []
+            transcripts=[]
             for folder in folders_batch:
 
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                masks_ = sorted(glob.glob(folder + '/*_mask.png'), key=numericalSort)
-                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                spect_ = folder + '/mixed_spectrogram.npy'
-                phase_ = folder + '/phase_spectrogram.npy'
+                #masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
+                #samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                #spect_ = folder + '/mixed_spectrogram.npy'
+                #phase_ = folder + '/phase_spectrogram.npy'
 
                 lips.append(lips_[0])
                 lips.append(lips_[1])
 
-                samples.append(samples_[0])
-                samples.append(samples_[1])
+                # samples.append(samples_[0])
+                # samples.append(samples_[1])
+                #
+                # mask.append(masks_[0])
+                # mask.append(masks_[1])
+                #
+                # spect.append(spect_)
+                # spect.append(spect_)
+                #
+                # phase.append(phase_)
+                # phase.append(phase_)
 
-              #  mask.append(masks_[0])
-             #   mask.append(masks_[1])
+                transcripts.append(transcripts_[0])
+                transcripts.append(transcripts_[1])
 
-                spect.append(spect_)
-                spect.append(spect_)
+            zipped = list(zip(lips, transcripts))
+            random.shuffle(zipped)
+            lips, transcripts = zip(*zipped)
 
-                phase.append(phase_)
-                phase.append(phase_)
-
-            #X_mask = np.asarray([to_onehot(cv2.imread(fname, cv2.IMREAD_UNCHANGED)) for fname in mask])
-            #print(X_mask.shape)
-#            print('mask', X_mask.shape)
-
-            X_spect = [np.load(fname) for fname in spect]
-
-            X_phase = [np.load(fname) for fname in phase]
-
-            X_samples = np.asarray([np.pad(np.load(fname), (0, 128500), mode='constant')[:128500] for fname in samples])
-
-            X_spect_phase = []
-            for i in range(len(X_spect)):
-                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
-                X_spect_phase.append(x_spect_phase)
-
-            X_spect_phase = np.asarray(X_spect_phase)
-
-#            print("X_spect_phase", X_spect_phase.shape)
+#             #X_mask = np.asarray([to_onehot(cv2.imread(fname, cv2.IMREAD_UNCHANGED)) for fname in mask])
+#             X_mask = np.asarray([np.load(fname).reshape(257, 500, 1) for fname in mask])
+#             #print(X_mask.shape)
+# #            print('mask', X_mask.shape)
+#
+#             X_spect = [np.load(fname) for fname in spect]
+#
+#             X_phase = [np.load(fname) for fname in phase]
+#
+#             X_samples = np.asarray([np.pad(np.load(fname), (0, 128500), mode='constant')[:128500] for fname in samples])
+#
+#             X_spect_phase = []
+#             for i in range(len(X_spect)):
+#                 x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+#                 X_spect_phase.append(x_spect_phase)
+#
+#             X_spect_phase = np.asarray(X_spect_phase)
+#
+# #            print("X_spect_phase", X_spect_phase.shape)
 
             X_lips = []
 
@@ -387,15 +398,115 @@ def DataGenerator_test(folderlist, batch_size):
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
-
+            align=[]
+            Y_data = []
+            label_length = []
+            input_length = []
+            source_str = []
             X_lips = np.asarray(X_lips)
-#            print(X_samples.shape)
+
+            # for i in range(len(transcripts)):
+            #     a=(Align(256, text_to_labels).from_file(transcripts[i]))
+            #     if(a.label_length<=125):
+            #             align.append(a)
+            #             X_lip.append(X_lips[i])
+            # for i in range(len(X_lip)):
+            #     Y_data.append(align[i].padded_label)
+            #     label_length.append(align[i].label_length)
+            #     input_length.append(125)
+            #     #source_str.append(align[i].sentence)
+            # Y_data = np.array(Y_data)
+            #
+            # #yield [X_spect_phase, X_lips, X_samples], X_mask
+            # yield [np.array(X_lip),Y_data,np.array(input_length),np.array(label_length)]
+
+
+           # X_lips = np.asarray(X_lips)
+            for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
+            for i in range(X_lips.shape[0]):
+               Y_data.append(align[i].padded_label)
+               label_length.append(align[i].label_length)
+               input_length.append(X_lips.shape[1])
+                #source_str.append(align[i].sentence)
+            Y_data = np.array(Y_data)
+           # print(X_lips.shape)
             #X = seq.augment_images(X)
 
-            yield [X_spect_phase, X_lips, X_samples]
+            #yield [X_spect_phase, X_lips, X_samples], X_mask
+            yield [np.array(X_lips),np.array(Y_data),np.array(input_length),np.array(label_length)]
+            #  inputs = {'the_input': X_lips,
+            #       'the_labels': Y_data,
+            #       'input_length': input_length,
+            #       'label_length': label_length,
+            #       'source_str': source_str
+            #       }
+            # outputs = {'ctc': np.zeros([X_lips.shape[0]])}  # dummy data for dummy loss function
+            #
+            # yield (inputs,outputs)
 
             batch_start += batch_size
             batch_end += batch_size
+
+#                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+#                 masks_ = sorted(glob.glob(folder + '/*_mask.png'), key=numericalSort)
+#                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+#                 spect_ = folder + '/mixed_spectrogram.npy'
+#                 phase_ = folder + '/phase_spectrogram.npy'
+#
+#                 lips.append(lips_[0])
+#                 lips.append(lips_[1])
+#
+#                 samples.append(samples_[0])
+#                 samples.append(samples_[1])
+#
+#               #  mask.append(masks_[0])
+#              #   mask.append(masks_[1])
+#
+#                 spect.append(spect_)
+#                 spect.append(spect_)
+#
+#                 phase.append(phase_)
+#                 phase.append(phase_)
+#
+#             #X_mask = np.asarray([to_onehot(cv2.imread(fname, cv2.IMREAD_UNCHANGED)) for fname in mask])
+#             #print(X_mask.shape)
+# #            print('mask', X_mask.shape)
+#
+#             X_spect = [np.load(fname) for fname in spect]
+#
+#             X_phase = [np.load(fname) for fname in phase]
+#
+#             X_samples = np.asarray([np.pad(np.load(fname), (0, 128500), mode='constant')[:128500] for fname in samples])
+#
+#             X_spect_phase = []
+#             for i in range(len(X_spect)):
+#                 x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+#                 X_spect_phase.append(x_spect_phase)
+#
+#             X_spect_phase = np.asarray(X_spect_phase)
+#
+# #            print("X_spect_phase", X_spect_phase.shape)
+#
+#             X_lips = []
+#
+#             for i in range(len(lips)):
+#
+#                 x_lips = get_video_frames(lips[i])
+#                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+#                 X_lips.append(x_lips)
+#
+#
+#             X_lips = np.asarray(X_lips)
+# #            print(X_samples.shape)
+#             #X = seq.augment_images(X)
+#
+#             yield [X_spect_phase, X_lips, X_samples]
+#
+#             batch_start += batch_size
+#             batch_end += batch_size
+
+
+
 
 def DataGenerator_sampling(folderlist_all, folders_per_epoch, batch_size):
 
@@ -519,6 +630,7 @@ def DataGenerator_train_softmask(folderlist, batch_size):
             spect = []
             phase = []
             samples = []
+            transcripts=[]
             for folder in folders_batch:
 
 
@@ -586,20 +698,34 @@ def DataGenerator_train_softmask(folderlist, batch_size):
             input_length = []
             source_str = []
 
+            #X_lips = np.asarray(X_lips)
+
+           #  for i in range(len(transcripts)):
+           #      a=(Align(256, text_to_labels).from_file(transcripts[i]))
+           #      if(a.label_length<=125):
+           #              align.append(a)
+           #              X_lip.append(X_lips[i])
+           #  for i in range(len(X_lip)):
+           #      Y_data.append(align[i].padded_label)
+           #      label_length.append(align[i].label_length)
+           #      input_length.append(125)
+           #      #source_str.append(align[i].sentence)
+           #  Y_data = np.array(Y_data)
+           # # print(X_lips.shape)
+           #  #X = seq.augment_images(X)
+           #
+           #  #yield [X_spect_phase, X_lips, X_samples], X_mask
+           #  yield [np.array(X_lip),Y_data,np.array(input_length),np.array(label_length)],np.zeros([len(X_lip)])
+
             X_lips = np.asarray(X_lips)
 
             for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
             for i in range(X_lips.shape[0]):
-                Y_data.append(align[i].padded_label)
-                label_length.append(align[i].label_length)
-                input_length.append(X_lips.shape[1])
-                source_str.append(align[i].sentence)
+               Y_data.append(align[i].padded_label)
+               label_length.append(align[i].label_length)
+               input_length.append(X_lips.shape[1])
+               source_str.append(align[i].sentence)
             Y_data = np.array(Y_data)
-           # print(X_lips.shape)
-            #X = seq.augment_images(X)
-
-            #yield [X_spect_phase, X_lips, X_samples], X_mask
-            yield [X_lips,Y_data,input_length,label_length],np.zeros([X_lips.shape[0]])
             #  inputs = {'the_input': X_lips,
             #       'the_labels': Y_data,
             #       'input_length': input_length,
@@ -609,7 +735,7 @@ def DataGenerator_train_softmask(folderlist, batch_size):
             # outputs = {'ctc': np.zeros([X_lips.shape[0]])}  # dummy data for dummy loss function
             #
             # yield (inputs,outputs)
-
+            yield [X_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([X_lips.shape[0]])
             batch_start += batch_size
             batch_end += batch_size
 
@@ -725,7 +851,7 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
             limit = min(batch_end, L)
 
             folders_batch = folderlist[batch_start:limit]
-
+           # print(folders_batch)
             lips = []
             mask = []
             spect = []
@@ -797,20 +923,40 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
             input_length = []
             source_str = []
 
+
+	     #X_lips = np.asarray(X_lips)
+
+            # for i in range(len(transcripts)):
+            #     a=(Align(256, text_to_labels).from_file(transcripts[i]))
+            #     if(a.label_length<=125):
+            #             align.append(a)
+            #             X_lip.append(X_lips[i])
+            # for i in range(len(X_lip)):
+            #     Y_data.append(align[i].padded_label)
+            #     label_length.append(align[i].label_length)
+            #     input_length.append(125)
+            #     #source_str.append(align[i].sentence)
+            # Y_data = np.array(Y_data)
+           # print(X_lips.shape)
+            #X = seq.augment_images(X)
+
+            #yield [X_spect_phase, X_lips, X_samples], X_mask
+            #yield [np.array(X_lip),Y_data,np.array(input_length),np.array(label_length)],np.zeros([len(X_lip)])
+
             X_lips = np.asarray(X_lips)
 
             for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
             for i in range(X_lips.shape[0]):
-                Y_data.append(align[i].padded_label)
-                label_length.append(align[i].label_length)
-                input_length.append(X_lips.shape[1])
-                source_str.append(align[i].sentence)
+               Y_data.append(align[i].padded_label)
+               label_length.append(align[i].label_length)
+               input_length.append(X_lips.shape[1])
+               source_str.append(align[i].sentence)
             Y_data = np.array(Y_data)
            # print(X_lips.shape)
             #X = seq.augment_images(X)
 
             #yield [X_spect_phase, X_lips, X_samples], X_mask
-            yield [X_lips,Y_data,input_length,label_length],np.zeros([X_lips.shape[0]])
+            yield [X_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([X_lips.shape[0]])
             #  inputs = {'the_input': X_lips,
             #       'the_labels': Y_data,
             #       'input_length': input_length,
@@ -837,7 +983,7 @@ def DataGenerator_test_softmask(folderlist, batch_size):
             limit = min(batch_end, L)
 
             folders_batch = folderlist[batch_start:limit]
-
+            print(folders_batch)
             lips = []
            # mask = []
             spect = []

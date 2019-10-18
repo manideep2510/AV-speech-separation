@@ -70,8 +70,8 @@ class LoggingCallback(Callback):
 
 def step_decay(epoch):
     initial_lrate = 0.0001
-    drop = 0.1
-    epochs_drop = 10
+    drop = 0.32
+    epochs_drop = 5
     lrate = initial_lrate * math.pow(drop,
            math.floor((1+epoch)/epochs_drop))
     return lrate

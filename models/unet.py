@@ -20,18 +20,19 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 class VideoModel():
 
-    def __init__(self, filters,filters_audio, audio_ip_shape):
+    def __init__(self, filters,filters_audio, audio_ip_shape, pretrain):
 
         self.filters = filters
         self.filters_audio=filters_audio
         self.audio_ip_shape = audio_ip_shape
+        self.pretrain = pretrain
 
-        self.conv_transpose = Lambda(lambda x: tf.transpose(x, perm=[0, 2, 1, 3]), name='lambda3')
+        self.conv_transpose = Lambda(lambda x: tf.transpose(x, perm=[0, 2, 1, 3]), name='lambda3_unet')
 
     def FullModel(self):
       #  import tensorflow as tf
-        ip = Input(shape = (self.audio_ip_shape[0], self.audio_ip_shape[1], 2), name = 'spect_input')#; print("input_audio", ip.shape)
-        input_spects = Lambda(lambda x : x, name='lambda_input_spects')(ip)
+        ip = Input(shape = (self.audio_ip_shape[0], self.audio_ip_shape[1], 2), name = 'spect_input_unet')#; print("input_audio", ip.shape)
+        input_spects = Lambda(lambda x : x, name='lambda_input_spects_unet')(ip)
         print('input_spects', input_spects.shape)
         
 #        ip_magnitude = Lambda(lambda x : x[:,:,:,0],name="ip_mag")(ip)#; print("ip_mag ", ip_magnitude.shape)  #takes magnitude from stack[magnitude,phase]
@@ -101,5 +102,9 @@ class VideoModel():
         print('conv10', conv10.shape)
 
         model = Model(inputs = ip, outputs = conv10)
+
+        if self.pretrain == 'pretrain':
+            model.load_weights('/data/models/pretrain_unet_236k-train_1to3ratio_epochs20_lr1e-4_0.32decay5epochs/weights-16-397.1351.hdf5')
+            print('Loaded pretrained weights for UNet')
 
         return model

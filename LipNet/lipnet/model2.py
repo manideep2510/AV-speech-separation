@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/data/AV-speech-separation/LipNet')
+
 from keras.layers.convolutional import Conv3D, ZeroPadding3D
 from keras.layers.pooling import MaxPooling3D
 from keras.layers.core import Dense, Activation, SpatialDropout3D, Flatten
@@ -7,11 +10,12 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers import Input
 from keras.models import Model
 from lipnet.core.layers import CTC
+print('Done')
 from keras import backend as K
 
 
 class LipNet(object):
-    def __init__(self, img_c=3, img_w=100, img_h=50, frames_n=125, absolute_max_string_len=128, output_size=28):
+    def __init__(self, pretrained=False, weights_path='', img_c=3, img_w=100, img_h=50, frames_n=125, absolute_max_string_len=128, output_size=29):
         self.img_c = img_c
         self.img_w = img_w
         self.img_h = img_h
@@ -19,12 +23,14 @@ class LipNet(object):
         self.absolute_max_string_len = absolute_max_string_len
         self.output_size = output_size
         self.build()
+        self.pretrained=pretrained
+        self.weights_path=weights_path
 
     def build(self):
         if K.image_data_format() == 'channels_first':
-            input_shape = (self.img_c, self.frames_n, self.img_w, self.img_h)
+            input_shape = (self.img_c, self.frames_n, self.img_h, self.img_w)
         else:
-            input_shape = (self.frames_n, self.img_w, self.img_h, self.img_c)
+            input_shape = (self.frames_n, self.img_h, self.img_w, self.img_c)
 
         self.input_data = Input(name='the_input', shape=input_shape, dtype='float32')
 
@@ -67,6 +73,11 @@ class LipNet(object):
 
         self.model = Model(inputs=[self.input_data, self.labels, self.input_length, self.label_length], outputs=self.loss_out)
 
+        if self.pretrained == True:
+            model.load_weights(self.weights_path)
+       
+        return model
+
     def summary(self):
         Model(inputs=self.input_data, outputs=self.y_pred).summary()
 
@@ -76,4 +87,4 @@ class LipNet(object):
     @property
     def test_function(self):
         # captures output of softmax so we can decode the output during visualization
-        return K.function([self.input_data, K.learning_phase()], [self.y_pred, K.learning_phase()])
+        return K.function([self.input_data, K.learning_phase()], [self.y_pred])

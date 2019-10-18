@@ -15,7 +15,7 @@ from callbacks import Metrics, learningratescheduler, earlystopping, reducelronp
 from plotting import plot_loss_and_acc
 #os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
-def LipNet(input_shape, pretrained=None, output_size = 28, absolute_max_string_len=32):
+def LipNet(input_shape, pretrained=None, output_size = 29, absolute_max_string_len=32):
         
         '''if K.image_data_format() == 'channels_first':
             input_shape = (img_c, frames_n, img_w, img_h)
@@ -53,7 +53,7 @@ def LipNet(input_shape, pretrained=None, output_size = 28, absolute_max_string_l
         # transforms RNN output to character activations:
         dense1 = Dense(output_size, kernel_initializer='he_normal', name='dense1')(gru_2)
 
-        y_pred = Activation('softmax', name='softmax')(dense1)
+        #y_pred = Activation('softmax', name='softmax')(dense1)
 
         #labels = Input(name='the_labels', shape=[absolute_max_string_len], dtype='float32')
         #input_length = Input(name='input_length', shape=[1], dtype='int64')
@@ -61,8 +61,12 @@ def LipNet(input_shape, pretrained=None, output_size = 28, absolute_max_string_l
 
         #loss_out = CTC('ctc', [y_pred, labels, input_length, label_length])
 
-        model = Model(inputs=input_data, outputs=y_pred)
+        model = Model(inputs=input_data, outputs=dense1)
         
         if pretrained == True:
             model.load_weights('/data/LipNet/evaluation/models/unseen-weights178.h5')
+
+        elif pretrained == 'pretrain':
+            model.load_weights('/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs10-20_lr1e-4_0.1decay10epochs/weights-04-125.3015.hdf5')
+            print('Loaded Lipnet weights pretrained on LRS2')
         return model
