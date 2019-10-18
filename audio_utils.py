@@ -360,6 +360,56 @@ def tbm(spec_signal,mask_factor=0.5):
 
     return mask
 
+def compress_crm(mixed_mag,mixed_phase,signal_mag,signal_phase,K=10,C=0.1):
+    
+    
+    p=np.cos(mixed_phase)+1.j*np.sin(mixed_phase)
+    Y=p*(mixed_mag**(10/3))
+    
+    p=np.cos(signal_phase)+1.j*np.sin(signal_phase)
+    S=p*(signal_mag**(10/3))
+    
+    Yr=Y.real 
+    Yi=Y.imag
+    Sr=S.real
+    Si=S.imag
+
+    Mr=np.divide(np.add((Yr*Sr),(Yi*Si)),np.add(np.square(Yr),np.square(Yi)))
+    Mi=np.divide(np.subtract((Yr*Si),(Yi*Sr)),np.add(np.square(Yr),np.square(Yi)))
+
+    Cx=K*np.divide(1-np.exp(-1*C*Mr),1+np.exp(-1*C*Mr))
+    Cy=K*np.divide(1-np.exp(-1*C*Mi),1+np.exp(-1*C*Mi))
+   
+    Cx=np.nan_to_num(Cx)
+    Cy=np.nan_to_num(Cy)
+
+    return Cx,Cy
+
+def inverse_crm(real_part,imaginary_part,K=10,C=0.1):
+
+
+    Mr=(1/C)*np.log(np.divide((K+real_part),(K-real_part)))
+    Mi=(1/C)*np.log(np.divide((K+imaginary_part),(K-imaginary_part)))
+
+    return Mr+1.j*Mi
+
+
+def return_samples_complex(mixed_mag,mixed_phase,mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10):
+
+    window_frame_size = int(round(window_size / 1e3 * sample_rate))
+    step_frame_size = int(round(step_size  / 1e3 * sample_rate))
+    overlap_samples=window_frame_size-step_frame_size
+
+    
+    p=np.cos(mixed_phase)+1.j*np.sin(mixed_phase)
+    mixed_speech=p*(mixed_mag**(10/3))
+    
+    stft=mixed_speech*mask
+    
+    predicted_samples=scipy.signal.istft(stft, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, input_onesided=True, boundary=True, time_axis=-1, freq_axis=-2)
+    samples=np.asarray(list(map(int, predicted_samples[1])),dtype='int16')
+    
+    return samples
 
 
 

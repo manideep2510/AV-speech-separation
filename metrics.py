@@ -26,6 +26,29 @@ def metric_eval(target_samples, predicted_samples):
     return np.mean(sdr_batch),sdr_batch
 
 
+def si_snr(x, s, remove_dc=True):
+    """
+    Compute SI-SNR
+    Arguments:
+        x: vector, enhanced/separated signal
+        s: vector, reference signal(ground truth)
+    """
+
+    def vec_l2norm(x):
+        return np.linalg.norm(x, 2)
+
+    # zero mean, seems do not hurt results
+    if remove_dc:
+        x_zm = x - np.mean(x)
+        s_zm = s - np.mean(s)
+        t = np.inner(x_zm, s_zm) * s_zm / vec_l2norm(s_zm)**2
+        n = x_zm - t
+    else:
+        t = np.inner(x, s) * s / vec_l2norm(s)**2
+        n = x - t
+    return 20 * np.log10(vec_l2norm(t) / vec_l2norm(n))
+
+
 def sdr(y_true, mask, mixed_spect, mixed_phase):
     
     mask = tf.keras.backend.argmax(mask, axis=3)
