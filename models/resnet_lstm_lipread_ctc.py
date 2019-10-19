@@ -85,14 +85,14 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
     elif mode == 'backendGRU' or mode == 'finetuneGRU':
         x = Lambda(lambda x : tf.reshape(x, [-1, frameLen, inputDim]), name='lambda6')(x)    #x.view(-1, frameLen, inputDim)
         print('Input to GRU:', x.shape)
-        x = GRU(x, inputDim, hiddenDim, nLayers, nClasses, every_frame)
-        print('GRU Out:', x.shape)
+        y_pred = GRU(x, inputDim, hiddenDim, nLayers, nClasses, every_frame)
+        print('GRU Out:', y_pred.shape)
         
         labels = Input(name='the_labels', shape=[absolute_max_string_len], dtype='float32')
         input_length = Input(name='input_length', shape=[1], dtype='int64')
         label_length = Input(name='label_length', shape=[1], dtype='int64')
 
-        loss_out = CTC('ctc', [x, labels, input_length, label_length])
+        loss_out = CTC('ctc', [y_pred, labels, input_length, label_length])
 
     else:
         raise Exception('No model is selected')
