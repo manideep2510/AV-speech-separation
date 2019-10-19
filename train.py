@@ -39,7 +39,8 @@ from data_generators import DataGenerator_train_softmask, DataGenerator_sampling
 #from lipnet.utils.spell import Spell
 from LipNet.lipnet.lipreading.callback import Metrics_softmask
 from LipNet.lipnet.lipreading.generator import DataGenerator_train_softmask, DataGenerator_sampling_softmask
-from LipNet.lipnet.model2 import LipNet
+#from LipNet.lipnet.model2 import LipNet
+from models.resnet_lstm_lipread_ctc import lipreading
 import numpy as np
 import datetime
 import pickle
@@ -78,21 +79,14 @@ print('numaricalsort Done')
 #folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 print('Folders_list Done')
 
-
-
 with open("./folder_filter_1.txt", "rb") as fp:  
        folders_list = pickle.load(fp) 
-
-
 
 #folders_list_train = folders_list[:91500] +folders_list[93000:238089]
 #print(folders_list_train[34])
 
 #folders_list_train=folders_list[:256]
 #folders_list_val=folders_list[256:320]
-
-
-
 
 folders_list_train=folders_list[0:192000]
 folders_list_val=folders_list[192000:204000]
@@ -115,8 +109,8 @@ print('Validation data:', len(folders_list_val)*2)
 
 #model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = True)
 
-lip=LipNet(pretrained=True,weights_path='/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs10-20_lr1e-4_0.1decay10epochs/weights-04-125.3015.hdf5')
-model = lip.model
+#lip=LipNet(pretrained=True,weights_path='/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs10-20_lr1e-4_0.1decay10epochs/weights-04-125.3015.hdf5')
+model = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True)
 #model.load_weights('/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-09-126.2645.hdf5')
 from io import StringIO
 
