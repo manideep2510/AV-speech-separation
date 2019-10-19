@@ -1,3 +1,17 @@
+import sys
+sys.path.append('/data/AV-speech-separation/LipNet')
+
+import tensorflow as tf
+import keras
+from keras.layers import *
+from keras import Model, Sequential
+import keras.backend as K
+from keras.optimizers import Adam
+from keras.models import load_model
+from keras.layers.core import Lambda
+from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
+from lipnet.core.layers import CTC
+
 def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
 
     out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', name='gru1'), merge_mode='concat')(x)
