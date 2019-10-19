@@ -1,5 +1,6 @@
 import sys
 sys.path.append('/data/AV-speech-separation/LipNet')
+sys.path.append('/data/AV-speech-separation/models')
 
 import tensorflow as tf
 import keras
