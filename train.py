@@ -110,7 +110,7 @@ print('Validation data:', len(folders_list_val)*2)
 #model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = True)
 
 #lip=LipNet(pretrained=True,weights_path='/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs10-20_lr1e-4_0.1decay10epochs/weights-04-125.3015.hdf5')
-lip = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, every_frame=True)
+lip = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True)
 model = lip.model
 #model.load_weights('/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-09-126.2645.hdf5')
 
