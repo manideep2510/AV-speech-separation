@@ -39,8 +39,8 @@ class Lipreading(object):
                     Conv3D(64, kernel_size=(5, 7, 7), strides=(1, 2, 2), padding='valid', use_bias=False, name='conv3d'),
                     BatchNormalization(),
                     ReLU(),
-                    ZeroPadding3D(padding=((0, 3, 1))),
-                    MaxPooling3D(pool_size=(1, 3, 3), strides=(1, 2, 2))
+                    ZeroPadding3D(padding=((0, 4, 8))),
+                    MaxPooling3D(pool_size=(1, 2, 3), strides=(1, 1, 2))
                     ])
 
         self.backend_conv1 = Sequential([
