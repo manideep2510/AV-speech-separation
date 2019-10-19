@@ -83,7 +83,7 @@ def get_frames_mouth(detector, predictor, frames):
         return frames
 '''
     
-def get_video_frames(path):
+def get_video_frames(path, fmt='rgb'):
 
     cap = cv2.VideoCapture(path)
     frames = []
@@ -92,7 +92,11 @@ def get_video_frames(path):
         # Capture frame-by-frame
         ret, frame = cap.read()
         if ret == True:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            if fmt == 'rgb':
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            elif fmt == 'grey':
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                frame = frame.reshape(frame.shape[0], frame.shape[1], 1)
             frames.append(frame)
 
         # Break the loop
