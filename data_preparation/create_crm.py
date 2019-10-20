@@ -19,7 +19,7 @@ import shutil
 home = str(Path.home())
 
 from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ibm
-from file_utils import pair_files, ggen_comb_folders_crm
+from file_utils import pair_files, gen_comb_folders_crm
 import glob
 import cv2
 
