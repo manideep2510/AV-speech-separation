@@ -17,6 +17,7 @@ import random
 from pathlib import Path
 import shutil
 home = '/data'
+from numba import jit
 
 from audio_utils import compare_lengths, compute_spectrograms, audios_sum, ibm, irm, compress_crm, inverse_crm, return_samples_complex
 import cv2
@@ -468,7 +469,7 @@ def gen_comb_folders_text(combined_pairs, dest_folder):
         file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '.txt'
         shutil.copy(text, save_path + '/' + file_name)
         
-            
+@jit            
 def gen_comb_folders_crm(combined_pairs, dest_folder):
     
     try:
