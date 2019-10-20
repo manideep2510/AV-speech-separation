@@ -551,7 +551,7 @@ def gen_comb_folders_crm(combined_pairs, dest_folder):
         s_phase = np.angle(c)
         s_phase=s_phase[:,:500]
 
-        Cx,Cy = compress_crm(mixed_mag = mixed_spectogram,mixed_phase = phase,signal_mag = s_use,signal_phase = s_phase)
+        Cx,Cy = compress_crm(mixed_mag = mixed_spectogram,mixed_phase = phase,signal_mag = s_use,signal_phase = s_phase, K=1,C=2)
         mask1 = np.stack([Cx,Cy], axis=-1)
         mask1=np.asarray(mask1, dtype='float16')
         file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_crm.npy'
