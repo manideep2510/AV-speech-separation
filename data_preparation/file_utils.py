@@ -470,7 +470,7 @@ def gen_comb_folders_text(combined_pairs, dest_folder):
         shutil.copy(text, save_path + '/' + file_name)
         
         
-def gen_comb_folders_crm(combined_pairs, dest_folder):
+def gen_comb_folders_crm_nonumba(combined_pairs, dest_folder):
     
     try:
         os.mkdir(dest_folder)
