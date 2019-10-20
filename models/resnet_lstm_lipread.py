@@ -19,15 +19,15 @@ def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
     return out
 
 
-def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, every_frame=True):
+def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, absolute_max_string_len=128, every_frame=True):
 
     frontend3D = Sequential([
-                ZeroPadding3D(padding=(2, 8, 3)),
-                Conv3D(64, kernel_size=(5, 7, 7), strides=(1, 1, 1), padding='valid', use_bias=False),
+                ZeroPadding3D(padding=(2, 3, 3)),
+                Conv3D(64, kernel_size=(5, 7, 7), strides=(1, 2, 2), padding='valid', use_bias=False),
                 BatchNormalization(),
                 ReLU(),
-                ZeroPadding3D(padding=((0, 3, 1))),
-                MaxPooling3D(pool_size=(1, 3, 3), strides=(1, 2, 2))
+                ZeroPadding3D(padding=((0, 4, 8))),
+                MaxPooling3D(pool_size=(1, 2, 3), strides=(1, 1, 2))
                 ])
 
     backend_conv1 = Sequential([
@@ -91,7 +91,6 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, eve
 
     return model
 
-
-def lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=125, every_frame=True):
-    model = Lipreading(mode, inputDim=inputDim, hiddenDim=hiddenDim, nClasses=nClasses, frameLen=frameLen, every_frame=every_frame)
+def lipreading(mode, inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True):
+    model = Lipreading(mode, inputDim=inputDim, hiddenDim=hiddenDim, nClasses=nClasses, frameLen=frameLen, absolute_max_string_len=AbsoluteMaxStringLen, every_frame=every_frame)
     return model
