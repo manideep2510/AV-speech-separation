@@ -59,6 +59,8 @@ class Lipreading(object):
                     ReLU(),
                     Dense(nClasses)
                     ])
+        
+        self.frames_to_batch = Lambda(lambda x : tf.reshape(x, [-1, x.shape[2], x.shape[3], x.shape[4]]), name='lambda2')
 
         self.nLayers=2
         self.build()
@@ -70,11 +72,11 @@ class Lipreading(object):
         self.input_frames = Input(shape=(self.frameLen,50,100,1), name='frames_input')
         self.x = self.frontend3D(self.input_frames)
         print('3D Conv Out:', self.x.shape)
-        self.x = Lambda(lambda x : tf.reshape(x, [-1, x.shape[2], x.shape[3], x.shape[4]]), name='lambda2')(self.x)   #x.view(-1, 64, x.size(3), x.size(4))
+        self.x = frames_to_batch(self.x)   #x.view(-1, 64, x.size(3), x.size(4))
         print('3D Conv Out Reshape:', self.x.shape)
 
-        self.channels = int(self.x.shape[-1])
-        self.resnet18 = ResNet18((None, None, self.channels), weights=None, include_top=False)
+        #self.channels = int(self.x.shape[-1])
+        self.resnet18 = ResNet18((None, None, 64), weights=None, include_top=False)
 
         self.x = self.resnet18(self.x)
         print('Resnet18 Out:', self.x.shape)
@@ -85,7 +87,7 @@ class Lipreading(object):
         print('Resnet18 Linear Out:', self.x.shape)
 
         if self.mode == 'temporalConv':
-            self.x = Lambda(lambda x : tf.reshape(x, [-1, frameLen, inputDim]), name='lambda3')(self.x)   #x.view(-1, frameLen, inputDim)
+            self.x = Lambda(lambda x : tf.reshape(x, [-1, self.frameLen, self.inputDim]), name='lambda3')(self.x)   #x.view(-1, frameLen, inputDim)
 
             self.x = Lambda(lambda x : tf.transpose(x, [0, 2, 1]), name='lambda4')(self.x)   #x.transpose(1, 2)
             self.x = backend_conv1(self.x)
