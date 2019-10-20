@@ -63,7 +63,7 @@ def crop_pad_frames(frames, fps, seconds):
     return frames
 
 
-def DataGenerator_train_softmask(folderlist, batch_size):
+def DataGenerator_train_crm(folderlist, batch_size):
 
     L = len(folderlist)
 
@@ -78,17 +78,17 @@ def DataGenerator_train_softmask(folderlist, batch_size):
             folders_batch = folderlist[batch_start:limit]
 
             lips = []
-            mask = []
+            crm = []
             spect = []
             phase = []
             samples = []
-            phase_mask = []
+            #phase_mask = []
             for folder in folders_batch:
 
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
+                crms_ = sorted(glob.glob(folder + '/*_crm.npy'), key=numericalSort)
                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                phase_mask_ = sorted(glob.glob(folder + '/*_phasemask.npy'), key=numericalSort)
+                #phase_mask_ = sorted(glob.glob(folder + '/*_phasemask.npy'), key=numericalSort)
                 spect_ = folder + '/mixed_spectrogram.npy'
                 phase_ = folder + '/phase_spectrogram.npy'
 
@@ -98,8 +98,8 @@ def DataGenerator_train_softmask(folderlist, batch_size):
                 samples.append(samples_[0])
                 samples.append(samples_[1])
 
-                mask.append(masks_[0])
-                mask.append(masks_[1])
+                crm.append(crms_[0])
+                crm.append(crms_[1])
 
                 spect.append(spect_)
                 spect.append(spect_)
@@ -107,16 +107,17 @@ def DataGenerator_train_softmask(folderlist, batch_size):
                 phase.append(phase_)
                 phase.append(phase_)
                 
-                phase_mask.append(phase_mask_[0])
-                phase_mask.append(phase_mask_[1])
+                #phase_mask.append(phase_mask_[0])
+                #phase_mask.append(phase_mask_[1])
 
-            zipped = list(zip(lips, samples, mask, spect, phase, phase_mask))
+            zipped = list(zip(lips, samples, crm, spect, phase))
             random.shuffle(zipped)
-            lips, samples, mask, spect, phase, phase_mask = zip(*zipped)
+            lips, samples, crm, spect, phase = zip(*zipped)
             
             #X_mask = np.asarray([to_onehot(cv2.imread(fname, cv2.IMREAD_UNCHANGED)) for fname in mask])
-            X_mask = np.asarray([np.load(fname) for fname in mask])
-            X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
+            #X_mask = np.asarray([np.load(fname) for fname in mask])
+            #X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
+            X_crm = np.asarray([np.load(fname) for fname in crm])
             #print(X_mask.shape)
 #            print('mask', X_mask.shape)
             
@@ -148,15 +149,15 @@ def DataGenerator_train_softmask(folderlist, batch_size):
            # print(X_lips.shape)
             #X = seq.augment_images(X)
             
-            X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
+            #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
 
-            yield [X_spect_phase, X_lips, X_samples], X_mag_phase_mask
+            yield [X_spect_phase, X_lips, X_samples], X_crm
 
             batch_start += batch_size
             batch_end += batch_size
 
             
-def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_size):
+def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
     
     epoch_number = 0
     L = folders_per_epoch
@@ -190,17 +191,17 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
             folders_batch = folderlist[batch_start:limit]
 
             lips = []
-            mask = []
+            crm = []
             spect = []
             phase = []
             samples = []
-            phase_mask = []
+            #phase_mask = []
             for folder in folders_batch:
 
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
+                crms_ = sorted(glob.glob(folder + '/*_crm.npy'), key=numericalSort)
                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                phase_mask_ = sorted(glob.glob(folder + '/*_phasemask.npy'), key=numericalSort)
+                #phase_mask_ = sorted(glob.glob(folder + '/*_phasemask.npy'), key=numericalSort)
                 spect_ = folder + '/mixed_spectrogram.npy'
                 phase_ = folder + '/phase_spectrogram.npy'
 
@@ -210,8 +211,8 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
                 samples.append(samples_[0])
                 samples.append(samples_[1])
 
-                mask.append(masks_[0])
-                mask.append(masks_[1])
+                crm.append(crms_[0])
+                crm.append(crms_[1])
 
                 spect.append(spect_)
                 spect.append(spect_)
@@ -219,16 +220,16 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
                 phase.append(phase_)
                 phase.append(phase_)
                 
-                phase_mask.append(phase_mask_[0])
-                phase_mask.append(phase_mask_[1])
+                #phase_mask.append(phase_mask_[0])
+                #phase_mask.append(phase_mask_[1])
 
-            zipped = list(zip(lips, samples, mask, spect, phase, phase_mask))
+            zipped = list(zip(lips, samples, crm, spect, phase))
             random.shuffle(zipped)
-            lips, samples, mask, spect, phase, phase_mask = zip(*zipped)
+            lips, samples, crm, spect, phase = zip(*zipped)
             
             #X_mask = np.asarray([to_onehot(cv2.imread(fname, cv2.IMREAD_UNCHANGED)) for fname in mask])
-            X_mask = np.asarray([np.load(fname) for fname in mask])
-            X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
+            X_crm = np.asarray([np.load(fname) for fname in crm])
+            #X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
             #print(X_mask.shape)
 #            print('mask', X_mask.shape)
             
@@ -260,15 +261,15 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
            # print(X_lips.shape)
             #X = seq.augment_images(X)
             
-            X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
+            #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
 
-            yield [X_spect_phase, X_lips, X_samples], X_mag_phase_mask
+            yield [X_spect_phase, X_lips, X_samples], X_crm
 
             batch_start += batch_size
             batch_end += batch_size
 
             
-def DataGenerator_test_softmask(folderlist, batch_size):
+def DataGenerator_test_crm(folderlist, batch_size):
 
     L = len(folderlist)
 
@@ -290,7 +291,7 @@ def DataGenerator_test_softmask(folderlist, batch_size):
             for folder in folders_batch:
 
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
+                #masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
                 spect_ = folder + '/mixed_spectrogram.npy'
                 phase_ = folder + '/phase_spectrogram.npy'
