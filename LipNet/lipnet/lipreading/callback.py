@@ -33,7 +33,7 @@ def numericalSort(value):
     parts[1::2] = map(int, parts[1::2])
     return parts
 
-def get_video_frames(path):
+def get_video_frames(path, fmt='rgb'):
 
     cap = cv2.VideoCapture(path)
     frames = []
@@ -42,7 +42,11 @@ def get_video_frames(path):
         # Capture frame-by-frame
         ret, frame = cap.read()
         if ret == True:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            if fmt == 'rgb':
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            elif fmt == 'grey':
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                frame = frame.reshape(frame.shape[0], frame.shape[1], 1)
             frames.append(frame)
 
         # Break the loop
@@ -220,14 +224,15 @@ class Metrics_softmask(Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         num = len(self.val_folders)
-        num_100s = int(num/50)
+        div_num = 12
+        num_100s = int(num/div_num)
 
         total_list=[]
         total_norm_list=[]
         total_wer=[]
 	
         for n in range(num_100s):
-            val_folders_100 = self.val_folders[n*50:(n+1)*50]
+            val_folders_100 = self.val_folders[n*div_num:(n+1)*div_num]
             lips=[]
             transcripts=[]
             for folder in val_folders_100:
@@ -252,7 +257,7 @@ class Metrics_softmask(Callback):
 
             for i in range(len(lips)):
 
-                x_lips = get_video_frames(lips[i])
+                x_lips = get_video_frames(lips[i], fmt='grey')
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 

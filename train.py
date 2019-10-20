@@ -95,9 +95,9 @@ random.seed(10)
 random.shuffle(folders_list_train)
 #folders_list_val = folders_list[91500:93000] + folders_list[238089:]
 #folders_list_val=folders_list[512:768]
-random.seed(20)
-folders_list_train = random.sample(folders_list_train, 180)
-folders_list_val = random.sample(folders_list_val, 100)
+#random.seed(20)
+#folders_list_train = random.sample(folders_list_train, 180)
+#folders_list_val = random.sample(folders_list_val, 100)
 
 print('Training data:', len(folders_list_train)*2)
 print('Validation data:', len(folders_list_val)*2)
@@ -113,7 +113,7 @@ print('Validation data:', len(folders_list_val)*2)
 #lip=LipNet(pretrained=True,weights_path='/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs10-20_lr1e-4_0.1decay10epochs/weights-04-125.3015.hdf5')
 lip = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True)
 model = lip.model
-#model.load_weights('/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-09-126.2645.hdf5')
+#model.load_weights('/data/models/combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs20_lr5e-4_0.1decay10epochs/weights-01-425.4971.hdf5')
 
 from io import StringIO
 tmp_smry = StringIO()
@@ -162,7 +162,7 @@ except OSError:
     pass
 
 filepath='/data/models/' +  path+ '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
-checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, mode='min')
+checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
 
 # Fit Generator
 
