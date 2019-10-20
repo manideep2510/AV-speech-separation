@@ -469,7 +469,7 @@ def gen_comb_folders_text(combined_pairs, dest_folder):
         file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '.txt'
         shutil.copy(text, save_path + '/' + file_name)
         
-@jit            
+        
 def gen_comb_folders_crm(combined_pairs, dest_folder):
     
     try:
@@ -558,3 +558,73 @@ def gen_comb_folders_crm(combined_pairs, dest_folder):
         file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_crm.npy'
 
         np.save(save_path + '/' + file_name, mask1)
+
+@jit            
+def gen_comb_folders_crm(combined_pairs, dest_folder):
+    
+    videos = combined_pairs
+    audios = []
+    
+    for item in videos:
+        audio = item[:-9] + '.wav'
+        audios.append(audio)
+    
+    
+    folder_name_list = []
+    for path in audios:
+        split_ = path.split('/')
+        fold = split_[-2] + '_' + split_[-1][:-4]
+        folder_name_list.append(fold)
+        
+    folder_name = '_'.join(folder_name_list) + '_' + str(len(videos))
+    folder_path = dest_folder + '/' + folder_name
+
+    ## Now mix the audios and compute the spectrogram of mixed audio
+    
+    mix_audio_folder = home + '/mixed_audio_files'
+        
+    # Filename to save the mixed audio  file
+    mixed_audio_filename = folder_name + '.wav'             
+        
+    mixed_audio_filepath = mix_audio_folder + '/' + mixed_audio_filename
+    
+    mixed_samples = audios_sum(audios, mixed_audio_filepath)
+        
+    # Compute the spectrogram of mised audio
+    s, n, c = compute_spectrograms(mixed_audio_filepath)
+    mixed_spectogram =s[:,:500]  # Useful frames
+
+    phase=np.angle(c)
+    phase=phase[:,:500]
+
+    mixed_spectogram = np.asarray(mixed_spectogram, dtype='float16')
+    
+    phase_spectogram = np.asarray(phase, dtype='float16')
+
+    # Save the mixed spectrogram
+    np.save(folder_path + '/' + 'mixed_spectrogram.npy',mixed_spectogram)
+    np.save(folder_path + '/' + 'phase_spectrogram.npy',phase_spectogram)
+
+    for p in range(len(videos)):
+
+        audio_file = audios[p]
+        lips_file = videos[p]
+       # mask_file = masks[p]
+        
+        save_path = folder_path
+
+        audio_file_split = audio_file.split('/')
+            
+        # Save the mask
+        
+        s, n, c_ = compute_spectrograms(audio_file)
+        s_use=s[:, :500]
+        s_phase = np.angle(c)
+        s_phase=s_phase[:,:500]
+
+        Cx,Cy = compress_crm(mixed_mag = mixed_spectogram,mixed_phase = phase,signal_mag = s_use,signal_phase = s_phase, K=1,C=2)
+        mask1 = np.stack([Cx,Cy], axis=-1)
+        mask1=np.asarray(mask1, dtype='float16')
+        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_crm.npy'
+
+        np.save(save_path + '/' + file_name, mask1)        
