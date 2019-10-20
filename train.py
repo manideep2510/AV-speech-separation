@@ -95,8 +95,9 @@ random.seed(10)
 random.shuffle(folders_list_train)
 #folders_list_val = folders_list[91500:93000] + folders_list[238089:]
 #folders_list_val=folders_list[512:768]
-#random.seed(20)
-#folders_list_val = random.sample(folders_list_val, 100)
+random.seed(20)
+folders_list_train = random.sample(folders_list_train, 180)
+folders_list_val = random.sample(folders_list_val, 100)
 
 print('Training data:', len(folders_list_train)*2)
 print('Validation data:', len(folders_list_val)*2)
