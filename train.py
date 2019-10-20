@@ -79,7 +79,7 @@ print('numaricalsort Done')
 #folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 print('Folders_list Done')
 
-with open("./folder_filter_1.txt", "rb") as fp:  
+with open("/data/AV-speech-separation/folder_filter_1.txt", "rb") as fp:  
        folders_list = pickle.load(fp) 
 
 #folders_list_train = folders_list[:91500] +folders_list[93000:238089]
@@ -88,14 +88,14 @@ with open("./folder_filter_1.txt", "rb") as fp:
 #folders_list_train=folders_list[:256]
 #folders_list_val=folders_list[256:320]
 
-folders_list_train=folders_list[0:192000]
-folders_list_val=folders_list[192000:204000]
+folders_list_train=folders_list[0:198000]
+folders_list_val=folders_list[198000:204000]
 import random
 random.seed(10)
 random.shuffle(folders_list_train)
 #folders_list_val = folders_list[91500:93000] + folders_list[238089:]
 #folders_list_val=folders_list[512:768]
-random.seed(20)
+#random.seed(20)
 #folders_list_val = random.sample(folders_list_val, 100)
 
 print('Training data:', len(folders_list_train)*2)
