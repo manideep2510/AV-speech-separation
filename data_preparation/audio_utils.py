@@ -24,6 +24,7 @@ import math
 import matplotlib.pyplot as plt
 from pathlib import Path
 import shutil
+from numba import jit
 home = str(Path.home())
 # Avoid printing TF log messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -359,6 +360,7 @@ def tbm(spec_signal,mask_factor=0.5):
 
     return mask
 
+@jit
 def compress_crm(mixed_mag,mixed_phase,signal_mag,signal_phase,K=10,C=0.1):
     
     
