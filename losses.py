@@ -14,7 +14,7 @@ def prepare_label(input_batch, new_size, num_classes, one_hot=True):
 
 def l2_loss(spect1, spect2):
     #spect2 = spect2[:,:,:,0]
-    loss = tf.sqrt(tf.nn.l2_loss(spect1[:,:,:,0] - spect2[:,:,:,0]))
+    loss = tf.sqrt(tf.nn.l2_loss(spect1[:,:,:,:2] - spect2[:,:,:,:2]))
     #loss = tf.sqrt(tf.nn.l2_loss(spect1 - spect2))
     return loss
 
