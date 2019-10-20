@@ -88,8 +88,8 @@ with open("/data/AV-speech-separation/folder_filter_1.txt", "rb") as fp:
 #folders_list_train=folders_list[:256]
 #folders_list_val=folders_list[256:320]
 
-folders_list_train=folders_list[0:198000]
-folders_list_val=folders_list[198000:204000]
+folders_list_train=folders_list[0:192000]
+folders_list_val=folders_list[192000:204000]
 import random
 random.seed(10)
 random.shuffle(folders_list_train)
@@ -172,7 +172,7 @@ history = model.fit_generator(DataGenerator_sampling_softmask(folders_list_train
                 epochs=epochs,
                 validation_data=DataGenerator_train_softmask(folders_list_val, batch_size),
                 validation_steps = np.ceil((len(folders_list_val))/float(batch_size)),
-                callbacks=[checkpoint_save_weights, learningratescheduler], verbose = 1)
+                callbacks=[checkpoint_save_weights, learningratescheduler, metrics_wer], verbose = 1)
 
 # Plots
 plot_loss_and_acc(history, path)
