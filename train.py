@@ -154,7 +154,7 @@ learningratescheduler = learningratescheduler()
 
 # Path to save model checkpoints
 
-path = 'combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs20_lr5e-4_0.1decay10epochs'
+path = 'combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs20_lr1e-4_0.1decay9epochs'
 
 try:
     os.mkdir('/data/models/'+ path)
