@@ -72,7 +72,7 @@ class Lipreading(object):
         self.input_frames = Input(shape=(self.frameLen,50,100,1), name='frames_input')
         self.x = self.frontend3D(self.input_frames)
         print('3D Conv Out:', self.x.shape)
-        self.x = frames_to_batch(self.x)   #x.view(-1, 64, x.size(3), x.size(4))
+        self.x = self.frames_to_batch(self.x)   #x.view(-1, 64, x.size(3), x.size(4))
         print('3D Conv Out Reshape:', self.x.shape)
 
         #self.channels = int(self.x.shape[-1])
