@@ -360,7 +360,7 @@ def tbm(spec_signal,mask_factor=0.5):
 
     return mask
 
-def compress_crm(mixed_mag,mixed_phase,signal_mag,signal_phase,K=10,C=0.1):
+def compress_crm(mixed_mag,mixed_phase,signal_mag,signal_phase,K=1,C=2):
     
     
     p=np.cos(mixed_phase)+1.j*np.sin(mixed_phase)
@@ -385,7 +385,7 @@ def compress_crm(mixed_mag,mixed_phase,signal_mag,signal_phase,K=10,C=0.1):
 
     return Cx,Cy
 
-def inverse_crm(real_part,imaginary_part,K=10,C=0.1):
+def inverse_crm(real_part,imaginary_part,K=1,C=2):
 
 
     Mr=(1/C)*np.log(np.divide((K+real_part),(K-real_part)))
