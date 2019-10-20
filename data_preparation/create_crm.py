@@ -39,4 +39,4 @@ for combination in combinations_list:
     if c%100 == 0:
         b = time.time()
         times.append(b)
-        print(c, '/', len(combinations_list), 'folders created in ', times[-1] - times[-2], 'seconds')
+        print(c, '/', len(combinations_list), 'CRMs created in ', times[-1] - times[-2], 'seconds')
