@@ -18,7 +18,7 @@ def custom_tanh(x,K=1,C=2):
     
     Cx=K*tf.math.divide(1-tf.math.exp(-1*C*x),1+tf.math.exp(-1*C*x))
     #Cy=tf.keras.backend.switch(Cx>0.9999999,tf.constant(0.9999999),Cx)
-    CY = 0.9999999*tf.dtypes.cast((x>0.9999999), dtype=tf.float32)+x*tf.dtypes.cast((x<=0.9999999), dtype=tf.float32)
+    Cy = 0.9999999*tf.dtypes.cast((x>0.9999999), dtype=tf.float32)+x*tf.dtypes.cast((x<=0.9999999), dtype=tf.float32)
     
     return Cy
 
@@ -137,7 +137,7 @@ class TasNet(object):
         self.mag=Reshape([self.t,self.f,1], name='reshape_mag')(self.mag)
         self.mag = Lambda(lambda x : tf.transpose(x, [0, 2, 1, 3]))(self.mag)
         self.phase=Conv1D(257,1)(self.fusion)
-        self.phase=Activation('tanh')(self.phase)
+        self.phase=Activation(custom_tanh)(self.phase)
         self.phase=Reshape([self.t,self.f,1], name='reshape_phase')(self.phase)
         self.phase = Lambda(lambda x : tf.transpose(x, [0, 2, 1, 3]))(self.phase)
 
