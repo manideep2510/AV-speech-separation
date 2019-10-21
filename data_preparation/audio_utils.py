@@ -428,7 +428,7 @@ def return_samples_complex(mixed_mag,mixed_phase,mask,sample_rate=16e3, n_fft=51
 #    np.save('/data/AV-speech-separation/stft.npy', stft)
     predicted_samples=scipy.signal.istft(stft, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, input_onesided=True, boundary=True, time_axis=-1, freq_axis=-2)
 #    print(predicted_samples[1])
-    predicted_samples[np.isnan(predicted_samples)] = 0.0
+#    predicted_samples[np.isnan(predicted_samples)] = 0.0
     samples=np.asarray(list(map(int, predicted_samples[1])),dtype='int16')
     
     return samples
