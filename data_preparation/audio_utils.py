@@ -394,7 +394,9 @@ def inverse_crm(real_part,imaginary_part,K=10,C=0.1):
     
     Mr = np.nan_to_num(Mr)
     Mi = np.nan_to_num(Mi)
-
+    print(Mr)
+    np.save('/data/AV-speech-separation/mi.npy', Mi)
+    np.save('/data/AV-speech-separation/mr.npy', Mr)
     return Mr+1.j*Mi
 
 
@@ -404,13 +406,19 @@ def return_samples_complex(mixed_mag,mixed_phase,mask,sample_rate=16e3, n_fft=51
     step_frame_size = int(round(step_size  / 1e3 * sample_rate))
     overlap_samples=window_frame_size-step_frame_size
 
-    
+    print('phase max: ', np.max(mixed_phase))    
+    print('mag max: ', np.max(mixed_mag))
+    np.save('/data/AV-speech-separation/mixed_mag.npy', mixed_mag)
+    np.save('/data/AV-speech-separation/mixed_phase.npy', mixed_phase)
     p=np.cos(mixed_phase)+1.j*np.sin(mixed_phase)
+    print('max value in p:', np.max(p))
     mixed_speech=p*(mixed_mag**(10/3))
     
     stft=mixed_speech*mask
-    
+    print('stft: ', stft) 
+    np.save('/data/AV-speech-separation/stft.npy', stft)
     predicted_samples=scipy.signal.istft(stft, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, input_onesided=True, boundary=True, time_axis=-1, freq_axis=-2)
+    print(predicted_samples[1])
     samples=np.asarray(list(map(int, predicted_samples[1])),dtype='int16')
     
     return samples

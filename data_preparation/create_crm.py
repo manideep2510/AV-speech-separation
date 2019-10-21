@@ -33,10 +33,10 @@ times = []
 start = time.time()
 times.append(start)
 for combination in combinations_list:
-    
-    gen_comb_folders_crm(combination, dest_folder = '/data/lrs2/train')
-    c = c+1
-    if c%100 == 0:
-        b = time.time()
-        times.append(b)
-        print(c, '/', len(combinations_list), 'CRMs created in ', times[-1] - times[-2], 'seconds')
+    if c<400:
+        gen_comb_folders_crm(combination, dest_folder = '/data/lrs2/train')
+        c = c+1
+        if c%100 == 0:
+            b = time.time()
+            times.append(b)
+            print(c, '/', len(combinations_list), 'CRMs created in ', times[-1] - times[-2], 'seconds')
