@@ -17,8 +17,9 @@ from .lipnet import LipNet
 def custom_tanh(x,K=1,C=2):
     
     Cx=K*tf.math.divide(1-tf.math.exp(-1*C*x),1+tf.math.exp(-1*C*x))
-    #Cy=tf.keras.backend.switch(Cx>0.9999999,tf.constant(0.9999999),Cx)
-    Cy = 0.9999999*tf.dtypes.cast((x>0.9999999), dtype=tf.float32)+x*tf.dtypes.cast((x<=0.9999999), dtype=tf.float32)
+  
+    Cx = 0.9999999*tf.dtypes.cast((Cx>0.9999999), dtype=tf.float32)+Cx*tf.dtypes.cast((Cx<=0.9999999), dtype=tf.float32)
+    Cy = -0.9999999*tf.dtypes.cast((Cx<-0.9999999), dtype=tf.float32)+Cx*tf.dtypes.cast((Cx=>-0.9999999), dtype=tf.float32)
     
     return Cy
 
