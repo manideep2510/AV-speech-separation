@@ -14,6 +14,13 @@ from keras.layers.core import Lambda
 
 from .lipnet import LipNet
 
+def custom_tanh(x,K=1,C=2):
+    
+    Cx=K*tf.math.divide(1-tf.math.exp(-1*C*x),1+tf.math.exp(-1*C*x))
+    Cy=tf.keras.backend.switch(Cx>0.99999999,0.99999999,Cx)
+    
+    return Cy
+
 def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
         x = Conv1D(filters,1)(inputs)
@@ -125,7 +132,7 @@ class TasNet(object):
         
         #prediction
         self.mag=Conv1D(257,1)(self.fusion)
-        self.mag=Activation('tanh')(self.mag)
+        self.mag=Activation(custom_tanh)(self.mag)
         self.mag=Reshape([self.t,self.f,1], name='reshape_mag')(self.mag)
         self.mag = Lambda(lambda x : tf.transpose(x, [0, 2, 1, 3]))(self.mag)
         self.phase=Conv1D(257,1)(self.fusion)
