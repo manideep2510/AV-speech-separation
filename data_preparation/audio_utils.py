@@ -391,6 +391,9 @@ def inverse_crm(real_part,imaginary_part,K=10,C=0.1):
 
     Mr=(1/C)*np.log(np.divide((K+real_part),(K-real_part)))
     Mi=(1/C)*np.log(np.divide((K+imaginary_part),(K-imaginary_part)))
+    
+    Mr = np.nan_to_num(Mr)
+    Mi = np.nan_to_num(Mi)
 
     return Mr+1.j*Mi
 
