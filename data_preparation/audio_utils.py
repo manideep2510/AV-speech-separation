@@ -388,6 +388,9 @@ def compress_crm(mixed_mag,mixed_phase,signal_mag,signal_phase,K=10,C=0.1):
 
     Cx=0.9999999*(Cx>0.9999999)+Cx*(Cx<=0.9999999)
     Cy=0.9999999*(Cy>0.9999999)+Cy*(Cy<=0.9999999)
+    
+    Cx=-0.9999999*(Cx<-0.9999999)+Cx*(Cx>=-0.9999999)
+    Cy=-0.9999999*(Cy<-0.9999999)+Cy*(Cy>=-0.9999999)
 
     return Cx,Cy
 
