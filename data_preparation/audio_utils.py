@@ -388,7 +388,8 @@ def compress_crm(mixed_mag,mixed_phase,signal_mag,signal_phase,K=10,C=0.1):
 
 def inverse_crm(real_part,imaginary_part,K=10,C=0.1):
 
-
+    np.save('/data/AV-speech-separation/real.npy', real_part)
+    np.save('/data/AV-speech-separation/img.npy', imaginary_part)
     Mr=(1/C)*np.log(np.divide((K+real_part),(K-real_part)))
     Mi=(1/C)*np.log(np.divide((K+imaginary_part),(K-imaginary_part)))
     
