@@ -428,6 +428,7 @@ def return_samples_complex(mixed_mag,mixed_phase,mask,sample_rate=16e3, n_fft=51
 #    np.save('/data/AV-speech-separation/stft.npy', stft)
     predicted_samples=scipy.signal.istft(stft, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, input_onesided=True, boundary=True, time_axis=-1, freq_axis=-2)
 #    print(predicted_samples[1])
+    predicted_samples[np.isnan(predicted_samples)] = 0.0
     samples=np.asarray(list(map(int, predicted_samples[1])),dtype='int16')
     
     return samples
@@ -470,12 +471,10 @@ def retrieve_samples(spec_signal,complex_stft,mask,sample_rate=16e3, n_fft=512, 
     stft=p*(spec_predicted**(10/3))
     predicted_samples=scipy.signal.istft(stft, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, input_onesided=True, boundary=True, time_axis=-1, freq_axis=-2)
     #predicted_samples = np.nan_to_num(predicted_samples, nan=0.0)
-    predicted_samples[np.isnan(predicted_samples)] = 0.0
+    #predicted_samples[np.isnan(predicted_samples)] = 0.0
     samples=np.asarray(list(map(int, predicted_samples[1])),dtype='int16')
 
     return samples
-
-
 
 def visualize_overlap(predicted_samples,groundtruth_samples):
 
