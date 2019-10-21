@@ -276,5 +276,5 @@ class Metrics_crm(Callback):
         snr_list = np.asarray(snr_list)
         _val_snr = np.mean(snr_list)
         self.val_snr.append(_val_snr)
-        print('Validation SDR: ', _val_sdr, '- Validation Si_SNR: ', _val_snr)
+        print('Validation SDR:', _val_sdr, ' -  Validation Si_SNR:', _val_snr)
         return

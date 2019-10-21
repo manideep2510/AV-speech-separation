@@ -381,8 +381,13 @@ def compress_crm(mixed_mag,mixed_phase,signal_mag,signal_phase,K=10,C=0.1):
     Cx=K*np.divide(1-np.exp(-1*C*Mr),1+np.exp(-1*C*Mr))
     Cy=K*np.divide(1-np.exp(-1*C*Mi),1+np.exp(-1*C*Mi))
     
-    Cx=np.nan_to_num(Cx)
-    Cy=np.nan_to_num(Cy)
+    #Cx=np.nan_to_num(Cx, nan=0.9999999)
+    #Cy=np.nan_to_num(Cy, nan=0.9999999)
+    Cx[np.isnan(Cx)] = 0.9999999
+    Cy[np.isnan(Cy)] = 0.9999999
+
+    Cx=0.9999999*(Cx>0.9999999)+Cx*(Cx<=0.9999999)
+    Cy=0.9999999*(Cy>0.9999999)+Cy*(Cy<=0.9999999)
 
     return Cx,Cy
 
@@ -461,6 +466,8 @@ def retrieve_samples(spec_signal,complex_stft,mask,sample_rate=16e3, n_fft=512, 
 
     stft=p*(spec_predicted**(10/3))
     predicted_samples=scipy.signal.istft(stft, fs=sample_rate, window='hann', nperseg=window_frame_size, noverlap=overlap_samples, nfft=n_fft, input_onesided=True, boundary=True, time_axis=-1, freq_axis=-2)
+    #predicted_samples = np.nan_to_num(predicted_samples, nan=0.0)
+    predicted_samples[np.isnan(predicted_samples)] = 0.0
     samples=np.asarray(list(map(int, predicted_samples[1])),dtype='int16')
 
     return samples
