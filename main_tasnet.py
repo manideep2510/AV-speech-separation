@@ -64,8 +64,10 @@ random.seed(10)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
 random.seed(20)
-folders_list_val = random.sample(folders_list_val, 120)
-folders_list_train = random.sample(folders_list_train, 180)
+#folders_list_val = random.sample(folders_list_val, 120)
+#folders_list_train = random.sample(folders_list_train, 180)
+folders_list_train = folders_list[:180]
+folders_list_val = folders_list[180:300]
 
 print('Training data:', len(folders_list_train)*2)
 print('Validation data:', len(folders_list_val)*2)
@@ -120,7 +122,7 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 folders_per_epoch = int(len(folders_list_train)/3)
 
-history = model.fit_generator(DataGenerator_sampling_crm(folders_list_train, batch_size),
+history = model.fit_generator(DataGenerator_sampling_crm(folders_list_train, folders_per_epoch, batch_size),
                 steps_per_epoch = np.ceil(len(folders_list_train)/float(batch_size)),
                 epochs=epochs,
                 validation_data=DataGenerator_train_crm(folders_list_val, batch_size), 
