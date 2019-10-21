@@ -24,10 +24,10 @@ from callbacks import Logger, learningratescheduler, earlystopping, reducelronpl
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
-from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
+from losses import l2_loss, mse
 from models.lipnet import LipNet
-from models.cocktail_lipnet_unet_pretrain import VideoModel
-from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask
+from models.tasnet_lipnet import TasNet
+from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
 
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
@@ -35,7 +35,7 @@ config.gpu_options.allow_growth=True
 set_session(tf.Session(config=config))
 
 from keras.utils import multi_gpu_model
-from metrics import sdr_metric, Metrics_softmask
+from metrics import sdr_metric, Metrics_crm
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -58,27 +58,23 @@ def numericalSort(value):
 # Read training folders
 #folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
-folders_list_train = folders_list[:40000] #+folders_list[93000:238089]
+folders_list_train = folders_list[:91500] +folders_list[93000:238089]
 import random
 random.seed(10)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
-#random.seed(20)
-#folders_list_val = random.sample(folders_list_val, 150)
-#folders_list_train = random.sample(folders_list_train, 180)
+random.seed(20)
+folders_list_val = random.sample(folders_list_val, 120)
+folders_list_train = random.sample(folders_list_train, 180)
 
 print('Training data:', len(folders_list_train)*2)
 print('Validation data:', len(folders_list_val)*2)
 
-#lips_filelist = sorted(glob.glob('/data/lrs2/train/*/*_lips.mp4'), key=numericalSort)
+# Building the model
+tasnet = TasNet(video_ip_shape=(125,50,100,3), time_dimensions=500, frequency_bins=257, n_frames=125, lipnet_pretrained='pretrain')
+model = tasnet.model
 
-#masks_filelist = sorted(glob.glob('/data/lrs2/train/*/*_mask.png'), key=numericalSort)
-
-#spects_filelist = sorted(glob.glob('/data/lrs2/train/*/mixed_spectrogram.npy'), key=numericalSort)
-
-model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = 'pretrain', unet_pretrained = 'pretrain')
 from io import StringIO
-
 tmp_smry = StringIO()
 model.summary(print_fn=lambda x: tmp_smry.write(x + '\n'))
 summary = tmp_smry.getvalue()
@@ -102,7 +98,7 @@ batch_size = args.batch_size
 epochs = args.epochs
 
 # callcack
-metrics_sdr = Metrics_softmask(model = model, val_folders = folders_list_val, batch_size = batch_size)
+metrics_crm = Metrics_crm(model = model, val_folders = folders_list_val, batch_size = batch_size)
 learningratescheduler = learningratescheduler()
 earlystopping = earlystopping()
 reducelronplateau = reducelronplateau()
@@ -110,7 +106,7 @@ reducelronplateau = reducelronplateau()
 
 # Path to save model checkpoints
 
-path = 'both_pretrained_softmask_40kTrain_epochs20_lr1e-4_0.32decay5epochs'
+path = 'tasnet_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1'
 
 try:
     os.mkdir('/data/models/'+ path)
@@ -118,18 +114,18 @@ except OSError:
     pass
 
 filepath='/data/models/' +  path+ '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
-checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, mode='min')
+checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
 
 # Fit Generator
 
 folders_per_epoch = int(len(folders_list_train)/3)
 
-history = model.fit_generator(DataGenerator_train_softmask(folders_list_train, batch_size),
+history = model.fit_generator(DataGenerator_sampling_crm(folders_list_train, batch_size),
                 steps_per_epoch = np.ceil(len(folders_list_train)/float(batch_size)),
                 epochs=epochs,
-                validation_data=DataGenerator_train_softmask(folders_list_val, batch_size), 
+                validation_data=DataGenerator_train_crm(folders_list_val, batch_size), 
                 validation_steps = np.ceil((len(folders_list_val))/float(batch_size)),
-                callbacks=[metrics_sdr, earlystopping, learningratescheduler, checkpoint_save_weights], verbose = 1)
+                callbacks=[metrics_crm, earlystopping, learningratescheduler, checkpoint_save_weights], verbose = 1)
 
 # Plots
 plot_loss_and_acc(history, path)
