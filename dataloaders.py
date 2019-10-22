@@ -142,6 +142,7 @@ def DataGenerator_train_crm(folderlist, batch_size):
 
                 x_lips = get_video_frames(lips[i])
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                x_lips = seq.augment_images(x_lips)
                 X_lips.append(x_lips)
 
 
@@ -254,6 +255,7 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
 
                 x_lips = get_video_frames(lips[i])
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                x_lips = seq.augment_images(x_lips)
                 X_lips.append(x_lips)
 
 
@@ -336,6 +338,7 @@ def DataGenerator_test_crm(folderlist, batch_size):
 
                 x_lips = get_video_frames(lips[i])
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                x_lips = seq.augment_images(x_lips)
                 X_lips.append(x_lips)
 
 
