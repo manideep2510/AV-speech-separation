@@ -25,6 +25,19 @@ from pathlib import Path
 import shutil
 import cv2
 
+import imgaug as ia
+import imgaug.augmenters as iaa
+
+sometimes = lambda aug: iaa.Sometimes(0.35, aug)
+
+seq = iaa.Sequential(
+    [
+        sometimes(iaa.Affine(rotate=(-10, 10))),
+        iaa.Fliplr(0.35),
+        sometimes(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+    ]
+)
+
 home = str(Path.home())
 # Avoid printing TF log messages
 #os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -141,8 +154,8 @@ def DataGenerator_train_crm(folderlist, batch_size):
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i])
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 x_lips = seq.augment_images(x_lips)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
 
@@ -254,8 +267,8 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i])
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 x_lips = seq.augment_images(x_lips)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
 
@@ -337,8 +350,8 @@ def DataGenerator_test_crm(folderlist, batch_size):
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i])
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 x_lips = seq.augment_images(x_lips)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
 
