@@ -36,20 +36,6 @@ home = str(Path.home())
 
 from data_preparation.video_utils import get_video_frames
 
-import imgaug as ia
-import imgaug.augmenters as iaa
-
-sometimes1 = lambda aug: iaa.Sometimes(0.35, aug)
-sometimes2 = lambda aug: iaa.Sometimes(0.35, aug)
-
-seq = iaa.Sequential(
-    [
-        sometimes1(iaa.Affine(rotate=(-10, 10))),
-        iaa.Fliplr(0.35),
-        sometimes2(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
-    ]
-)
-
 def to_onehot(arr):
     arr = (np.arange(arr.max()+1) == arr[...,None]).astype(int)
     return arr
@@ -80,6 +66,20 @@ def crop_pad_frames(frames, fps, seconds):
         frames = frames
 
     return frames
+
+import imgaug as ia
+import imgaug.augmenters as iaa
+
+sometimes1 = lambda aug: iaa.Sometimes(0.35, aug)
+sometimes2 = lambda aug: iaa.Sometimes(0.35, aug)
+
+seq = iaa.Sequential(
+    [
+        sometimes1(iaa.Affine(rotate=(-10, 10))),
+        iaa.Fliplr(0.35),
+        sometimes2(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+    ]
+)
 
 def DataGenerator_train_softmask(folderlist, batch_size):
 
@@ -197,9 +197,15 @@ def DataGenerator_train_softmask(folderlist, batch_size):
                input_length.append(X_lips.shape[1])
                source_str.append(align[i].sentence)
             Y_data = np.array(Y_data)
-			
-            #X_lips = seq.augment_images(X_lips)
-		
+            #  inputs = {'the_input': X_lips,
+            #       'the_labels': Y_data,
+            #       'input_length': input_length,
+            #       'label_length': label_length,
+            #       'source_str': source_str
+            #       }
+            # outputs = {'ctc': np.zeros([X_lips.shape[0]])}  # dummy data for dummy loss function
+            #
+            # yield (inputs,outputs)
             yield [X_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([X_lips.shape[0]])
             batch_start += batch_size
             batch_end += batch_size
@@ -342,9 +348,6 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
             #X = seq.augment_images(X)
 
             #yield [X_spect_phase, X_lips, X_samples], X_mask
-		
-            X_lips = seq.augment_images(X_lips)
-		
             yield [X_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([X_lips.shape[0]])
             #  inputs = {'the_input': X_lips,
             #       'the_labels': Y_data,
@@ -358,3 +361,4 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
 
             batch_start += batch_size
             batch_end += batch_size
+
