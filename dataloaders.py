@@ -28,13 +28,14 @@ import cv2
 import imgaug as ia
 import imgaug.augmenters as iaa
 
-sometimes = lambda aug: iaa.Sometimes(0.35, aug)
+sometimes1 = lambda aug: iaa.Sometimes(0.35, aug)
+sometimes2 = lambda aug: iaa.Sometimes(0.35, aug)
 
 seq = iaa.Sequential(
     [
-        sometimes(iaa.Affine(rotate=(-10, 10))),
+        sometimes1(iaa.Affine(rotate=(-10, 10))),
         iaa.Fliplr(0.35),
-        sometimes(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+        sometimes2(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
     ]
 )
 
