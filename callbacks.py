@@ -69,7 +69,7 @@ class LoggingCallback(Callback):
 #loggingcallback = LoggingCallback(
 
 def step_decay(epoch):
-    initial_lrate = 0.0001
+    initial_lrate = 0.00001
     drop = 0.1
     epochs_drop = 9
     lrate = initial_lrate * math.pow(drop,

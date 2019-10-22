@@ -37,15 +37,15 @@ from data_generators import DataGenerator_train_softmask, DataGenerator_sampling
 #from lipnet.lipreading.helpers import labels_to_text
 #from lipnet.utils.spell import Spell
 from LipNet.lipnet.lipreading.callback import Metrics_softmask, Decoder
-from LipNet.lipnet.lipreading.generator import DataGenerator_train_softmask, DataGenerator_sampling_softmask
+from LipNet.lipnet.lipreading.generator import DataGenerator_train_softmask, DataGenerator_sampling_softmask, crop_pad_frames
 from LipNet.lipnet.lipreading.helpers import text_to_labels
 from LipNet.lipnet.lipreading.aligns import Align
 #from LipNet.lipnet.model2 import LipNet
-from models.resnet_lstm_lipread_ctc import lipreading
+from models.resnet_lstm_lipread import lipreading
 import numpy as np
 import datetime
 import pickle
-from data_preparation.video_utils import get_video_frames, crop_pad_frames
+from data_preparation.video_utils import get_video_frames
 
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
@@ -91,21 +91,24 @@ with open("/data/AV-speech-separation/folder_filter_1.txt", "rb") as fp:
 
 video_file = args.video_file
 transcript_file = video_file[:-9]+'.txt'
-lips = get_video_frames(video_file, fmt='grey')
+lips = get_video_frames(video_file, fmt='rgb')
 lips = crop_pad_frames(frames = lips, fps = 25, seconds = 5)
-lips = lips.reshape(1, 125,50,100,1)
+lips = lips.reshape(1, 125,50,100,3)
+print('lips shape:', lips.shape)
 
 # Read text
 
-trans=(Align(128, text_to_labels).from_file(transcripts_path))
+trans=(Align(128, text_to_labels).from_file(transcript_file))
 y_data=(trans.padded_label)
 y_data = y_data.reshape(1, 128)
+print('y_data shape:',y_data.shape)
 label_length=(trans.label_length)
 input_length=125
 
-lip = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True)
-model = lip.model
-model.load_weights('/data/models/combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs20_lr1e-4_0.1decay9epochs/weights-07-117.3701.hdf5')
+#lip = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True)
+#model = lip
+model=LipNet(input_shape=(125,50,100,3), pretrained='pretrain', output_size = 29, absolute_max_string_len=128)
+#model.load_weights('/data/models/combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs20_lr1e-4_0.1decay9epochs/weights-07-117.3701.hdf5')
 
 from io import StringIO
 tmp_smry = StringIO()
@@ -117,28 +120,126 @@ summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
 # Compile the model
-lrate = args.lrate
+#lrate = args.lrate
 
-adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+#adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 #model = multi_gpu_model(lip.model, gpus=2)
-model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=adam)
+#model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=adam)
 
-batch_size = args.batch_size
-epochs = args.epochs
+#batch_size = args.batch_size
+#epochs = args.epochs
 
 
-spell = Spell(path=PREDICT_DICTIONARY)
-decoder = Decoder(greedy=PREDICT_GREEDY, beam_width=PREDICT_BEAM_WIDTH,
-                  postprocessors=[labels_to_text, spell.sentence])
+#spell = Spell(path=PREDICT_DICTIONARY)
+#decoder = Decoder(greedy=PREDICT_GREEDY, beam_width=PREDICT_BEAM_WIDTH,
+#                  postprocessors=[labels_to_text, spell.sentence])
 
 #metrics_error_rates  = Statistics(lip,DataGenerator_train_softmask(folders_list_val, batch_size) , decoder, 256, output_dir='./results'))
 
 # callcack
-metrics_wer = Metrics_softmask(model = lip, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
+#metrics_wer = Metrics_softmask(model = lip, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
 
 # Fit Generator
 
-pred = model.predict([lips, y_data, np.asarray(input_length), np.asarray(128)], batch_size=1)
+pred = model.predict(lips, batch_size=1)
+
+def labels_to_text(labels):
+    # 26 is space, 27 is CTC blank char
+    text = ''
+    for c in labels:
+        c1=int(c)
+        if c1 >= 0 and c1 < 26:
+            text += chr(c1 + ord('a'))
+        elif c1 == 26:
+            text += ' '
+    return text
+
+def _decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
+    """Decodes the output of a softmax.
+    Can use either greedy search (also known as best path)
+    or a constrained dictionary search.
+    # Arguments
+        y_pred: tensor `(samples, time_steps, num_categories)`
+            containing the prediction, or output of the softmax.
+        input_length: tensor `(samples, )` containing the sequence length for
+            each batch item in `y_pred`.
+        greedy: perform much faster best-path search if `true`.
+            This does not use a dictionary.
+        beam_width: if `greedy` is `false`: a beam search decoder will be used
+            with a beam of this width.
+        top_paths: if `greedy` is `false`,
+            how many of the most probable paths will be returned.
+    # Returns
+        Tuple:
+            List: if `greedy` is `true`, returns a list of one element that
+                contains the decoded sequence.
+                If `false`, returns the `top_paths` most probable
+                decoded sequences.
+                Important: blank labels are returned as `-1`.
+            Tensor `(top_paths, )` that contains
+                the log probability of each decoded sequence.
+    """
+    decoded = K.ctc_decode(y_pred=y_pred, input_length=input_length,
+                           greedy=greedy, beam_width=beam_width, top_paths=top_paths)
+    paths = [path.eval(session=K.get_session()) for path in decoded[0]]
+    logprobs  = decoded[1].eval(session=K.get_session())
+
+    return (paths, logprobs)
+
+def decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1, **kwargs):
+    language_model = kwargs.get('language_model', None)
+
+    paths, logprobs = _decode(y_pred=y_pred, input_length=input_length,
+                              greedy=greedy, beam_width=beam_width, top_paths=top_paths)
+    if language_model is not None:
+        # TODO: compute using language model
+        raise NotImplementedError("Language model search is not implemented yet")
+    else:
+        # simply output highest probability sequence
+        # paths has been sorted from the start
+        result = paths[0]
+    return result
+
+class Decoder(object):
+    def __init__(self, greedy=True, beam_width=100, top_paths=1, **kwargs):
+        self.greedy         = greedy
+        self.beam_width     = beam_width
+        self.top_paths      = top_paths
+        self.language_model = kwargs.get('language_model', None)
+        self.postprocessors = kwargs.get('postprocessors', [])
+
+    def decode(self, y_pred, input_length):
+        decoded = decode(y_pred, input_length, greedy=self.greedy, beam_width=self.beam_width,
+                         top_paths=self.top_paths, language_model=self.language_model)
+        preprocessed = []
+        for output in decoded:
+            out = output
+            for postprocessor in self.postprocessors:
+                out = postprocessor(out)
+            preprocessed.append(out)
+
+        return preprocessed
+
+PREDICT_GREEDY      = True
+PREDICT_BEAM_WIDTH  = 200
+
+
+
+decoder = Decoder(greedy=PREDICT_GREEDY, beam_width=PREDICT_BEAM_WIDTH,
+                  postprocessors=[labels_to_text])
+
+out = decoder.decode(pred, [125])
+
+
+pred = np.argmax(pred, axis=2)
+pred = pred.reshape(125,)
+#print(pred)
+letters = labels_to_text(pred.tolist())
+
+#out = ''.join(letters)
+print('Raw Output:', letters)
+print('Prediction:', out)
+print('Transcript:', trans.sentence)
 
 #decode_res=decoder.decode(pred, 125)
 
