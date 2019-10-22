@@ -176,7 +176,7 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
                     indices = []
                     for ind in range(len(folderlist_all)):
                         indices.append(ind)
-
+                random.seed(100*epoch_number)
                 pick_indices = random.sample(indices, L)
 
                 for item in pick_indices:
@@ -222,7 +222,7 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
                 
                 #phase_mask.append(phase_mask_[0])
                 #phase_mask.append(phase_mask_[1])
-
+            
             zipped = list(zip(lips, samples, crm, spect, phase))
             random.shuffle(zipped)
             lips, samples, crm, spect, phase = zip(*zipped)

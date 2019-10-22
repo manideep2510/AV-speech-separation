@@ -207,10 +207,11 @@ class Metrics_softmask(Callback):
 
 class Metrics_crm(Callback):
 
-    def __init__(self, model, val_folders, batch_size):
+    def __init__(self, model, val_folders, batch_size, save_path):
         self.model = model
         self.val_folders = val_folders
         self.batch_size = batch_size
+        self.save_path = save_path
 
     def on_train_begin(self, logs={}):
         self.val_sdr = []
@@ -277,4 +278,6 @@ class Metrics_crm(Callback):
         _val_snr = np.mean(snr_list)
         self.val_snr.append(_val_snr)
         print('Validation SDR:', _val_sdr, ' -  Validation Si_SNR:', _val_snr)
+        with open(self.save_path, "a") as myfile:
+            myfile.write(', Val_SDR: ' + str(_val_sdr) + ',  Val_Si-SNR: '+ str(_val_snr) + '\n')
         return

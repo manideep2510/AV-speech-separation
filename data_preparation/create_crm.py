@@ -24,7 +24,7 @@ import glob
 import cv2
 
 combinations_list = np.loadtxt('/data/lrs2/combinations_list.txt', dtype='object')
-
+combinations_list = combinations_list[219100:]
 print(len(combinations_list), 'pairs generated')
 
 # Create training folders

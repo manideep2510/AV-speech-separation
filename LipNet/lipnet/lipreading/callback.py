@@ -211,11 +211,11 @@ def split(data):
 
 class Metrics_softmask(Callback):
 
-    def __init__(self, model, val_folders, batch_size):
+    def __init__(self, model, val_folders, batch_size, save_path):
         self.model_container = model
         self.val_folders = val_folders
         self.batch_size = batch_size
-
+        self.save_path = save_path
     def on_train_begin(self, logs={}):
         self.val_wer = []
         #self.val_f1s_weigh = []
@@ -314,10 +314,10 @@ class Metrics_softmask(Callback):
         total_list=np.array(total_list)
         total_norm_list=np.array(total_norm_list)
 
-
-
         print('Validation WER_original:',np.mean(total_wer),'Validation WER: ', np.mean(total_list),'Validation WER_NORM:',np.mean(total_norm_list))
-
+        
+        with open(self.save_path, "a") as myfile:
+            myfile.write(', Validation WER_original: ' + str(np.mean(total_wer)) + ', Validation WER: ' + str(np.mean(total_list)) + ', Validation WER_NORM: ' + str(np.mean(total_norm_list)) + '\n')
 
 #             return self.get_mean_tuples(data, mean_individual_length, wer_sentence)
 #

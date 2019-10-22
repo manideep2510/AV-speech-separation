@@ -19,8 +19,9 @@ import keras.backend as K
 from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
-from callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau, CSVLogger
+from callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau, LoggingCallback
+#from tensorflow.keras.callbacks import CSVLogger
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
@@ -63,11 +64,11 @@ import random
 random.seed(10)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
-random.seed(20)
+#random.seed(20)
 #folders_list_val = random.sample(folders_list_val, 120)
 #folders_list_train = random.sample(folders_list_train, 180)
-folders_list_train = folders_list[:180]
-folders_list_val = folders_list[180:300]
+#folders_list_train = folders_list[:180]
+#folders_list_val = folders_list[180:300]
 
 print('Training data:', len(folders_list_train)*2)
 print('Validation data:', len(folders_list_val)*2)
@@ -99,21 +100,34 @@ model.compile(optimizer = Adam(lr=lrate), loss = l2_loss)
 batch_size = args.batch_size
 epochs = args.epochs
 
-# callcack
-metrics_crm = Metrics_crm(model = model, val_folders = folders_list_val, batch_size = batch_size)
-learningratescheduler = learningratescheduler()
-earlystopping = earlystopping()
-reducelronplateau = reducelronplateau()
-#logger = Logger('/data/results')
-
 # Path to save model checkpoints
 
-path = 'tasnet_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1'
+path = 'tasnet_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp2'
 
 try:
     os.mkdir('/data/models/'+ path)
 except OSError:
     pass
+
+try:
+    os.mkdir('/data/results/'+ path)
+except OSError:
+    pass
+
+def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
+    
+    with open(file, "a") as myfile:
+        
+        myfile.write(msg)
+
+# callcack
+metrics_crm = Metrics_crm(model = model, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
+learningratescheduler = learningratescheduler()
+earlystopping = earlystopping()
+reducelronplateau = reducelronplateau()
+#loggingcallback = LoggingCallback
+#logger = Logger('/data/results')
+#csv_logger = CSVLogger(filename = '/data/results/'+path+'/logs.txt', append=True)
 
 filepath='/data/models/' +  path+ '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
@@ -123,12 +137,12 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 folders_per_epoch = int(len(folders_list_train)/3)
 
 history = model.fit_generator(DataGenerator_sampling_crm(folders_list_train, folders_per_epoch, batch_size),
-                steps_per_epoch = np.ceil(len(folders_list_train)/float(batch_size)),
+                steps_per_epoch = np.ceil(folders_per_epoch/float(batch_size)),
                 epochs=epochs,
                 validation_data=DataGenerator_train_crm(folders_list_val, batch_size), 
                 validation_steps = np.ceil((len(folders_list_val))/float(batch_size)),
-                callbacks=[metrics_crm, earlystopping, learningratescheduler, checkpoint_save_weights], verbose = 1)
-
+                callbacks=[earlystopping, learningratescheduler, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm], verbose = 1)
+#LoggingCallback(print_fcn=log_to_file)
 # Plots
 plot_loss_and_acc(history, path)
 
