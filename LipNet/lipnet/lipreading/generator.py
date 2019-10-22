@@ -158,6 +158,7 @@ def DataGenerator_train_softmask(folderlist, batch_size):
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i], fmt = 'grey')
+		x_lips = seq.augment_images(x_lips)
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
@@ -196,7 +197,7 @@ def DataGenerator_train_softmask(folderlist, batch_size):
                source_str.append(align[i].sentence)
             Y_data = np.array(Y_data)
 			
-            X_lips = seq.augment_images(X_lips)
+            #X_lips = seq.augment_images(X_lips)
 		
             yield [X_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([X_lips.shape[0]])
             batch_start += batch_size
@@ -297,6 +298,7 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i], fmt = 'grey')
+		x_lips = seq.augment_images(x_lips)
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
