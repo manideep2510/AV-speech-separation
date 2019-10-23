@@ -107,7 +107,7 @@ def get_video_frames(path, fmt='rgb'):
     return np.asarray(frames)
 
 
-def get_cropped_video(input_vid, output_dest, detector = detector, predictor = predictor):
+def get_cropped_video_(input_vid, output_dest, detector = detector, predictor = predictor):
     
     frames=get_video_frames(input_vid)
     shape_input = frames.shape    
@@ -130,6 +130,23 @@ def get_cropped_video(input_vid, output_dest, detector = detector, predictor = p
             for i in range(outputdata.shape[0]):
                     writer.writeFrame(outputdata[i, :, :, :])
             writer.close()
+        
+    except ValueError:
+        pass
+
+def get_cropped_video(input_vid, output_dest, detector = detector, predictor = predictor):
+    
+    frames=get_video_frames(input_vid)
+    shape_input = frames.shape    
+    mouth=get_frames_mouth(detector, predictor, frames)
+
+    try:
+        
+        outputdata = np.asarray(mouth)
+        shape_output = outputdata.shape
+    
+        if shape_input != shape_output and len(shape_output) == 4:
+            return outputdata
         
     except ValueError:
         pass

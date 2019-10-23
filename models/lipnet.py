@@ -3,6 +3,7 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 from keras.layers import *
 from keras import Model
@@ -13,7 +14,7 @@ from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
 from callbacks import Metrics, learningratescheduler, earlystopping, reducelronplateau
 from plotting import plot_loss_and_acc
-#os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
 
 def LipNet(input_shape, pretrained=None, output_size = 29, absolute_max_string_len=32):
         
