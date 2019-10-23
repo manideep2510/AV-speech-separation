@@ -70,14 +70,61 @@ def crop_pad_frames(frames, fps, seconds):
 import imgaug as ia
 import imgaug.augmenters as iaa
 
-sometimes1 = lambda aug: iaa.Sometimes(0.35, aug)
-sometimes2 = lambda aug: iaa.Sometimes(0.35, aug)
+sometimes = lambda aug: iaa.Sometimes(1, aug)
 
-seq = iaa.Sequential(
+seq1_1 = iaa.Sequential(
     [
-        sometimes1(iaa.Affine(rotate=(-10, 10))),
-        iaa.Fliplr(0.35),
-        sometimes2(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+        sometimes(iaa.Affine(rotate=(10), mode='reflect')),
+        #iaa.Fliplr(1),
+        #sometimes(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+    ]
+)
+
+seq1_2 = iaa.Sequential(
+    [
+        sometimes(iaa.Affine(rotate=(-10), mode='reflect')),
+        #iaa.Fliplr(1),
+        #sometimes(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+    ]
+)
+
+seq2 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        iaa.Fliplr(1),
+        #sometimes(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+    ]
+)
+
+seq3 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        #iaa.Fliplr(1),
+        sometimes(iaa.Affine(translate_px={"x": (10), "y": (-5)}, mode='constant', cval=0))
+    ]
+)
+
+seq4 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        #iaa.Fliplr(1),
+        sometimes(iaa.Affine(translate_px={"x": (-10), "y": (5)}, mode='constant', cval=0))
+    ]
+)
+
+seq5 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        #iaa.Fliplr(1),
+        sometimes(iaa.Affine(translate_px={"x": (10), "y": (5)}, mode='constant', cval=0))
+    ]
+)
+
+seq6 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        #iaa.Fliplr(1),
+        sometimes(iaa.Affine(translate_px={"x": (-10), "y": (-5)}, mode='constant', cval=0))
     ]
 )
 
@@ -159,7 +206,7 @@ def DataGenerator_train_softmask(folderlist, batch_size):
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i], fmt = 'grey')
-                x_lips = seq.augment_images(x_lips)
+#                x_lips = seq.augment_images(x_lips)
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
@@ -305,7 +352,34 @@ def DataGenerator_sampling_softmask(folderlist_all, folders_per_epoch, batch_siz
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i], fmt = 'grey')
-                x_lips = seq.augment_images(x_lips)
+                choices = [0,1,2,3]
+                choose = random.choice(choices)
+                if choose == 0:
+                    choices = [1,2,3]
+                    choose = random.choice(choices)
+                    if choose == 1:
+                        choices = [1,2]
+                        choose = random.choice(choices)
+                        if choose == 1:
+                            x_lips = seq1_1.augment_images(x_lips)
+                        elif choose == 2:
+                            x_lips = seq1_2.augment_images(x_lips)
+                    elif choose == 2:
+                        x_lips = seq2.augment_images(x_lips)
+                    elif choose == 3:
+                        choices = [0,1,2,3]
+                        choose = random.choice(choices)
+                        if choose == 0:
+                            x_lips = seq3.augment_images(x_lips)
+                        elif choose == 1:
+                            x_lips = seq4.augment_images(x_lips)
+                        elif choose == 2:
+                            x_lips = seq5.augment_images(x_lips)
+                        elif choose == 3:
+                            x_lips = seq6.augment_images(x_lips)
+                else:
+                    x_lips = x_lips
+                #x_lips = seq.augment_images(x_lips)
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
