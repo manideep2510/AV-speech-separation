@@ -827,7 +827,7 @@ def DataGenerator_test_softmask(folderlist, batch_size):
             
             for i in range(len(lips)):
 
-                x_lips = get_video_frames(lips[i])
+                x_lips = get_video_frames(lips[i], fmt='grey')
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 

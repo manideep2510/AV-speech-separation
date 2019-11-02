@@ -69,9 +69,9 @@ class LoggingCallback(Callback):
 #loggingcallback = LoggingCallback(
 
 def step_decay(epoch):
-    initial_lrate = 0.00001
+    initial_lrate = 0.0001
     drop = 0.1
-    epochs_drop = 9
+    epochs_drop = 10
     lrate = initial_lrate * math.pow(drop,
            math.floor((1+epoch)/epochs_drop))
     return lrate
@@ -88,8 +88,6 @@ def reducelronplateau():
     reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, min_lr = 0.00000001)
     return reducelronplateau
 
-class Logger(object):
-    """ Logger class to enable logging to file and terminal together """
     def __init__(self, logsdir):
         self.terminal = sys.stdout
         self.log = open(os.path.join(logsdir, 'log.txt'), "a")

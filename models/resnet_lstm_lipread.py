@@ -19,13 +19,13 @@ def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
     out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', name='gru1'), merge_mode='concat')(x)
     out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', name='gru2'), merge_mode='concat')(out)
     if every_frame:
-        out = Dense(num_classes, activation='softmax')(out)  # predictions based on every time step
+        out = Dense(num_classes)(out)  # predictions based on every time step
     else:
-        out = Dense(num_classes, activation='softmax')(out[:, -1, :])  # predictions based on last time-step
+        out = Dense(num_classes)(out[:, -1, :])  # predictions based on last time-step
     return out
 
 
-def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, absolute_max_string_len=128, every_frame=True):
+def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, absolute_max_string_len=128, every_frame=True, pretrain=None):
 
     frontend3D = Sequential([
                 ZeroPadding3D(padding=(2, 3, 3)),
@@ -95,8 +95,12 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
 
     model = Model(inputs=input_frames, outputs=x)
 
+    if pretrain == True:
+        model.load_weights('/data/models/combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs9to20_lr1e-5_0.1decay9epochs/weights-04-109.0513.hdf5')
+        print('ResNet LSTM Pretrain weights loaded')
+
     return model
 
-def lipreading(mode, inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True):
-    model = Lipreading(mode, inputDim=inputDim, hiddenDim=hiddenDim, nClasses=nClasses, frameLen=frameLen, absolute_max_string_len=AbsoluteMaxStringLen, every_frame=every_frame)
+def lipreading(mode, inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True, pretrain=True):
+    model = Lipreading(mode, inputDim=inputDim, hiddenDim=hiddenDim, nClasses=nClasses, frameLen=frameLen, absolute_max_string_len=AbsoluteMaxStringLen, every_frame=every_frame, pretrain=pretrain)
     return model

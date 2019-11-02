@@ -6,7 +6,7 @@ import numpy as np
 
 import tensorflow as tf
 from keras import backend as K
-from data_generators import DataGenerator_test
+from data_generators import DataGenerator_test_softmask
 
 def si_snr(x, s, remove_dc=True):
     """
@@ -224,7 +224,7 @@ class Metrics_crm(Callback):
         snr_list = []
         for n in range(num_100s):
             val_folders_100 = self.val_folders[n*100:(n+1)*100]
-            val_predict = np.asarray(self.model.predict_generator(DataGenerator_test(val_folders_100, self.batch_size), steps = np.ceil((len(val_folders_100))/float(self.batch_size))))
+            val_predict = np.asarray(self.model.predict_generator(DataGenerator_test_softmask(val_folders_100, self.batch_size), steps = np.ceil((len(val_folders_100))/float(self.batch_size))))
             mixed_spect = val_predict[:,:,:,2]
             mixed_phase = val_predict[:,:,:,3]
             val_targ = val_predict[:,:,:,4]

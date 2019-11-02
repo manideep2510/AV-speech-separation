@@ -20,15 +20,17 @@ from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau, CSVLogger
-from callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau, LoggingCallback
+from callbacks import learningratescheduler, earlystopping, reducelronplateau, LoggingCallback
 #from tensorflow.keras.callbacks import CSVLogger
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
-from losses import l2_loss, mse
+from losses import l2_loss, mse, l1_loss, mag_phase_loss
 from models.lipnet import LipNet
-from models.tasnet_lipnet import TasNet
+from models.tasnet_resnetLip import TasNet
+#from models.tasnet_lipnet import TasNet
 from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
+#from dataloaders_aug import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
 
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
@@ -60,21 +62,29 @@ def numericalSort(value):
 #folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
 folders_list_train = folders_list[:91500] +folders_list[93000:238089]
+'''folders_list_train2 = np.loadtxt('/data/AV-speech-separation/data_filenames_3comb.txt', dtype='object').tolist()
+folders_list_train2_=[]
+for item in folders_list_train2:
+    fold = '/data/lrs2/'+item
+    folders_list_train2_.append(fold)
+folders_list_train = folders_list_train1[:55000] + folders_list_train2_'''
 import random
 random.seed(10)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
-#random.seed(20)
+#random.seed(30)
 #folders_list_val = random.sample(folders_list_val, 120)
 #folders_list_train = random.sample(folders_list_train, 180)
 #folders_list_train = folders_list[:180]
 #folders_list_val = folders_list[180:300]
 
+#print('Training data:', len(folders_list_train1[:55000])*2 + len(folders_list_train2)*3)
 print('Training data:', len(folders_list_train)*2)
 print('Validation data:', len(folders_list_val)*2)
 
 # Building the model
-tasnet = TasNet(video_ip_shape=(125,50,100,3), time_dimensions=500, frequency_bins=257, n_frames=125, lipnet_pretrained='pretrain')
+#tasnet = TasNet(video_ip_shape=(125,50,100,3), time_dimensions=500, frequency_bins=257, n_frames=125, lipnet_pretrained='pretrain', train_lipnet=False)
+tasnet = TasNet(video_ip_shape=(125,50,100,3), time_dimensions=500, frequency_bins=257, n_frames=125, lipnet_pretrained='pretrain', train_lipnet=None)
 model = tasnet.model
 
 from io import StringIO
@@ -89,11 +99,9 @@ print('\n'+summary_params)
 # Compile the model
 lrate = args.lrate
 
-#model.load_weights('/data/models/softmask_unet_Lipnet+cocktail_1in_1out_90k-train_1to3ratio_valSDR_epochs20_lr1e-4_0.1decay10epochs/weights-10-188.9557.hdf5')
+model.load_weights('/data/models/tasnet_ResNetLSTMLip_Lips_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1/weights-17-249.6407.hdf5')
 
 #model = multi_gpu_model(model, gpus=2)
-
-#model.load_weights('/data/models/test_Lipnet+cocktail_1in_1out_20k-train_valSDR_epochs20_lr1e-4_0.322decay5epochs/weights-12-0.4127.hdf5')
 
 model.compile(optimizer = Adam(lr=lrate), loss = l2_loss)
 
@@ -102,7 +110,8 @@ epochs = args.epochs
 
 # Path to save model checkpoints
 
-path = 'tasnet_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp2'
+path = 'tasnet_lipnet_MagPhaseLoss_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
+#path = 'tasnet_ResNetLSTMLip_Lips_crm_100kTrain_2And3Mix_epochs20_lr1e-4_0.1decay10epochs_exp1'
 
 try:
     os.mkdir('/data/models/'+ path)
@@ -121,13 +130,23 @@ def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
         myfile.write(msg)
 
 # callcack
+
+def step_decay(epoch):
+    initial_lrate = 0.0001
+    drop = 0.1
+    epochs_drop = 10
+    lrate = initial_lrate * math.pow(drop,
+           math.floor((1+epoch)/epochs_drop))
+    return lrate
+
+def learningratescheduler():
+    learningratescheduler = LearningRateScheduler(step_decay)
+    return learningratescheduler
+
 metrics_crm = Metrics_crm(model = model, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
 learningratescheduler = learningratescheduler()
 earlystopping = earlystopping()
 reducelronplateau = reducelronplateau()
-#loggingcallback = LoggingCallback
-#logger = Logger('/data/results')
-#csv_logger = CSVLogger(filename = '/data/results/'+path+'/logs.txt', append=True)
 
 filepath='/data/models/' +  path+ '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
@@ -142,7 +161,7 @@ history = model.fit_generator(DataGenerator_sampling_crm(folders_list_train, fol
                 validation_data=DataGenerator_train_crm(folders_list_val, batch_size), 
                 validation_steps = np.ceil((len(folders_list_val))/float(batch_size)),
                 callbacks=[earlystopping, learningratescheduler, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm], verbose = 1)
-#LoggingCallback(print_fcn=log_to_file)
+
 # Plots
 plot_loss_and_acc(history, path)
 

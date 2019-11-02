@@ -25,19 +25,66 @@ from pathlib import Path
 import shutil
 import cv2
 
-'''import imgaug as ia
+import imgaug as ia
 import imgaug.augmenters as iaa
 
-sometimes1 = lambda aug: iaa.Sometimes(0.35, aug)
-sometimes2 = lambda aug: iaa.Sometimes(0.35, aug)
+sometimes = lambda aug: iaa.Sometimes(1, aug)
 
-seq = iaa.Sequential(
+seq1_1 = iaa.Sequential(
     [
-        sometimes1(iaa.Affine(rotate=(-10, 10))),
-        iaa.Fliplr(0.35),
-        sometimes2(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+        sometimes(iaa.Affine(rotate=(10), mode='reflect')),
+        #iaa.Fliplr(1),
+        #sometimes(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
     ]
-)'''
+)
+
+seq1_2 = iaa.Sequential(
+    [
+        sometimes(iaa.Affine(rotate=(-10), mode='reflect')),
+        #iaa.Fliplr(1),
+        #sometimes(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+    ]
+)
+
+seq2 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        iaa.Fliplr(1),
+        #sometimes(iaa.Affine(translate_px={"x": (-10,10), "y": (-5, 5)}, mode='constant', cval=0))
+    ]
+)
+
+seq3 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        #iaa.Fliplr(1),
+        sometimes(iaa.Affine(translate_px={"x": (10), "y": (-5)}, mode='constant', cval=0))
+    ]
+)
+
+seq4 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        #iaa.Fliplr(1),
+        sometimes(iaa.Affine(translate_px={"x": (-10), "y": (5)}, mode='constant', cval=0))
+    ]
+)
+
+seq5 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        #iaa.Fliplr(1),
+        sometimes(iaa.Affine(translate_px={"x": (10), "y": (5)}, mode='constant', cval=0))
+    ]
+)
+
+seq6 = iaa.Sequential(
+    [
+        #sometimes(iaa.Affine(rotate=(-10, 10))),
+        #iaa.Fliplr(1),
+        sometimes(iaa.Affine(translate_px={"x": (-10), "y": (-5)}, mode='constant', cval=0))
+    ]
+)
 
 home = str(Path.home())
 # Avoid printing TF log messages
@@ -136,7 +183,6 @@ def DataGenerator_train_crm(folderlist, batch_size):
 
             Cx = 0.9999999*(X_crm>0.9999999)+X_crm*(X_crm<=0.9999999)
             X_crm = -0.9999999*(Cx<-0.9999999)+Cx*(Cx>=-0.9999999)
-
             #print(X_mask.shape)
 #            print('mask', X_mask.shape)
             
@@ -217,7 +263,6 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
             samples = []
             #phase_mask = []
             for folder in folders_batch:
-                #print(folder)
 
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 crms_ = sorted(glob.glob(folder + '/*_crm.npy'), key=numericalSort)
@@ -225,16 +270,21 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
                 #phase_mask_ = sorted(glob.glob(folder + '/*_phasemask.npy'), key=numericalSort)
                 spect_ = folder + '/mixed_spectrogram.npy'
                 phase_ = folder + '/phase_spectrogram.npy'
-                for i in range(len(lips_)):
-                    lips.append(lips_[i])
-                for i in range(len(samples_)):
-                    samples.append(samples_[i])
-                for i in range(len(crms_)):
-                    crm.append(crms_[i])
-                for i in range(len(lips_)):
-                    spect.append(spect_)
-                for i in range(len(lips_)):
-                    phase.append(phase_)
+
+                lips.append(lips_[0])
+                lips.append(lips_[1])
+
+                samples.append(samples_[0])
+                samples.append(samples_[1])
+
+                crm.append(crms_[0])
+                crm.append(crms_[1])
+
+                spect.append(spect_)
+                spect.append(spect_)
+
+                phase.append(phase_)
+                phase.append(phase_)
                 
                 #phase_mask.append(phase_mask_[0])
                 #phase_mask.append(phase_mask_[1])
@@ -249,7 +299,6 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
 
             Cx = 0.9999999*(X_crm>0.9999999)+X_crm*(X_crm<=0.9999999)
             X_crm = -0.9999999*(Cx<-0.9999999)+Cx*(Cx>=-0.9999999)
-
             #X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
             #print(X_mask.shape)
 #            print('mask', X_mask.shape)
@@ -274,7 +323,33 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i], fmt= 'grey')
-                #x_lips = seq.augment_images(x_lips)
+                choices = [0,1,2,3]
+                choose = random.choice(choices)
+                if choose == 0:
+                    choices = [1,2,3]
+                    choose = random.choice(choices)
+                    if choose == 1:
+                        choices = [1,2]
+                        choose = random.choice(choices)
+                        if choose == 1:
+                            x_lips = seq1_1.augment_images(x_lips)
+                        elif choose == 2:
+                            x_lips = seq1_2.augment_images(x_lips)
+                    elif choose == 2:
+                        x_lips = seq2.augment_images(x_lips)
+                    elif choose == 3:
+                        choices = [0,1,2,3]
+                        choose = random.choice(choices)
+                        if choose == 0:
+                            x_lips = seq3.augment_images(x_lips)
+                        elif choose == 1:
+                            x_lips = seq4.augment_images(x_lips)
+                        elif choose == 2:
+                            x_lips = seq5.augment_images(x_lips)
+                        elif choose == 3:
+                            x_lips = seq6.augment_images(x_lips)
+                else:
+                    x_lips = x_lips
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)
 
@@ -284,10 +359,6 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
             #X = seq.augment_images(X)
             
             #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
-
-            '''print('X_spect_phase:', X_spect_phase.shape)
-            print('X_lips', X_lips.shape)
-            print('X_samples')'''
 
             yield [X_spect_phase, X_lips, X_samples], X_crm
 
@@ -360,7 +431,7 @@ def DataGenerator_test_crm(folderlist, batch_size):
             
             for i in range(len(lips)):
 
-                x_lips = get_video_frames(lips[i], fmt = 'grey')
+                x_lips = get_video_frames(lips[i], fmt= 'grey')
                 #x_lips = seq.augment_images(x_lips)
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
                 X_lips.append(x_lips)

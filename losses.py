@@ -2,7 +2,7 @@ import tensorflow as tf
 import keras
 from  keras import backend as K
 from keras.losses import sparse_categorical_crossentropy
-
+ 
 def prepare_label(input_batch, new_size, num_classes, one_hot=True):
     with tf.name_scope('label_encode'):
         input_batch = tf.image.resize_nearest_neighbor(input_batch, new_size) # as labels are integer numbers, need to use NN interp.
@@ -13,9 +13,67 @@ def prepare_label(input_batch, new_size, num_classes, one_hot=True):
     return input_batch
 
 def l2_loss(spect1, spect2):
+    
     #spect2 = spect2[:,:,:,0]
     loss = tf.sqrt(tf.nn.l2_loss(spect1[:,:,:,:2] - spect2[:,:,:,:2]))
     #loss = tf.sqrt(tf.nn.l2_loss(spect1 - spect2))
+    return loss
+
+def l1_loss(spect1, spect2):
+    #spect2 = spect2[:,:,:,0] 
+    #batch = spect1.shape[0]
+    #loss = tf.reduce_mean(tf.math.abs(spect1[:,:,:,:2] - spect2[:,:,:,:2]))
+    mae = tf.keras.losses.MeanAbsoluteError()
+    loss = mae(spect1[:,:,:,:2], spect2[:,:,:,:2])
+    #loss = tf.sqrt(tf.nn.l2_loss(spect1 - spect2))
+    return loss
+
+def crm_to_mag_phase(crm, mixed_spect, mixed_phase):
+    real = crm[:,:,:,0]
+    imag = crm[:,:,:,1]
+
+    real_phase = tf.math.cos(mixed_phase)
+    imag_phase = tf.math.sin(mixed_phase)
+
+    mixed_stft_real = tf.math.multiply(real_phase,(tf.math.pow(mixed_spect, 10/3)))
+    mixed_stft_imag = tf.math.multiply(imag_phase,(tf.math.pow(mixed_spect, 10/3)))
+
+    stft_real = tf.math.multiply(real, mixed_stft_real)
+    stft_imag = tf.math.multiply(imag, mixed_stft_imag)
+
+    mag = tf.math.sqrt(tf.math.abs(tf.math.add(tf.math.square(stft_real), tf.math.square(stft_imag)))+ 1e-10)
+    phase = tf.math.atan(tf.math.divide(stft_imag, stft_real))
+    #phase = tf.math.angle(tf.dtypes.complex(stft_real, stft_imag))
+    phase = tf.where(tf.is_nan(phase), tf.ones_like(phase) * 1.5707964, phase)
+
+    return mag, phase
+
+
+def mag_phase_loss(crms_gt, y_pred):
+    #crms_gt = y_true
+    mixed_spect = y_pred[:,:,:,2]
+    mixed_phase = y_pred[:,:,:,3]
+    crms = y_pred[:,:,:,:2]
+
+    inverse_crm = tf.math.atanh(crms)
+
+    '''Cx = 0.9999999*tf.dtypes.cast((crms_gt>0.9999999), dtype=tf.float32)+crms_gt*tf.dtypes.cast((crms_gt<=0.9999999), dtype=tf.float32)
+    crms_gt = -0.9999999*tf.dtypes.cast((Cx<-0.9999999), dtype=tf.float32)+Cx*tf.dtypes.cast((Cx>=-0.9999999), dtype=tf.float32)
+'''
+    inverse_crm_gt = tf.math.atanh(crms_gt)
+
+    mag_pred, phase_pred = crm_to_mag_phase(inverse_crm, mixed_spect, mixed_phase)
+    mag_true, phase_true = crm_to_mag_phase(inverse_crm_gt, mixed_spect, mixed_phase)
+
+    # Mag and Phase loss calculation
+    #mae = tf.keras.losses.MeanAbsoluteError()
+    #mag_loss = mae(mag_pred, mag_true)
+    mag_loss = tf.reduce_mean(tf.math.abs(mag_pred - mag_true))
+
+    phase_loss = tf.reduce_mean(tf.math.multiply(tf.math.cos(tf.math.subtract(phase_pred, phase_true)), mag_true))
+
+    loss = tf.math.subtract(mag_loss, 0.4*phase_loss)
+    
     return loss
 
 def mse(target_mask, predicted_mask):
