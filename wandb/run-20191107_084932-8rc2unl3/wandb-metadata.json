@@ -1,0 +1,35 @@
+{
+    "os": "Linux-4.15.0-46-generic-x86_64-with-Ubuntu-16.04-xenial",
+    "python": "3.5.2",
+    "cpu_count": 12,
+    "gpu_count": 1,
+    "heartbeatAt": "2019-11-08T18:28:11.388148",
+    "jobType": null,
+    "notes": "Training with 5 Second clips. TasNet with 2 branches at the end, one for each real and imaginary mask prediction. Loss is Root of TF L2 Loss",
+    "root": "/data/AV-speech-separation",
+    "name": "tasnet-2branches-5SecVids_RootOfL2Loss",
+    "project": "av-speech-seperation",
+    "program": "main_tasnet.py",
+    "username": "4014",
+    "cuda": "10.0.130",
+    "startedAt": "2019-11-07T08:49:35.468631",
+    "git": {
+        "remote": "https://github.com/manideep2510/AV-speech-separation",
+        "commit": "6fc0803cf9a85ec476684b1187aa41d57f3db6f4"
+    },
+    "host": "shell3",
+    "executable": "/usr/local/bin/python",
+    "email": null,
+    "gpu": "TITAN Xp",
+    "exitcode": 255,
+    "args": [
+        "-epochs",
+        "20",
+        "-batch_size",
+        "4",
+        "-lr",
+        "0.0001"
+    ],
+    "mode": "dryrun",
+    "state": "killed"
+}

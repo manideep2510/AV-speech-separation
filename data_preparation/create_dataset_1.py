@@ -38,8 +38,8 @@ combination_no = args.combination_no
 count = args.count'''
 
 dataset_type = 'train'
-combination_no = 2
-count = 3
+combination_no = 1
+count = 2
 
 '''# To read the images in numerical order
 import re
@@ -53,11 +53,11 @@ if dataset_type == "train":
     files = sorted(glob.glob('/data/lrs2/mvlrs_v1/pretrain/*/*_lips.mp4'), key=numericalSort)
     
     try:
-        os.mkdir('/data/lrs2/train_3comb')
+        os.mkdir('/data/lrs2/train_20s')
     except OSError:
         pass
     
-    dest_folder = '/data/lrs2/train_3comb'
+    dest_folder = '/data/lrs2/train_20s'
     
 elif dataset_type == "val":
     files = sorted(glob.glob('/data/lrs2/mvlrs_v1/main/*/*_lips.mp4'), key=numericalSort)
@@ -83,23 +83,25 @@ files_req = []
 for item in files:
     frames = get_frames(item)
     #sh = frames.shape[0]
-    if frames>=75 and frames<325:
+    if frames>=501 and frames<550:
         files_req.append(item)
 
-print('Files > 3 secs', len(files_req))
+print('Files > 20 secs and < 22 secs', len(files_req))
 
 # Make combinations
 a = time.time()
 combinations_list = pair_files(files_req, combination_no = combination_no, count = count)
 b = time.time()'''
 
-dest_folder = '/data/lrs2/train_3comb'
-combinations_list = np.loadtxt('/data/lrs2/combinations_list_3comb.txt', dtype='object')
+dest_folder = '/data/lrs2/train_20s'
+combinations_list = np.loadtxt('/data/lrs2/combinations_list_20s.txt', dtype='object')
 
 with open("/data/AV-speech-separation/data_preparation/log_create_dataset.txt", "w") as myfile:
     myfile.write(str(len(combinations_list)) + ' pairs generated')
 
 print(len(combinations_list), 'pairs generated')
+
+#np.savetxt('/data/lrs2/combinations_list_20s.txt', combinations_list, fmt='%s')
 
 # Create training folders
 c = 0

@@ -518,10 +518,10 @@ def gen_comb_folders_crm(combined_pairs, dest_folder):
         
     # Compute the spectrogram of mised audio
     s, n, c = compute_spectrograms(mixed_audio_filepath)
-    mixed_spectogram =s[:,:500]  # Useful frames
+    mixed_spectogram =s[:,:2000]  # Useful frames
 
     phase=np.angle(c)
-    phase=phase[:,:500]
+    phase=phase[:,:2000]
 
     mixed_spectogram = np.asarray(mixed_spectogram, dtype='float16')
     
@@ -549,9 +549,9 @@ def gen_comb_folders_crm(combined_pairs, dest_folder):
         # Save the mask
         
         s, n, c_ = compute_spectrograms(audio_file)
-        s_use=s[:, :500]
+        s_use=s[:, :2000]
         s_phase = np.angle(c)
-        s_phase=s_phase[:,:500]
+        s_phase=s_phase[:,:2000]
 
         Cx,Cy = compress_crm(mixed_mag = mixed_spectogram,mixed_phase = phase,signal_mag = s_use,signal_phase = s_phase, K=1,C=2)
         mask1 = np.stack([Cx,Cy], axis=-1)
@@ -613,10 +613,10 @@ def gen_comb_folders_3comb(combined_pairs, dest_folder):
         
     # Compute the spectrogram of mised audio
     s, n, c = compute_spectrograms(mixed_audio_filepath)
-    mixed_spectogram =s[:,:500]  # Useful frames
+    mixed_spectogram =s[:,:2000]  # Useful frames
 
     phase=np.angle(c)
-    phase=phase[:,:500]
+    phase=phase[:,:2000]
 
     mixed_spectogram = np.asarray(mixed_spectogram, dtype='float16')
     
@@ -660,9 +660,9 @@ def gen_comb_folders_3comb(combined_pairs, dest_folder):
         # Save the mask
         
         s, n, c_ = compute_spectrograms(audio_file)
-        s_use=s[:, :500]
+        s_use=s[:, :2000]
         s_phase = np.angle(c)
-        s_phase=s_phase[:,:500]
+        s_phase=s_phase[:,:2000]
 
         Cx,Cy = compress_crm(mixed_mag = mixed_spectogram,mixed_phase = phase,signal_mag = s_use,signal_phase = s_phase, K=1,C=2)
         mask1 = np.stack([Cx,Cy], axis=-1)

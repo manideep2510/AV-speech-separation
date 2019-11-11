@@ -1,18 +1,19 @@
 import sys
-sys.path.append('/data/AV-speech-separation/LipNet')
-sys.path.append('/data/AV-speech-separation/models')
+sys.path.append('/data/AV-speech-separation1/LipNet')
+sys.path.append('/data/AV-speech-separation1/models')
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
-import keras
-from keras.layers import *
-from keras import Model, Sequential
-import keras.backend as K
-from keras.optimizers import Adam
-from keras.models import load_model
-from keras.layers.core import Lambda
-from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
+import tensorflow.keras as keras
+from tensorflow.keras.layers import *
+from tensorflow.keras import Model, Sequential
+import tensorflow.keras.backend as K
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import load_model
+from tensorflow.keras.layers import Lambda
+#from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
+from classification_models.tfkeras import Classifiers
 
 def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
 
@@ -66,6 +67,9 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
     print('3D Conv Out Reshape:', x.shape)
 
     channels = int(x.shape[-1])
+    #resnet18 = ResNet18((None, None, channels), weights=None, include_top=False)
+
+    ResNet18, preprocess_input = Classifiers.get('resnet18')
     resnet18 = ResNet18((None, None, channels), weights=None, include_top=False)
 
     x = resnet18(x)

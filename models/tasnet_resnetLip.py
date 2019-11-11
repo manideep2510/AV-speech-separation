@@ -71,7 +71,7 @@ class TasNet(object):
         
     def build(self):
         
-        self.ip_samples = Input(shape = (128500,))
+        self.ip_samples = Input(shape = (self.t*self.f,), name='ip_samples')
         self.input_samples = Lambda(lambda x : x, name='lambda_input_samples')(self.ip_samples)
         print('input_samples', self.input_samples.shape)
         self.input_samples = Reshape([self.f, self.t, 1])(self.input_samples)
@@ -79,7 +79,7 @@ class TasNet(object):
         
         #self.video_input_data=Input(shape=(self.frames,256))#video_shape=(125,256)
         
-        self.audio_input_data=Input(shape=(self.f,self.t,2),dtype='float32')#audio_shape=(257,500,2)
+        self.audio_input_data=Input(shape=(self.f,self.t,2),dtype='float32', name='audio_input_data')#audio_shape=(257,500,2)
         self.audio_input = Lambda(lambda x : tf.transpose(x, [0, 2, 1, 3]))(self.audio_input_data) # Transpose
         self.audio_magnitude = Lambda(lambda x : x[:,:,:,0])(self.audio_input)
         self.audio_phase = Lambda(lambda x : x[:,:,:,1])(self.audio_input)
@@ -88,7 +88,7 @@ class TasNet(object):
     
         #video_processing
 
-        self.lipnet_model = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True, pretrain=True)
+        self.lipnet_model = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=self.frames, AbsoluteMaxStringLen=128, every_frame=True, pretrain=True)
 
         if self.train_lipnet == False:
             for layer in self.lipnet_model.layers:

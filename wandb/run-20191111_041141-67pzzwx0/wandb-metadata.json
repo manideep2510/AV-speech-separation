@@ -1,0 +1,35 @@
+{
+    "heartbeatAt": "2019-11-11T04:12:03.955631",
+    "root": "/data/AV-speech-separation1",
+    "gpu": "TITAN Xp",
+    "name": "test_Attention-tasnet-ResNetLSTMLipnet",
+    "python": "3.5.2",
+    "cuda": "10.0.130",
+    "mode": "dryrun",
+    "jobType": null,
+    "username": "4014",
+    "executable": "/usr/local/bin/python",
+    "project": "av-speech-seperation",
+    "gpu_count": 2,
+    "notes": "Code Testing. Training with Attention layer, 2 Second clips. TasNet with Resnet LSTM Lipnet. Loss is Root of TF L2 Loss",
+    "args": [
+        "-epochs",
+        "2",
+        "-batch_size",
+        "12",
+        "-lr",
+        "0.0001"
+    ],
+    "git": {
+        "remote": "https://github.com/manideep2510/AV-speech-separation",
+        "commit": "6fc0803cf9a85ec476684b1187aa41d57f3db6f4"
+    },
+    "program": "main_tasnet.py",
+    "email": null,
+    "state": "failed",
+    "startedAt": "2019-11-11T04:11:44.368654",
+    "exitcode": 1,
+    "os": "Linux-4.15.0-46-generic-x86_64-with-Ubuntu-16.04-xenial",
+    "cpu_count": 12,
+    "host": "shell2"
+}

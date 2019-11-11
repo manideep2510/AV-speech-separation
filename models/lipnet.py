@@ -5,13 +5,13 @@ warnings.filterwarnings("ignore")
 
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
-from keras.layers import *
-from keras import Model
-import keras.backend as K
-from keras.optimizers import Adam
-from keras.models import load_model
-from keras.layers.core import Lambda
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.layers import *
+from tensorflow.keras import Model
+import tensorflow.keras.backend as K
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import load_model
+from tensorflow.keras.layers import Lambda
+from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
 from callbacks import Metrics, learningratescheduler, earlystopping, reducelronplateau
 from plotting import plot_loss_and_acc
 

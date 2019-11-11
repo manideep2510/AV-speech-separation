@@ -1,0 +1,13 @@
+2019-11-11 12:51:51,289 DEBUG   MainThread:29150 [wandb_config.py:_load_defaults():104] wandb dir not provided, skipping defaults
+2019-11-11 12:51:51,308 DEBUG   MainThread:29150 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2019-11-11 12:51:52,162 DEBUG   MainThread:29150 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 499
+2019-11-11 12:51:52,182 DEBUG   MainThread:29150 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2019-11-11 12:51:53,008 DEBUG   MainThread:29150 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /files/manideep2510/av-speech-seperation/mxz3scy4/file_stream HTTP/1.1" 200 311
+2019-11-11 12:51:53,343 DEBUG   MainThread:29150 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /files/manideep2510/av-speech-seperation/mxz3scy4/file_stream HTTP/1.1" 200 311
+2019-11-11 12:51:53,359 DEBUG   MainThread:29150 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2019-11-11 12:51:54,201 DEBUG   MainThread:29150 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 733
+2019-11-11 12:51:54,234 DEBUG   Thread-4  :29150 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2019-11-11 12:51:55,058 DEBUG   Thread-4  :29150 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 819
+2019-11-11 12:51:55,063 DEBUG   Thread-4  :29150 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): storage.googleapis.com:443
+2019-11-11 12:51:55,977 DEBUG   Thread-4  :29150 [connectionpool.py:_make_request():393] https://storage.googleapis.com:443 "PUT /wandb-production.appspot.com/manideep2510/av-speech-seperation/mxz3scy4/___batch_archive_1.tgz?Expires=1573456974&GoogleAccessId=gorilla-cloud-storage%40wandb-production.iam.gserviceaccount.com&Signature=UmwaTyZFskbC1gv0EufpuglUOHK7XZ4aNsNSHnh6%2Fm00FMUKRkNl5k1NT1G%2Frj8SxrQXJJ%2Fwv71z1puqxpqCS63Z1xYtEIR56LoiFhfjAehrc5wt0Aj9I%2Fcox83F%2FIC0oj%2BjGVg0nsxpIQ49a2er0mtW48JxbSjhbY3ISmHDXp7GPAlafH4gEvsBjCbm%2Fv5eTua3BVdTgflINcBYEcLqcy3JC7DU4%2F7cwk%2F%2FlADkXUC2zqD91bZgRpGDas%2FezzxQIErz1hJHBd3XKd8VUKDgACODkbiJktyCVY%2FWUAl0Ok%2FihKUfcqtNFvwMGzvMRB49AKE%2BXPnuObft%2BEWxLwktMA%3D%3D HTTP/1.1" 200 0
+2019-11-11 12:51:57,523 DEBUG   Thread-1  :29150 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /files/manideep2510/av-speech-seperation/mxz3scy4/file_stream HTTP/1.1" 200 308

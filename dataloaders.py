@@ -161,7 +161,7 @@ def DataGenerator_train_crm(folderlist, batch_size):
 
                 x_lips = get_video_frames(lips[i], fmt= 'grey')
                 #x_lips = seq.augment_images(x_lips)
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
                 X_lips.append(x_lips)
 
 
@@ -170,6 +170,10 @@ def DataGenerator_train_crm(folderlist, batch_size):
             #X = seq.augment_images(X)
             
             #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
+
+            X_spect_phase = X_spect_phase[:,:,:200,:]
+            X_samples = X_samples[:,:257*200]
+            X_crm=X_crm[:,:,:200,:]
 
             yield [X_spect_phase, X_lips, X_samples], X_crm
 
@@ -275,7 +279,7 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
 
                 x_lips = get_video_frames(lips[i], fmt= 'grey')
                 #x_lips = seq.augment_images(x_lips)
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
                 X_lips.append(x_lips)
 
 
@@ -289,13 +293,17 @@ def DataGenerator_sampling_crm(folderlist_all, folders_per_epoch, batch_size):
             print('X_lips', X_lips.shape)
             print('X_samples')'''
 
+            X_spect_phase = X_spect_phase[:,:,:200,:]
+            X_samples = X_samples[:,:257*200]
+            X_crm=X_crm[:,:,:200,:]
+
             yield [X_spect_phase, X_lips, X_samples], X_crm
 
             batch_start += batch_size
             batch_end += batch_size
 
             
-def DataGenerator_test_crm(folderlist, batch_size):
+def DataGenerator_test_softmask(folderlist, batch_size):
 
     L = len(folderlist)
 
@@ -317,7 +325,7 @@ def DataGenerator_test_crm(folderlist, batch_size):
             for folder in folders_batch:
 
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                #masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
+                masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
                 spect_ = folder + '/mixed_spectrogram.npy'
                 phase_ = folder + '/phase_spectrogram.npy'
@@ -345,7 +353,7 @@ def DataGenerator_test_crm(folderlist, batch_size):
             
             X_phase = [np.load(fname) for fname in phase]
 
-            X_samples = np.asarray([np.pad(np.load(fname), (0, 128500), mode='constant')[:128500] for fname in samples])
+            X_samples = np.asarray([np.pad(np.load(fname), (0, 257*100*5), mode='constant')[:257*100*5] for fname in samples])
             
             X_spect_phase = []
             for i in range(len(X_spect)):
@@ -360,15 +368,17 @@ def DataGenerator_test_crm(folderlist, batch_size):
             
             for i in range(len(lips)):
 
-                x_lips = get_video_frames(lips[i], fmt = 'grey')
-                #x_lips = seq.augment_images(x_lips)
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                x_lips = get_video_frames(lips[i], fmt='grey')
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds =2)
                 X_lips.append(x_lips)
 
 
             X_lips = np.asarray(X_lips)
 #            print(X_samples.shape)
             #X = seq.augment_images(X)
+
+            X_spect_phase = X_spect_phase[:,:,:200,:]
+            X_samples = X_samples[:,:257*200]
 
             yield [X_spect_phase, X_lips, X_samples]
 

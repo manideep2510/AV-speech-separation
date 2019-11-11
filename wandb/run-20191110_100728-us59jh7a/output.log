@@ -1,0 +1,51 @@
+Training data: 473178
+Validation data: 6002
+input_samples (?, 128500)
+input_samples_reshape (?, 257, 500, 1)
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+3D Conv Out: (?, 125, 32, 32, 64)
+3D Conv Out Reshape: (?, 32, 32, 64)
+Resnet18 Out: (?, 1, 1, 512)
+Resnet18 Linear Out: (?, 256)
+Input to GRU: (?, 125, 256)
+GRU Out: (?, 125, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (?, 500, 256)
+outa: (?, 500, 256)
+attn_out: (?, 500, 256)
+attn_states: (?, 500, 500)
+fusion: (?, 500, 512)
+
+==================================================================================================
+Total params: 38,135,071
+Trainable params: 38,080,287
+Non-trainable params: 54,784
+__________________________________________________________________________________________________
+
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.
+Epoch 1/20
+    1/11267 [..............................] - ETA: 144:03:24 - loss: 1376.0414Traceback (most recent call last):
+  File "main_tasnet.py", line 167, in <module>
+    callbacks=[earlystopping, learningratescheduler, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm], verbose = 1)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training.py", line 1426, in fit_generator
+    initial_epoch=initial_epoch)
+  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
+    return old_generator(*args, **kwargs)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training_generator.py", line 191, in model_iteration
+    batch_outs = batch_function(*batch_data)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training.py", line 1191, in train_on_batch
+    outputs = self._fit_function(ins)  # pylint: disable=not-callable
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/backend.py", line 3076, in __call__
+    run_metadata=self.run_metadata)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/client/session.py", line 1439, in __call__
+    run_metadata_ptr)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/framework/errors_impl.py", line 528, in __exit__
+    c_api.TF_GetCode(self.status.status))
+tensorflow.python.framework.errors_impl.ResourceExhaustedError: OOM when allocating tensor with shape[14,64,125,33,66] and type float on /job:localhost/replica:0/task:0/device:GPU:0 by allocator GPU_0_bfc
+	 [[{{node training/Adam/gradients/sequential/MaxPool3D_grad/MaxPool3DGrad}}]]
+Hint: If you want to see a list of allocated tensors when OOM happens, add report_tensor_allocations_upon_oom to RunOptions for current allocation info.
+

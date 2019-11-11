@@ -1,0 +1,35 @@
+{
+    "cuda": "10.0.130",
+    "notes": "Training with Attention layer, 5 Second clips. TasNet with LipNet. Loss is Root of TF L2 Loss",
+    "git": {
+        "commit": "6fc0803cf9a85ec476684b1187aa41d57f3db6f4",
+        "remote": "https://github.com/manideep2510/AV-speech-separation"
+    },
+    "program": "main_tasnet.py",
+    "jobType": null,
+    "heartbeatAt": "2019-11-09T23:59:41.890846",
+    "os": "Linux-4.15.0-46-generic-x86_64-with-Ubuntu-16.04-xenial",
+    "cpu_count": 12,
+    "executable": "/usr/local/bin/python",
+    "project": "av-speech-seperation",
+    "python": "3.5.2",
+    "mode": "dryrun",
+    "args": [
+        "-epochs",
+        "20",
+        "-batch_size",
+        "14",
+        "-lr",
+        "0.0001"
+    ],
+    "name": "Attention-tasnet-Lipnet",
+    "email": null,
+    "gpu": "TITAN Xp",
+    "username": "4014",
+    "state": "killed",
+    "host": "shell2",
+    "root": "/data/AV-speech-separation1",
+    "gpu_count": 2,
+    "startedAt": "2019-11-09T23:30:27.059018",
+    "exitcode": 255
+}

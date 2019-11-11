@@ -4,15 +4,16 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import tensorflow as tf
-import keras.backend as K
+import tensorflow.keras.backend as K
 
-from keras.layers import *
-from keras.activations import *
-from keras.models import Model
-from keras.models import load_model
-from keras.layers.core import Lambda
+from tensorflow.keras.layers import *
+from tensorflow.keras.activations import *
+from tensorflow.keras.models import Model
+from tensorflow.keras.models import load_model
+from tensorflow.keras.layers import Lambda
 
 from .lipnet import LipNet
+from .attention_layers import AttentionLayer
 
 def custom_tanh(x):
     
@@ -70,7 +71,7 @@ class TasNet(object):
         
     def build(self):
         
-        self.ip_samples = Input(shape = (128500,))
+        self.ip_samples = Input(shape = (self.t*self.f,))
         self.input_samples = Lambda(lambda x : x, name='lambda_input_samples')(self.ip_samples)
         print('input_samples', self.input_samples.shape)
         self.input_samples = Reshape([self.f, self.t, 1])(self.input_samples)
@@ -115,7 +116,19 @@ class TasNet(object):
         #fusion_process
         
         self.outv=UpSampling1D(size=4)(self.outv)
-        self.fusion=concatenate([self.outv,self.outa],axis=-1)
+
+        print('outv:', self.outv.shape)
+        print('outa:', self.outa.shape)
+        self.attn_layer = AttentionLayer(name='attention_layer')
+        self.attn_out, self.attn_states = self.attn_layer([self.outv, self.outa], verbose=False)
+        print('attn_out:', self.attn_out.shape)
+        print('attn_states:', self.attn_states.shape)
+
+        self.fusion=concatenate([self.attn_out, self.outv,self.outa],axis=-1)
+        self.fusion=Conv1D(512,1)(self.fusion)
+        print('fusion:', self.fusion.shape)
+        #self.fusion=Conv2D(2, 3, activation = 'relu', padding = 'same')(self.fusion)
+        #self.fusion=concatenate([self.outv,self.outa],axis=-1)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=512)

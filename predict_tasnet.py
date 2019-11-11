@@ -20,15 +20,16 @@ from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
-from callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau
+from callbacks import learningratescheduler, earlystopping, reducelronplateau
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
 from models.lipnet import LipNet
-from models.tasnet_lipnet import TasNet
+#from models.tasnet_lipnet import TasNet
+from models.tasnet_resnetLip import TasNet
 from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask, DataGenerator_test_softmask
-from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
+from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_softmask
 
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
@@ -79,20 +80,25 @@ def crop_pad_frames(frames, fps, seconds):
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
 
 #folders_list_train = folders_list[:24]
-import random
+#import random
 #random.shuffle(folders_list_train)
-val_folders_pred = folders_list[91500:93000] + folders_list[238089:]
+val_folders_pred_all = folders_list[91500:93000] + folders_list[238089:]
 random.seed(200)
 val_folders_pred = random.sample(val_folders_pred, 200)
 #print(folders_list_val[4])
+
+'''val_folders_pred_all = sorted(glob.glob('/data/lrs2/train_20s/*'), key=numericalSort)
+print('Pred folders:', len(val_folders_pred_all))
+
+time = 20'''
 
 '''model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = 'pretrain', unet_pretrained = 'pretrain')
 '''
 
 # Building the model
-tasnet = TasNet(video_ip_shape=(125,50,100,3), time_dimensions=500, frequency_bins=257, n_frames=125, lipnet_pretrained='pretrain')
+tasnet = TasNet(video_ip_shape=(500,50,100,3), time_dimensions=500, frequency_bins=257, n_frames=125, lipnet_pretrained='pretrain', train_lipnet=None)
 model = tasnet.model
-model.load_weights('/data/models/tasnet_crm_236kTrain_epochs14to20_lr1e-5_0.1decay4epochs_exp4/weights-04-267.8097.hdf5')
+model.load_weights('/data/models/tasnet_ResNetLSTMLip_Lips_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1/weights-20-237.6519.hdf5')
 print('Weights Loaded')
 
 from io import StringIO
@@ -107,91 +113,178 @@ print('\n'+summary_params)
 
 sdr_list = []
 
-batch_size = 8
+batch_size = 4
 
-val_predict = np.asarray(model.predict_generator(DataGenerator_test_softmask(val_folders_pred, batch_size), steps = np.ceil((len(val_folders_pred))/float(batch_size))))
+print('Predicting on the data')
+num = len(val_folders_pred_all)
+num_100s = int(num/200)
+sdr_list = []
+snr_list = []
+for n in range(num_100s):
+    val_folders_pred = val_folders_pred_all[n*200:(n+1)*200]
+    val_predict = model.predict_generator(DataGenerator_test_softmask(val_folders_pred, batch_size), steps = np.ceil((len(val_folders_pred))/float(batch_size)), verbose=1)
 
-mixed_spect = val_predict[:,:,:,2]
-mixed_phase = val_predict[:,:,:,3]
-val_targ = val_predict[:,:,:,4]
-batch = val_targ.shape[0]
-val_targ = val_targ.reshape(batch, -1)
-#       val_targ = val_targ[:, :80000]
+    mixed_spect = val_predict[:,:,:,2]
+    mixed_phase = val_predict[:,:,:,3]
+    val_targ = val_predict[:,:,:,4]
+    batch = val_targ.shape[0]
+    val_targ = val_targ.reshape(batch, -1)
+    #       val_targ = val_targ[:, :80000]
 
-crms = val_predict[:,:,:,:2]
+    crms = val_predict[:,:,:,:2]
 
-samples_pred = []
-for i in range(crms.shape[0]):
-    crm = crms[i]
-    real = crm[:,:,0]
-    imaginary = crm[:,:,1]
-    inverse_mask = inverse_crm(real_part=real,imaginary_part=imaginary,K=1,C=2)
-    #print('crm', crm.shape)
-    mixed_spect_ = mixed_spect[i]
-    #print('mixed_spect_' ,mixed_spect_.shape)
-    mixed_phase_ = mixed_phase[i]
-    #print('mixed_phase_', mixed_phase_.shape)
-    samples = return_samples_complex(mixed_mag = mixed_spect_, mixed_phase = mixed_phase_, mask = inverse_mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10)
+    samples_pred = []
+    for i in range(crms.shape[0]):
+        crm = crms[i]
+        real = crm[:,:,0]
+        imaginary = crm[:,:,1]
+        inverse_mask = inverse_crm(real_part=real,imaginary_part=imaginary,K=1,C=2)
+        #print('crm', crm.shape)
+        mixed_spect_ = mixed_spect[i]
+        #print('mixed_spect_' ,mixed_spect_.shape)
+        mixed_phase_ = mixed_phase[i]
+        #print('mixed_phase_', mixed_phase_.shape)
+        samples = return_samples_complex(mixed_mag = mixed_spect_, mixed_phase = mixed_phase_, mask = inverse_mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10)
 
-    #print('samples', samples.shape) 
-    samples_pred.append(samples[256:32000])
+        #print('samples', samples.shape) 
+        samples_pred.append(samples[256:])
 
-val_targ1 = []
-for i in range(batch):
-    length_pred = len(samples_pred[i])
-    #print('length_pred', length_pred)
-    val_targ_ = val_targ[i, :length_pred]
-    #val_targ_ = val_targ_.reshape(1, -1)
-    #print('val_targ_', val_targ_.shape)
-    val_targ1.append(val_targ_)
+    val_targ1 = []
+    for i in range(batch):
+        length_pred = len(samples_pred[i])
+        #print('length_pred', length_pred)
+        val_targ_ = val_targ[i, :length_pred]
+        #val_targ_ = val_targ_.reshape(1, -1)
+        #print('val_targ_', val_targ_.shape)
+        val_targ1.append(val_targ_)
 
-val_targ = val_targ1
+    val_targ = val_targ1
 
-samples_pred = np.asarray(samples_pred)
+    samples_pred = np.asarray(samples_pred)
 
-val_targ = np.asarray(val_targ)
+    val_targ = np.asarray(val_targ)
 
-val_sdr, _, val_snr, _ = metric_eval(target_samples = val_targ, predicted_samples = samples_pred)
+    val_sdr, val_sdr_list, val_snr, val_snr_list, val_pesq, val_pesq_list = metric_eval(target_samples = val_targ, predicted_samples = samples_pred)
 
-print('SDR:', val_sdr)
-print('SNR:', val_snr)
+    print('SDR:', val_sdr)
+    print('SNR:', val_snr)
+    print('PESQ:', val_pesq)
 
-'''samples = []
+    '''samples = []
 
-for i, item in enumerate(val_folders_pred):
+    try:
+        os.mkdir('/data/pred_tasnet_20s')
+    except OSError:
+        pass
 
-    items = sorted(glob.glob(item+ '/*_lips.mp4'), key=numericalSort)
-    
-    samples = []
-    for j, item in enumerate(items):
-        try:
-            os.mkdir('/data/pred_tasnet/'+item[-88:-35])
-        except OSError:
-            pass
+    for i, item in enumerate(val_folders_pred):
 
-        scipy.io.wavfile.write('/data/pred_tasnet/'+item[-88:-9]+'_pred.wav', 16000, samples_pred[2*i+j])
+        items = sorted(glob.glob(item+ '/*_lips.mp4'), key=numericalSort)
+        length = len(samples_pred[i])
+        
+        samples = []
+        for j, item in enumerate(items):
+            try:
+                os.mkdir('/data/pred_tasnet_20s/'+item[-88:-35])
+            except OSError:
+                pass
 
-        shutil.copy2('/data/lrs2/train/'+item[-88:-9]+'_samples.npy','/data/pred_tasnet/'+item[-88:-35])
+            scipy.io.wavfile.write('/data/pred_tasnet_20s/'+item[-88:-9]+'_pred.wav', 16000, samples_pred[2*i+j])
 
-        samples_ = np.load('/data/lrs2/train/'+item[-88:-9]+'_samples.npy')
-        scipy.io.wavfile.write('/data/pred_tasnet/'+item[-88:-9]+'_original.wav', 16000, samples_)
-        #'/data/pred_sample/'+item[-88:-35]
-        samples.append(samples_)
-    sam1 = np.zeros((80000,))
-    sam1[:len(samples[0][:80000])] = samples[0][:80000]
-    sam2 = np.zeros((80000,))
-    sam2[:len(samples[1][:80000])] = samples[1][:80000]
-    add_samples = sam1+sam2
-    scipy.io.wavfile.write('/data/pred_tasnet/'+item[-88:-35]+'/mixed.wav', 16000, add_samples)
+            shutil.copy2('/data/lrs2/train_20s/'+item[-88:-9]+'_samples.npy','/data/pred_tasnet_20s/'+item[-88:-35])
+            shutil.copy2('/data/lrs2/mvlrs_v1/pretrain/'+item[-34:-15]+'/'+item[-14:-9]+'.mp4','/' '/data/pred_tasnet_20s/'+item[-88:-35])
+
+            samples_ = np.load('/data/lrs2/train_20s/'+item[-88:-9]+'_samples.npy')
+            scipy.io.wavfile.write('/data/pred_tasnet_20s/'+item[-88:-9]+'_original.wav', 16000, samples_[:length])
+            #'/data/pred_sample/'+item[-88:-35]
+            samples.append(samples_)
+        sam1 = np.zeros((length,))
+        sam1[:len(samples[0][:length])] = samples[0][:length]
+        sam2 = np.zeros((length,))
+        sam2[:len(samples[1][:length])] = samples[1][:length]
+        add_samples = sam1+sam2
+        scipy.io.wavfile.write('/data/pred_tasnet_20s/'+item[-88:-35]+'/mixed.wav', 16000, add_samples)
 
 
-val_folders_pred = sorted(glob.glob('/data/pred_tasnet/*'), key=numericalSort)
+    val_folders_pred = sorted(glob.glob('/data/pred_tasnet_20s/*'), key=numericalSort)
 
-for fold in val_folders_pred:
-    wavs = sorted(glob.glob(fold + '/*_original.wav'), key=numericalSort)
-    file_sum_name = '/data/pred_tasnet/'+fold[-53:]
-    su = audios_sum(wavs,file_sum_name, volume_reduction=0)
+    for fold in val_folders_pred:
+        wavs = sorted(glob.glob(fold + '/*_original.wav'), key=numericalSort)
+        file_sum_name = '/data/pred_tasnet_20s/'+fold[-53:]+'/mixed.wav'
+        su = audios_sum(wavs,file_sum_name, volume_reduction=0)
 
-npys = sorted(glob.glob('pred_tasnet/*/*.npy'),key=numericalSort)
-for i in folds:
-    os.remove(i)'''
+    npys = sorted(glob.glob('/data/pred_tasnet_20s/*/*.npy'),key=numericalSort)
+    for i in npys:
+        os.remove(i)
+'''
+
+'''try: 
+        os.mkdir('/data/pred_tasnet_6000')
+    except OSError:
+        pass
+
+    sdr_mixed = []
+    snr_mixed = []
+    for i, fold in enumerate(val_folders_pred):
+
+        items = sorted(glob.glob(fold+ '/*_lips.mp4'), key=numericalSort)
+
+        true = val_predict[i,:,:,4]
+        true = true.reshape(-1,)    
+        true = true[:80000]
+
+        samples = []
+        wavs=[]
+        for j, item in enumerate(items):
+            try:
+                os.mkdir('/data/pred_tasnet_6000/'+item[-88:-35])
+            except OSError:
+                pass
+
+            scipy.io.wavfile.write('/data/pred_tasnet_6000/'+item[-88:-9]+'_pred.wav', 16000, samples_pred[2*i+j])
+
+            shutil.copy2('/data/lrs2/train/'+item[-88:-9]+'_samples.npy','/data/pred_tasnet_6000/'+item[-88:-35])
+
+            samples_ = np.load('/data/lrs2/train/'+item[-88:-9]+'_samples.npy')
+            scipy.io.wavfile.write('/data/pred_tasnet_6000/'+item[-88:-9]+'_original.wav', 16000, samples_)
+            #'/data/pred_sample/'+item[-88:-35]
+            wavs.append('/data/pred_tasnet_6000/'+item[-88:-9]+'_original.wav')
+            samples.append(samples_)
+
+        file_sum_name = '/data/mixed.wav'
+        su = audios_sum(wavs,file_sum_name, volume_reduction=0)
+        su = su[:80000]
+
+        sam1 = np.zeros((80000,))
+        sam1[:len(su)] = su
+
+        mix = sam1[:80000]
+        print('mix:',mix)
+        print('true',true)
+
+        val_sdr_, val_sdr_list_, val_snr_, val_snr_list_ = metric_eval(target_samples = np.asarray([true]), predicted_samples = np.asarray([mix]))
+
+        sdr_mixed.append(val_sdr_)
+        snr_mixed.append(val_snr_)
+
+    print(np.max(np.asarray(sdr_mixed)))
+    print(np.min(np.asarray(sdr_mixed)))
+
+    sdr_imp = val_sdr - np.asarray(sdr_mixed)
+    snr_imp = val_snr - np.asarray(snr_mixed)
+
+    area = np.pi*3
+
+    # Plot
+    plt.scatter(sdr_mixed, sdr_imp, s=area, c='green', alpha=0.5)
+    plt.title('SDR Improvement Vs Input SDR')
+    plt.xlabel('Input SDR')
+    plt.ylabel('SDR Improvement')
+    plt.savefig('sdr_improv.png')
+
+    # Plot
+    plt.scatter(snr_mixed, snr_imp, s=area, c='green', alpha=0.5)
+    plt.title('SNR Improvement Vs Input SNR')
+    plt.xlabel('Input SNR')
+    plt.ylabel('SNR Improvement')
+    plt.savefig('snr_improv.png')'''
