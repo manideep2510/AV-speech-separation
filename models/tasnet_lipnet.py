@@ -70,7 +70,7 @@ class TasNet(object):
         
     def build(self):
         
-        self.ip_samples = Input(shape = (128500,))
+        self.ip_samples = Input(shape = (self.t*self.f,))
         self.input_samples = Lambda(lambda x : x, name='lambda_input_samples')(self.ip_samples)
         print('input_samples', self.input_samples.shape)
         self.input_samples = Reshape([self.f, self.t, 1])(self.input_samples)

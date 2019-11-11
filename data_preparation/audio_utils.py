@@ -281,7 +281,7 @@ def compare_lengths(file_1_path, file_2_path, max_duration_diff=2000):
 
 
 #Returns spectrogram, number of useful frames, complex_stft
-def compute_spectrograms(audio_file, max_audio_length=500000, sample_rate=16e3, n_fft=512, window_size=25, step_size=10):
+def compute_spectrograms(audio_file, max_audio_length=1000000, sample_rate=16e3, n_fft=512, window_size=25, step_size=10):
 
 
 

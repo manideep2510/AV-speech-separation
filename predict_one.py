@@ -20,39 +20,37 @@ from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
-from callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau
+from callbacks import learningratescheduler, earlystopping, reducelronplateau
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
 from models.lipnet import LipNet
-from models.cocktail_lipnet_unet_pretrain import VideoModel
-from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask, DataGenerator_test_softmask
+#from models.tasnet_lipnet import TasNet
+from models.tasnet_resnetLip import TasNet
+#from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask, DataGenerator_test_softmask
+#from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
 
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
 config.gpu_options.allow_growth=True
 set_session(tf.Session(config=config))
 
-from keras.utils import multi_gpu_model
-from metrics import sdr_metric, Metrics_softmask
+#from keras.utils import multi_gpu_model
+#from metrics import sdr_metric, Metrics_softmask
 from argparse import ArgumentParser
 import shutil
 import re
 
-from mir_eval.separation import bss_eval_sources
-from metrics import metric_eval
+#from mir_eval.separation import bss_eval_sources
+#from metrics import metric_eval
 
-from audio_utils import retrieve_samples
+from data_preparation.audio_utils import compress_crm, inverse_crm, return_samples_complex, compare_lengths, compute_spectrograms, audios_sum, ibm, irm
 from data_preparation.video_utils import get_video_frames
 
 import scipy
 
-numbers = re.compile(r'(\d+)')
-def numericalSort(value):
-    parts = numbers.split(value)
-    parts[1::2] = map(int, parts[1::2])
-    return parts
+print('Imports Done')
 
 def crop_pad_frames(frames, fps, seconds):
 
@@ -73,19 +71,42 @@ def crop_pad_frames(frames, fps, seconds):
 
     return frames
 
+mixed_audio = '/data/cropped_cnn/1women_1man/cnn_debate_2_man_women.wav'
+lips = '/data/cropped_cnn/1women_1man/man_high.mp4'
+time= 30
+print('time:', time)
 
-# Read training folders
-folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
+# Compute the spectrogram of mised audio
+s, n, c = compute_spectrograms(mixed_audio)
+mixed_spectogram =s[:,:time*100]  # Useful frames
+mixed_spectogram = mixed_spectogram.reshape(1, 257, time*100)
+print('mixed_spectogram:', mixed_spectogram.shape)
 
-#folders_list_train = folders_list[:24]
-import random
-#random.shuffle(folders_list_train)
-val_folders_pred = folders_list[91500:93000] + folders_list[238089:]
-random.seed(200)
-val_folders_pred = random.sample(val_folders_pred, 50)
-#print(folders_list_val[4])
+phase=np.angle(c)
+phase=phase[:,:time*100]
+phase = phase.reshape(1, 257, time*100)
+print('phase:', phase.shape)
 
-model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = 'pretrain', unet_pretrained = 'pretrain')
+spect_phase = np.stack((mixed_spectogram, phase), axis=3)
+print('spect_phase:', spect_phase.shape)
+
+# Fake X_samples
+samples = np.zeros((1, 257*time*100))
+print('samples:', samples.shape)
+
+# Read Video frames
+x_lips = get_video_frames(lips, fmt='grey')
+x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = time)
+num_frames = x_lips.shape[0]
+x_lips = x_lips.reshape(1, num_frames, 50, 100, 1)
+print('x_lips:', x_lips.shape)
+
+# Building the model
+tasnet = TasNet(video_ip_shape=(125,50,100,3), time_dimensions=time*100, frequency_bins=257, n_frames=num_frames, lipnet_pretrained='pretrain', train_lipnet=None)
+model = tasnet.model
+model.load_weights('/data/models/tasnet_ResNetLSTMLip_Lips_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1/weights-20-237.6519.hdf5')
+print('Weights Loaded')
+
 from io import StringIO
 
 tmp_smry = StringIO()
@@ -96,80 +117,26 @@ summary_params = summary_split[-6:]
 summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
-model.load_weights('/data/models/both_pretrained_softmask_236kTrain_1to3ratio_epochs20_lr1e-4_0.1decay10epochs/weights-15-156.4964.hdf5')
-print('Weights Loaded')
+batch_size = 1
 
-sdr_list = []
+print('Predicting on the demo example')
 
-batch_size = 2
+val_predict = model.predict([spect_phase, x_lips, samples], batch_size=batch_size, verbose=1)
 
-val_predict = np.asarray(model.predict_generator(DataGenerator_test_softmask(val_folders_pred, batch_size), steps = np.ceil((len(val_folders_pred))/float(batch_size))))
+mixed_spect = val_predict[:,:,:,2]
+mixed_phase = val_predict[:,:,:,3]
+crms = val_predict[:,:,:,:2]
 
-mixed_spect = val_predict[:,:,:,1]
-mixed_phase = val_predict[:,:,:,2]
-val_targ = val_predict[:,:,:,3]
-batch = val_targ.shape[0]
-val_targ = val_targ.reshape(batch, -1)
-#       val_targ = val_targ[:, :80000]
+crm = crms[0]
+real = crm[:,:,0]
+imaginary = crm[:,:,1]
+inverse_mask = inverse_crm(real_part=real,imaginary_part=imaginary,K=1,C=2)
+#print('crm', crm.shape)
+mixed_spect_ = mixed_spect[0]
+#print('mixed_spect_' ,mixed_spect_.shape)
+mixed_phase_ = mixed_phase[0]
+#print('mixed_phase_', mixed_phase_.shape)
+samples_ = return_samples_complex(mixed_mag = mixed_spect_, mixed_phase = mixed_phase_, mask = inverse_mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10)
+samples_ = samples_[256:]
 
-masks = val_predict[:,:,:,0]
-
-samples_pred = []
-for i in range(masks.shape[0]):
-    mask = masks[i]
-    #print('mask', mask.shape)
-    mixed_spect_ = mixed_spect[i]
-    #print('mixed_spect_' ,mixed_spect_.shape)
-    mixed_phase_ = mixed_phase[i]
-    #print('mixed_phase_', mixed_phase_.shape)
-    samples = retrieve_samples(spec_signal = mixed_spect_,phase_spect = mixed_phase_,mask = mask,sample_rate=16e3, n_fft=512, window_size=25, step_size=10)
-
-    #print('samples', samples.shape)
-    samples_pred.append(samples[256:])
-
-val_targ1 = []
-for i in range(batch):
-    length_pred = len(samples_pred[i])
-    #print('length_pred', length_pred)
-    val_targ_ = val_targ[i, :length_pred]
-    #val_targ_ = val_targ_.reshape(1, -1)
-    #print('val_targ_', val_targ_.shape)
-    val_targ1.append(val_targ_)
-
-val_targ = val_targ1
-
-samples_pred = np.asarray(samples_pred)
-
-val_targ = np.asarray(val_targ)
-
-val_sdr, _ = metric_eval(target_samples = val_targ, predicted_samples = samples_pred)
-
-print('SDR:', val_sdr)
-
-samples = []
-
-for i, item in enumerate(val_folders_pred):
-
-    items = sorted(glob.glob(item+ '/*_lips.mp4'), key=numericalSort)
-    
-    samples = []
-    for j, item in enumerate(items):
-        try:
-            os.mkdir('/data/pred_samples/'+item[-88:-35])
-        except OSError:
-            pass
-
-        scipy.io.wavfile.write('/data/pred_samples/'+item[-88:-9]+'_pred.wav', 16000, samples_pred[2*i+j])
-
-        shutil.copy2('/data/lrs2/train/'+item[-88:-9]+'_samples.npy','/data/pred_samples/'+item[-88:-35])
-
-        samples_ = np.load('/data/lrs2/train/'+item[-88:-9]+'_samples.npy')
-        scipy.io.wavfile.write('/data/pred_samples/'+item[-88:-9]+'_original.wav', 16000, samples_)
-        #'/data/pred_sample/'+item[-88:-35]
-        samples.append(samples_)
-    sam1 = np.zeros((80000,))
-    sam1[:len(samples[0][:80000])] = samples[0][:80000]
-    sam2 = np.zeros((80000,))
-    sam2[:len(samples[1][:80000])] = samples[1][:80000]
-    add_samples = sam1+sam2
-    scipy.io.wavfile.write('/data/pred_samples/'+item[-88:-35]+'/mixed.wav', 16000, add_samples)
+scipy.io.wavfile.write('/data/demo_preds/1women_1man_man_pred.wav', 16000, samples_)
