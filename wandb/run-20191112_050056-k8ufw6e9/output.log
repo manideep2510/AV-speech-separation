@@ -1,0 +1,46 @@
+Training data: 360
+Validation data: 240
+input_samples (?, 51400)
+input_samples_reshape (?, 257, 200, 1)
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+3D Conv Out: (?, 50, 32, 32, 64)
+3D Conv Out Reshape: (?, 32, 32, 64)
+Resnet18 Out: (?, 1, 1, 512)
+Resnet18 Linear Out: (?, 256)
+Input to GRU: (?, 50, 256)
+GRU Out: (?, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (?, 200, 256)
+outa: (?, 200, 256)
+attn_out: (?, 200, 256)
+attn_states: (?, 200, 200)
+fusion: (?, 200, 512)
+
+==================================================================================================
+Total params: 38,135,071
+Trainable params: 38,080,287
+Non-trainable params: 54,784
+__________________________________________________________________________________________________
+
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.
+Epoch 1/2
+1/5 [=====>........................] - ETA: 1:34 - loss: 1147.48752/5 [===========>..................] - ETA: 36s - loss: 1125.9587 3/5 [=================>............] - ETA: 16s - loss: 1106.68494/5 [=======================>......] - ETA: 6s - loss: 1089.1999  1/10 [==>...........................] - ETA: 22s - loss: 957.1703 2/10 [=====>........................] - ETA: 10s - loss: 958.2608 3/10 [========>.....................] - ETA: 6s - loss: 960.6051  4/10 [===========>..................] - ETA: 4s - loss: 961.5251 5/10 [==============>...............] - ETA: 3s - loss: 961.3098 6/10 [=================>............] - ETA: 2s - loss: 961.8089 7/10 [====================>.........] - ETA: 1s - loss: 961.4218 8/10 [=======================>......] - ETA: 1s - loss: 961.7023 9/10 [==========================>...] - ETA: 0s - loss: 961.226610/10 [==============================] - 6s 576ms/step - loss: 961.8542
+atten_outs len: 2
+Traceback (most recent call last):
+  File "main_tasnet.py", line 167, in <module>
+    callbacks=[reducelronplateau, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm], verbose = 1)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training.py", line 1426, in fit_generator
+    initial_epoch=initial_epoch)
+  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
+    return old_generator(*args, **kwargs)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training_generator.py", line 232, in model_iteration
+    callbacks.on_epoch_end(epoch, epoch_logs, mode=mode)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/callbacks.py", line 251, in on_epoch_end
+    callback.on_epoch_end(epoch, logs)
+  File "/data/AV-speech-separation1/metrics.py", line 238, in on_epoch_end
+    print('atten_outs:', atten_outs.shape)
+AttributeError: 'list' object has no attribute 'shape'

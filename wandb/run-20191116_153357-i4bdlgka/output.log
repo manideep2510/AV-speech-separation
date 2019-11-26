@@ -1,0 +1,37 @@
+Training data: 360
+Validation data: 240
+input_samples (?, 32000)
+input_samples_reshape (?, 32000, 1)
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+3D Conv Out: (?, 50, 32, 32, 64)
+3D Conv Out Reshape: (?, 32, 32, 64)
+Resnet18 Out: (?, 1, 1, 512)
+Resnet18 Linear Out: (?, 256)
+Input to GRU: (?, 50, 256)
+GRU Out: (?, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (?, 200, 256)
+outa: (?, 200, 256)
+attn_out: (?, 200, 256)
+attn_states: (?, 200, 200)
+fusion: (?, 200, 512)
+Phase (?, 200, 257, 1)
+mag_phase: (?, 200, 257, 1)
+up1: (?, 700, 256)
+up2: (?, 2700, 64)
+up3: (?, 10700, 16)
+up4: (?, 32025, 4)
+out_samples: (?, 32000, 1)
+output_concats: (?, 32000, 2)
+
+==================================================================================================
+Total params: 40,300,399
+Trainable params: 40,245,615
+Non-trainable params: 54,784
+__________________________________________________________________________________________________
+
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.

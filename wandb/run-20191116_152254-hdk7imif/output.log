@@ -1,0 +1,44 @@
+Training data: 360
+Validation data: 240
+input_samples (?, 32000)
+input_samples_reshape (?, 32000, 1)
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+3D Conv Out: (?, 50, 32, 32, 64)
+3D Conv Out Reshape: (?, 32, 32, 64)
+Resnet18 Out: (?, 1, 1, 512)
+Resnet18 Linear Out: (?, 256)
+Input to GRU: (?, 50, 256)
+GRU Out: (?, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (?, 200, 256)
+outa: (?, 200, 256)
+attn_out: (?, 200, 256)
+attn_states: (?, 200, 200)
+fusion: (?, 200, 512)
+Phase (?, 200, 257, 1)
+up1: (?, 700, 256)
+up2: (?, 2700, 64)
+up3: (?, 10700, 16)
+up4: (?, 32025, 4)
+out_samples: (?, 32000, 1)
+output_concats: (?, 32000, 2)
+Traceback (most recent call last):
+  File "main_tasnet.py", line 90, in <module>
+    tasnet = TasNet(video_ip_shape=(50,50,100,3), time_dimensions=200, frequency_bins=257, n_frames=50, lipnet_pretrained='pretrain',  train_lipnet=None)
+  File "/data/AV-speech-separation1/models/tasnet_pred_samples.py", line 72, in __init__
+    self.build()
+  File "/data/AV-speech-separation1/models/tasnet_pred_samples.py", line 214, in build
+    self.model=Model(inputs=[self.audio_input_data, self.lipnet_model.input, self.ip_samples],outputs=self.output_concats)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training.py", line 121, in __init__
+    super(Model, self).__init__(*args, **kwargs)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/network.py", line 81, in __init__
+    self._init_graph_network(*args, **kwargs)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/training/checkpointable/base.py", line 442, in _method_wrapper
+    method(self, *args, **kwargs)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/network.py", line 177, in _init_graph_network
+    self._validate_graph_inputs_and_outputs()
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/network.py", line 1673, in _validate_graph_inputs_and_outputs
+    '(thus holding past layer metadata). Found: ' + str(x))
+ValueError: Output tensors to a Model must be the output of a TensorFlow `Layer` (thus holding past layer metadata). Found: Tensor("concat_maps/concat:0", shape=(?, 32000, 2), dtype=float32)

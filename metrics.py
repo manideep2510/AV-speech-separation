@@ -6,9 +6,11 @@ import numpy as np
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
-from dataloaders import DataGenerator_test_softmask
+from tensorflow.keras.models import Model
+from dataloaders import DataGenerator_test_crm, DataGenerator_test_samples
 from pypesq import pypesq
 import wandb
+import random
 
 def si_snr(x, s, remove_dc=True):
     """
@@ -225,6 +227,24 @@ class Metrics_crm(Callback):
         self.val_pesq = []
  
     def on_epoch_end(self, epoch, logs={}):
+        '''print(len(self.val_folders[:1500]))
+        print(len(self.val_folders[1500:]))'''
+        val_folders_samp = [self.val_folders[200], self.val_folders[305],self.val_folders[400],self.val_folders[500],self.val_folders[600],self.val_folders[800],self.val_folders[1200],self.val_folders[1400],self.val_folders[-100], self.val_folders[-305],self.val_folders[-400],self.val_folders[-500],self.val_folders[-600],self.val_folders[-800],self.val_folders[-1200],self.val_folders[-1400]]
+        #val_folders_samp = random.sample(self.val_folders[:1500], 8) + random.sample(self.val_folders[1500:], 8)
+
+        attn_states_out_model = Model(inputs=self.model.input, outputs=self.model.get_layer('attention_layer').output)
+        atten_outs = attn_states_out_model.predict_generator(DataGenerator_test_crm(val_folders_samp, self.batch_size), steps = int(np.ceil((len(val_folders_samp))/float(self.batch_size))), verbose=0)
+        #print('atten_outs len:', len(atten_outs))
+        #print('atten_outs:', atten_outs.shape)
+        atten_states = atten_outs[1]
+        np.save(self.save_path[:-8]+'atten_states_'+str(epoch)+'.npy', atten_states)
+        atten_states = atten_states*10000
+        '''print('atten_states:', atten_states.shape)
+        print('atten_states max:', np.max(atten_states))
+        print('atten_states min:', np.min(atten_states))'''
+
+        wandb.log({"Attention Weights Alignment": [wandb.Image(i, caption="Attention_align") for i in atten_states]}, commit=False)
+
         num = len(self.val_folders)
         num_100s = int(num/100)
         sdr_list = []
@@ -232,7 +252,8 @@ class Metrics_crm(Callback):
         pesq_list =[]
         for n in range(num_100s):
             val_folders_100 = self.val_folders[n*100:(n+1)*100]
-            val_predict = np.asarray(self.model.predict_generator(DataGenerator_test_softmask(val_folders_100, self.batch_size), steps = int(np.ceil((len(val_folders_100))/float(self.batch_size))), verbose=0))
+            val_predict = np.asarray(self.model.predict_generator(DataGenerator_test_crm(val_folders_100, self.batch_size), steps = int(np.ceil((len(val_folders_100))/float(self.batch_size))), verbose=0))
+
             mixed_spect = val_predict[:,:,:,2]
             mixed_phase = val_predict[:,:,:,3]
             val_targ = val_predict[:,:,:,4]
@@ -272,6 +293,76 @@ class Metrics_crm(Callback):
             samples_pred = np.asarray(samples_pred)
             #print('samples_pred', samples_pred.shape)
             val_targ = np.asarray(val_targ)
+
+            _val_sdr1, _, _val_snr1, _, _val_pesq1, _ = metric_eval(target_samples = val_targ, predicted_samples = samples_pred)
+            sdr_list.append(_val_sdr1)
+            snr_list.append(_val_snr1)
+            pesq_list.append(_val_pesq1)
+
+        # SDR
+        sdr_list = np.asarray(sdr_list)
+        _val_sdr = np.mean(sdr_list)
+        self.val_sdr.append(_val_sdr)
+        #SNR
+        snr_list = np.asarray(snr_list)
+        _val_snr = np.mean(snr_list)
+        self.val_snr.append(_val_snr)
+        #PESQ
+        pesq_list = np.asarray(pesq_list)
+        _val_pesq = np.mean(pesq_list)
+        self.val_pesq.append(_val_pesq)
+        print('Val SDR:', _val_sdr, ' -  Val Si_SNR:', _val_snr, ' -  Val PESQ:', _val_pesq)
+        #print(logs['val_loss'])
+        wandb.log({'loss':logs['loss'], 'val_loss':logs['val_loss'], 'lr':logs['lr'], 'sdr': _val_sdr, 'snr': _val_snr, 'pesq':_val_pesq})
+        with open(self.save_path, "a") as myfile:
+            myfile.write(', Val_SDR: ' + str(_val_sdr) + ',  Val_Si-SNR: '+ str(_val_snr) + '\n')
+        return
+
+
+class Metrics_samples(Callback):
+
+    def __init__(self, model, val_folders, batch_size, save_path):
+        self.model = model
+        self.val_folders = val_folders
+        self.batch_size = batch_size
+        self.save_path = save_path
+
+    def on_train_begin(self, logs={}):
+        self.val_sdr = []
+        self.val_snr = []
+        self.val_pesq = []
+ 
+    def on_epoch_end(self, epoch, logs={}):
+        '''print(len(self.val_folders[:1500]))
+        print(len(self.val_folders[1500:]))'''
+        val_folders_samp = [self.val_folders[200], self.val_folders[305],self.val_folders[400],self.val_folders[500],self.val_folders[600],self.val_folders[800],self.val_folders[1200],self.val_folders[1400],self.val_folders[-100], self.val_folders[-305],self.val_folders[-400],self.val_folders[-500],self.val_folders[-600],self.val_folders[-800],self.val_folders[-1200],self.val_folders[-1400]]
+        #val_folders_samp = [self.val_folders[20], self.val_folders[30],self.val_folders[40],self.val_folders[50],self.val_folders[60],self.val_folders[80],self.val_folders[12],self.val_folders[14],self.val_folders[-1], self.val_folders[-3],self.val_folders[-4],self.val_folders[-5],self.val_folders[-6],self.val_folders[-8],self.val_folders[-12],self.val_folders[-10]]
+
+        attn_states_out_model = Model(inputs=self.model.input, outputs=self.model.get_layer('attention_layer').output)
+        atten_outs = attn_states_out_model.predict_generator(DataGenerator_test_samples(val_folders_samp, self.batch_size), steps = int(np.ceil((len(val_folders_samp))/float(self.batch_size))), verbose=0)
+        #print('atten_outs len:', len(atten_outs))
+        #print('atten_outs:', atten_outs.shape)
+        atten_states = atten_outs[1]
+        np.save(self.save_path[:-8]+'atten_states_'+str(epoch)+'.npy', atten_states)
+        atten_states = atten_states*10000
+        '''print('atten_states:', atten_states.shape)
+        print('atten_states max:', np.max(atten_states))
+        print('atten_states min:', np.min(atten_states))'''
+
+        wandb.log({"Attention Weights Alignment": [wandb.Image(i, caption="Attention_align") for i in atten_states]}, commit=False)
+
+        num = len(self.val_folders)
+        num_100s = int(num/100)
+        sdr_list = []
+        snr_list = []
+        pesq_list =[]
+        for n in range(num_100s):
+            val_folders_100 = self.val_folders[n*100:(n+1)*100]
+            val_predict = np.asarray(self.model.predict_generator(DataGenerator_test_samples(val_folders_100, self.batch_size), steps = int(np.ceil((len(val_folders_100))/float(self.batch_size))), verbose=0))
+
+            val_targ = val_predict[:,:,1]
+
+            samples_pred = val_predict[:,:,0]
 
             _val_sdr1, _, _val_snr1, _, _val_pesq1, _ = metric_eval(target_samples = val_targ, predicted_samples = samples_pred)
             sdr_list.append(_val_sdr1)

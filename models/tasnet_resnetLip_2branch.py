@@ -14,6 +14,7 @@ from tensorflow.keras.layers import Lambda
 
 from .resnet_lstm_lipread import lipreading
 from .attention_layers import AttentionLayer
+from .mish import Mish
 
 def custom_tanh(x):
     
@@ -28,10 +29,10 @@ def custom_tanh(x):
 def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
         x = Conv1D(filters,1)(inputs)
-        x = Activation('relu')(x)
+        x = Mish('Mish')(x)
         x = BatchNormalization()(x)
         x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
-        x = Activation('relu')(x)
+        x = Mish('Mish')(x)
         x = BatchNormalization()(x)
         x = Conv1D(int(inputs.shape[-1]),1)(x)
         x = Add()([inputs,x])
@@ -41,7 +42,7 @@ def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
 def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
     x = Conv1D(filters,1)(inputs)
-    x = Activation('relu')(x)
+    x = Mish('Mish')(x)
     x = BatchNormalization()(x)
     x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
     x = Add()([inputs,x])
@@ -51,7 +52,7 @@ def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
 def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
     
-    x = Activation('relu')(inputs)
+    x = Mish('Mish')(inputs)
     x = BatchNormalization()(x)
     x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
     x = Add()([inputs,x])

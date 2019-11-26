@@ -1,0 +1,35 @@
+{
+    "name": "Attention-tasnet-",
+    "project": "av-speech-seperation",
+    "host": "shell2",
+    "git": {
+        "commit": "5af62a44e5d9b93829b0040da67dab097ff28656",
+        "remote": "https://github.com/manideep2510/AV-speech-separation"
+    },
+    "jobType": null,
+    "executable": "/usr/local/bin/python",
+    "username": "4014",
+    "notes": "Testing. Predict time samples directly.Training with Attention layer, Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 2epochs. TasNet with Resnet LSTM Lipnet. Loss is Root of TF L2 Loss",
+    "root": "/data/AV-speech-separation1",
+    "state": "finished",
+    "gpu": "TITAN Xp",
+    "cpu_count": 12,
+    "program": "main_tasnet.py",
+    "email": null,
+    "os": "Linux-4.15.0-46-generic-x86_64-with-Ubuntu-16.04-xenial",
+    "cuda": "10.0.130",
+    "gpu_count": 2,
+    "startedAt": "2019-11-16T14:56:14.393712",
+    "mode": "dryrun",
+    "exitcode": 0,
+    "heartbeatAt": "2019-11-16T15:07:02.101504",
+    "args": [
+        "-epochs",
+        "2",
+        "-batch_size",
+        "12",
+        "-lr",
+        "0.0001"
+    ],
+    "python": "3.5.2"
+}

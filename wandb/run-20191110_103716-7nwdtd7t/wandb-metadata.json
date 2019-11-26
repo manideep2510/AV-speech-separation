@@ -1,4 +1,5 @@
 {
+    "exitcode": 0,
     "startedAt": "2019-11-10T10:37:20.406511",
     "cuda": "10.0.130",
     "git": {
@@ -20,14 +21,14 @@
     ],
     "gpu_count": 2,
     "mode": "dryrun",
-    "heartbeatAt": "2019-11-11T18:17:47.644394",
+    "heartbeatAt": "2019-11-13T21:27:32.816466",
     "host": "shell2",
     "jobType": null,
     "cpu_count": 12,
     "notes": "Training with Attention layer, 2 Second clips. TasNet with Resnet LSTM Lipnet. Loss is Root of TF L2 Loss",
     "username": "4014",
     "gpu": "TITAN Xp",
-    "state": "running",
+    "state": "finished",
     "program": "main_tasnet.py",
     "email": null,
     "project": "av-speech-seperation"

@@ -20,16 +20,16 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import Lambda
 from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau, CSVLogger
-from callbacks import earlystopping, reducelronplateau, LoggingCallback
+from callbacks import earlystopping, LoggingCallback
 #from tensorflow.keras.callbacks import CSVLogger
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
-from losses import l2_loss, mse, l1_loss, mag_phase_loss
+from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
 from models.lipnet import LipNet
-from models.tasnet_resnetLip_2branch import TasNet
+from models.tasnet_pred_samples import TasNet
 #from models.tasnet_lipnet import TasNet
-from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm
+from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_train_samples, DataGenerator_sampling_samples
 #from dataloaders_aug import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
 
 '''from tensorflow.keras.backend.tensorflow_backend import set_session
@@ -38,7 +38,7 @@ config.gpu_options.allow_growth=True
 set_session(tf.Session(config=config))'''
 
 from tensorflow.keras.utils import multi_gpu_model
-from metrics import sdr_metric, Metrics_crm
+from metrics import sdr_metric, Metrics_crm, Metrics_samples
 from argparse import ArgumentParser
 import wandb
 from wandb.keras import WandbCallback
@@ -51,7 +51,7 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
-wandb.init(name='test_Attention-tasnet-ResNetLSTMLipnet', notes='Code Testing. Training with Attention layer, 2 Second clips. TasNet with Resnet LSTM Lipnet. Loss is Root of TF L2 Loss', project="av-speech-seperation")
+wandb.init(name='Attention-tasnet-pred_samples', notes='Predict time samples directly.Training with Attention layer, Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 2epochs. TasNet with Resnet LSTM Lipnet. Loss is Root of TF L2 Loss', project="av-speech-seperation")
 
 # To read the images in numerical order
 import re
@@ -75,9 +75,9 @@ import random
 random.seed(10)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
-random.seed(30)
-folders_list_val = random.sample(folders_list_val, 120)
-folders_list_train = random.sample(folders_list_train, 180)
+#random.seed(30)
+#folders_list_val = random.sample(folders_list_val, 120)
+#folders_list_train = random.sample(folders_list_train, 180)
 #folders_list_train = folders_list[:180]
 #folders_list_val = folders_list[180:300]
 
@@ -106,7 +106,7 @@ lrate = args.lrate
 
 #model = multi_gpu_model(model, gpus=2)
 
-model.compile(optimizer = Adam(lr=lrate), loss = l2_loss)
+model.compile(optimizer = Adam(lr=lrate), loss = snr_loss, metrics=[snr_acc])
 
 batch_size = args.batch_size
 epochs = args.epochs
@@ -114,7 +114,7 @@ epochs = args.epochs
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'test_tasnet_Attnention_ResNetLSTMLip_Lips_crm_236kTrain_2secondsClips_RMSLoss_epochs20_lr1e-4_0.1decay10epochs_exp1'
+path = 'PredTimeSamples_tasnet_Attnention_MishActivation_ResNetLSTMLip_Lips_236kTrain_2secondsClips_RMSLoss_epochs50_lr1e-4_0.35decayNoValDec2epochs_exp1'
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 
 try:
@@ -147,10 +147,10 @@ def learningratescheduler():
     learningratescheduler = LearningRateScheduler(step_decay)
     return learningratescheduler
 
-metrics_crm = Metrics_crm(model = model, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
+metrics_crm = Metrics_samples(model = model, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
 learningratescheduler = learningratescheduler()
 earlystopping = earlystopping()
-reducelronplateau = reducelronplateau()
+reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.35, patience=3, min_lr = 0.00000001)
 
 filepath='/data/models/' +  path+ '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
@@ -159,12 +159,12 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 folders_per_epoch = int(len(folders_list_train)/3)
 
-history = model.fit_generator(DataGenerator_sampling_crm(folders_list_train, folders_per_epoch, batch_size),
+history = model.fit_generator(DataGenerator_sampling_samples(folders_list_train, folders_per_epoch, batch_size),
                 steps_per_epoch = int(np.ceil(folders_per_epoch/float(batch_size))),
                 epochs=int(epochs),
-                validation_data=DataGenerator_train_crm(folders_list_val, batch_size), 
+                validation_data=DataGenerator_train_samples(folders_list_val, batch_size), 
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),
-                callbacks=[earlystopping, learningratescheduler, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm], verbose = 1)
+                callbacks=[reducelronplateau, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm], verbose = 1)
 
 #, WandbCallback(save_model=False, data_type="image")
 

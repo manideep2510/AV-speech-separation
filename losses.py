@@ -207,7 +207,21 @@ def cal_si_snr_with_pit(source, estimate_source, source_lengths):
     max_snr /= C
     return max_snr, perms, max_snr_idx
 
-def snr_loss(s, x, remove_dc=True):
+
+def vec_l2norm(x):
+
+    nr = K.sqrt(tf.math.reduce_sum(K.square(x), axis=1))
+    nr = tf.reshape(nr, (-1, 1))
+    #nr = tf.broadcast_to(nr, (int(x.shape[1]), int(x.shape[0])))
+    return nr
+
+def log10(x):
+  numerator = tf.log(x)
+  denominator = tf.log(tf.constant(10, dtype=numerator.dtype))
+  return numerator / denominator
+
+
+def snr_loss(s, x):
     """
     Compute SI-SNR
     Arguments:
@@ -215,16 +229,60 @@ def snr_loss(s, x, remove_dc=True):
         s: vector, reference signal(ground truth)
     """
 
-    def vec_l2norm(x):
-        return np.linalg.norm(x, 2)
+    x = x[:,:,0]
+    #s = x[:,:,1]
+
+    x = tf.reshape(x, (24, 32000))
+    s = tf.reshape(s, (24, 32000))
+
+    '''print('Pred:', x.shape)
+    print('GT:', s.shape)'''
 
     # zero mean, seems do not hurt results
-    if remove_dc:
-        x_zm = x - np.mean(x)
-        s_zm = s - np.mean(s)
-        t = np.inner(x_zm, s_zm) * s_zm / vec_l2norm(s_zm)**2
-        n = x_zm - t
-    else:
-        t = np.inner(x, s) * s / vec_l2norm(s)**2
-        n = x - t
-    return 20 * np.log10(vec_l2norm(t) / vec_l2norm(n))
+    x_zm = x - tf.reshape(tf.math.reduce_mean(x, axis=1), (-1, 1))
+    s_zm = s - tf.reshape(tf.math.reduce_mean(s, axis=1), (-1, 1))
+    t = tf.reshape(tf.math.reduce_sum(x_zm*s_zm, axis=1), (-1, 1)) * s_zm / vec_l2norm(s_zm)**2
+    n = x_zm - t
+
+    snr_loss_batch = 20 * log10(vec_l2norm(t) / vec_l2norm(n))
+
+    return -tf.reduce_mean(snr_loss_batch)
+
+
+def snr_acc(s, x):
+    """
+    Compute SI-SNR
+    Arguments:
+        x: vector, enhanced/separated signal
+        s: vector, reference signal(ground truth)
+    """
+
+    x = x[:,:,0]
+    #s = x[:,:,1]
+
+    x = tf.reshape(x, (24, 32000))
+    s = tf.reshape(s, (24, 32000))
+
+    '''print('Pred:', x.shape)
+    print('GT:', s.shape)'''
+
+    # zero mean, seems do not hurt results
+    x_zm = x - tf.reshape(tf.math.reduce_mean(x, axis=1), (-1, 1))
+    s_zm = s - tf.reshape(tf.math.reduce_mean(s, axis=1), (-1, 1))
+    t = tf.reshape(tf.math.reduce_sum(x_zm*s_zm, axis=1), (-1, 1)) * s_zm / vec_l2norm(s_zm)**2
+    n = x_zm - t
+
+    snr_loss_batch = 20 * log10(vec_l2norm(t) / vec_l2norm(n))
+
+    return tf.reduce_mean(snr_loss_batch)
+
+'''# zero mean, seems do not hurt results
+if remove_dc:
+    x_zm = x - np.mean(x)
+    s_zm = s - np.mean(s)
+    t = np.inner(x_zm, s_zm) * s_zm / vec_l2norm(s_zm)**2
+    n = x_zm - t
+else:
+    t = np.inner(x, s) * s / vec_l2norm(s)**2
+    n = x - t
+return 20 * np.log10(vec_l2norm(t) / vec_l2norm(n))'''

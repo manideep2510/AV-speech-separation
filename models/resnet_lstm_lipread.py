@@ -14,6 +14,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import Lambda
 #from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
 from classification_models.tfkeras import Classifiers
+from .mish import Mish
 
 def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
 
@@ -32,7 +33,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
                 ZeroPadding3D(padding=(2, 3, 3)),
                 Conv3D(64, kernel_size=(5, 7, 7), strides=(1, 2, 2), padding='valid', use_bias=False),
                 BatchNormalization(),
-                ReLU(),
+                Mish('Mish'),
                 ZeroPadding3D(padding=((0, 4, 8))),
                 MaxPooling3D(pool_size=(1, 2, 3), strides=(1, 1, 2))
                 ])
@@ -40,17 +41,17 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
     backend_conv1 = Sequential([
                 Conv1D(2*inputDim, 5, strides=2, use_bias=False),
                 BatchNormalization(),
-                ReLU(),
+                Mish('Mish'),
                 MaxPooling1D(2, 2),
                 Conv1D(4*inputDim, 5, strides=2, use_bias=False),
                 BatchNormalization(),
-                ReLU(),
+                Mish('Mish'),
                 ])
 
     backend_conv2 = Sequential([
                 Dense(inputDim),
                 BatchNormalization(),
-                ReLU(),
+                Mish('Mish'),
                 Dense(nClasses)
                 ])
 
