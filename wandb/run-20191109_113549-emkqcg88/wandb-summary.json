@@ -1,0 +1,3766 @@
+{
+    "graph": {
+        "edges": [
+            [
+                "input_2",
+                "lambda_1"
+            ],
+            [
+                "lambda_1",
+                "lambda_2"
+            ],
+            [
+                "lambda_1",
+                "lambda_3"
+            ],
+            [
+                "lambda_2",
+                "concatenate_1"
+            ],
+            [
+                "lambda_3",
+                "concatenate_1"
+            ],
+            [
+                "concatenate_1",
+                "conv1d_1"
+            ],
+            [
+                "conv1d_1",
+                "conv1d_6"
+            ],
+            [
+                "conv1d_6",
+                "activation_6"
+            ],
+            [
+                "activation_6",
+                "batch_normalization_11"
+            ],
+            [
+                "batch_normalization_11",
+                "separable_conv1d_6"
+            ],
+            [
+                "separable_conv1d_6",
+                "activation_7"
+            ],
+            [
+                "activation_7",
+                "batch_normalization_12"
+            ],
+            [
+                "batch_normalization_12",
+                "conv1d_7"
+            ],
+            [
+                "conv1d_1",
+                "add_14"
+            ],
+            [
+                "conv1d_7",
+                "add_14"
+            ],
+            [
+                "add_14",
+                "conv1d_8"
+            ],
+            [
+                "conv1d_8",
+                "activation_8"
+            ],
+            [
+                "activation_8",
+                "batch_normalization_13"
+            ],
+            [
+                "batch_normalization_13",
+                "separable_conv1d_7"
+            ],
+            [
+                "separable_conv1d_7",
+                "activation_9"
+            ],
+            [
+                "activation_9",
+                "batch_normalization_14"
+            ],
+            [
+                "batch_normalization_14",
+                "conv1d_9"
+            ],
+            [
+                "add_14",
+                "add_15"
+            ],
+            [
+                "conv1d_9",
+                "add_15"
+            ],
+            [
+                "add_15",
+                "conv1d_10"
+            ],
+            [
+                "conv1d_10",
+                "activation_10"
+            ],
+            [
+                "activation_10",
+                "batch_normalization_15"
+            ],
+            [
+                "batch_normalization_15",
+                "separable_conv1d_8"
+            ],
+            [
+                "separable_conv1d_8",
+                "activation_11"
+            ],
+            [
+                "activation_11",
+                "batch_normalization_16"
+            ],
+            [
+                "batch_normalization_16",
+                "conv1d_11"
+            ],
+            [
+                "add_15",
+                "add_16"
+            ],
+            [
+                "conv1d_11",
+                "add_16"
+            ],
+            [
+                "add_16",
+                "conv1d_12"
+            ],
+            [
+                "conv1d_12",
+                "activation_12"
+            ],
+            [
+                "activation_12",
+                "batch_normalization_17"
+            ],
+            [
+                "batch_normalization_17",
+                "separable_conv1d_9"
+            ],
+            [
+                "separable_conv1d_9",
+                "activation_13"
+            ],
+            [
+                "frames_input",
+                "sequential_1"
+            ],
+            [
+                "activation_13",
+                "batch_normalization_18"
+            ],
+            [
+                "sequential_1",
+                "lambda2"
+            ],
+            [
+                "batch_normalization_18",
+                "conv1d_13"
+            ],
+            [
+                "lambda2",
+                "resnet18"
+            ],
+            [
+                "add_16",
+                "add_17"
+            ],
+            [
+                "conv1d_13",
+                "add_17"
+            ],
+            [
+                "resnet18",
+                "global_avgpool_resnet"
+            ],
+            [
+                "add_17",
+                "conv1d_14"
+            ],
+            [
+                "global_avgpool_resnet",
+                "dense_3"
+            ],
+            [
+                "conv1d_14",
+                "activation_14"
+            ],
+            [
+                "dense_3",
+                "batch_normalization_5"
+            ],
+            [
+                "activation_14",
+                "batch_normalization_19"
+            ],
+            [
+                "batch_normalization_5",
+                "lambda6"
+            ],
+            [
+                "batch_normalization_19",
+                "separable_conv1d_10"
+            ],
+            [
+                "lambda6",
+                "bidirectional_1"
+            ],
+            [
+                "separable_conv1d_10",
+                "activation_15"
+            ],
+            [
+                "bidirectional_1",
+                "bidirectional_2"
+            ],
+            [
+                "activation_15",
+                "batch_normalization_20"
+            ],
+            [
+                "bidirectional_2",
+                "dense_4"
+            ],
+            [
+                "batch_normalization_20",
+                "conv1d_15"
+            ],
+            [
+                "dense_4",
+                "dense2"
+            ],
+            [
+                "add_17",
+                "add_18"
+            ],
+            [
+                "conv1d_15",
+                "add_18"
+            ],
+            [
+                "dense2",
+                "dense3"
+            ],
+            [
+                "add_18",
+                "conv1d_16"
+            ],
+            [
+                "dense3",
+                "conv1d_4"
+            ],
+            [
+                "conv1d_16",
+                "activation_16"
+            ],
+            [
+                "conv1d_4",
+                "activation_1"
+            ],
+            [
+                "activation_16",
+                "batch_normalization_21"
+            ],
+            [
+                "activation_1",
+                "batch_normalization_6"
+            ],
+            [
+                "batch_normalization_21",
+                "separable_conv1d_11"
+            ],
+            [
+                "batch_normalization_6",
+                "separable_conv1d_1"
+            ],
+            [
+                "separable_conv1d_11",
+                "activation_17"
+            ],
+            [
+                "conv1d_4",
+                "add_9"
+            ],
+            [
+                "separable_conv1d_1",
+                "add_9"
+            ],
+            [
+                "activation_17",
+                "batch_normalization_22"
+            ],
+            [
+                "add_9",
+                "activation_2"
+            ],
+            [
+                "batch_normalization_22",
+                "conv1d_17"
+            ],
+            [
+                "activation_2",
+                "batch_normalization_7"
+            ],
+            [
+                "add_18",
+                "add_19"
+            ],
+            [
+                "conv1d_17",
+                "add_19"
+            ],
+            [
+                "batch_normalization_7",
+                "separable_conv1d_2"
+            ],
+            [
+                "add_19",
+                "conv1d_18"
+            ],
+            [
+                "add_9",
+                "add_10"
+            ],
+            [
+                "separable_conv1d_2",
+                "add_10"
+            ],
+            [
+                "conv1d_18",
+                "activation_18"
+            ],
+            [
+                "add_10",
+                "activation_3"
+            ],
+            [
+                "activation_18",
+                "batch_normalization_23"
+            ],
+            [
+                "activation_3",
+                "batch_normalization_8"
+            ],
+            [
+                "batch_normalization_23",
+                "separable_conv1d_12"
+            ],
+            [
+                "batch_normalization_8",
+                "separable_conv1d_3"
+            ],
+            [
+                "separable_conv1d_12",
+                "activation_19"
+            ],
+            [
+                "add_10",
+                "add_11"
+            ],
+            [
+                "separable_conv1d_3",
+                "add_11"
+            ],
+            [
+                "activation_19",
+                "batch_normalization_24"
+            ],
+            [
+                "add_11",
+                "activation_4"
+            ],
+            [
+                "batch_normalization_24",
+                "conv1d_19"
+            ],
+            [
+                "activation_4",
+                "batch_normalization_9"
+            ],
+            [
+                "add_19",
+                "add_20"
+            ],
+            [
+                "conv1d_19",
+                "add_20"
+            ],
+            [
+                "batch_normalization_9",
+                "separable_conv1d_4"
+            ],
+            [
+                "add_20",
+                "conv1d_20"
+            ],
+            [
+                "add_11",
+                "add_12"
+            ],
+            [
+                "separable_conv1d_4",
+                "add_12"
+            ],
+            [
+                "conv1d_20",
+                "activation_20"
+            ],
+            [
+                "add_12",
+                "activation_5"
+            ],
+            [
+                "activation_20",
+                "batch_normalization_25"
+            ],
+            [
+                "activation_5",
+                "batch_normalization_10"
+            ],
+            [
+                "batch_normalization_25",
+                "separable_conv1d_13"
+            ],
+            [
+                "batch_normalization_10",
+                "separable_conv1d_5"
+            ],
+            [
+                "separable_conv1d_13",
+                "activation_21"
+            ],
+            [
+                "add_12",
+                "add_13"
+            ],
+            [
+                "separable_conv1d_5",
+                "add_13"
+            ],
+            [
+                "activation_21",
+                "batch_normalization_26"
+            ],
+            [
+                "add_13",
+                "conv1d_5"
+            ],
+            [
+                "batch_normalization_26",
+                "conv1d_21"
+            ],
+            [
+                "conv1d_5",
+                "up_sampling1d_1"
+            ],
+            [
+                "add_20",
+                "add_21"
+            ],
+            [
+                "conv1d_21",
+                "add_21"
+            ],
+            [
+                "up_sampling1d_1",
+                "concatenate_2"
+            ],
+            [
+                "add_21",
+                "concatenate_2"
+            ],
+            [
+                "concatenate_2",
+                "conv1d_22"
+            ],
+            [
+                "conv1d_22",
+                "activation_22"
+            ],
+            [
+                "activation_22",
+                "batch_normalization_27"
+            ],
+            [
+                "batch_normalization_27",
+                "separable_conv1d_14"
+            ],
+            [
+                "concatenate_2",
+                "add_22"
+            ],
+            [
+                "separable_conv1d_14",
+                "add_22"
+            ],
+            [
+                "add_22",
+                "conv1d_23"
+            ],
+            [
+                "conv1d_23",
+                "activation_23"
+            ],
+            [
+                "activation_23",
+                "batch_normalization_28"
+            ],
+            [
+                "batch_normalization_28",
+                "separable_conv1d_15"
+            ],
+            [
+                "add_22",
+                "add_23"
+            ],
+            [
+                "separable_conv1d_15",
+                "add_23"
+            ],
+            [
+                "add_23",
+                "conv1d_24"
+            ],
+            [
+                "conv1d_24",
+                "activation_24"
+            ],
+            [
+                "activation_24",
+                "batch_normalization_29"
+            ],
+            [
+                "batch_normalization_29",
+                "separable_conv1d_16"
+            ],
+            [
+                "add_23",
+                "add_24"
+            ],
+            [
+                "separable_conv1d_16",
+                "add_24"
+            ],
+            [
+                "add_24",
+                "conv1d_25"
+            ],
+            [
+                "conv1d_25",
+                "activation_25"
+            ],
+            [
+                "activation_25",
+                "batch_normalization_30"
+            ],
+            [
+                "batch_normalization_30",
+                "separable_conv1d_17"
+            ],
+            [
+                "add_24",
+                "add_25"
+            ],
+            [
+                "separable_conv1d_17",
+                "add_25"
+            ],
+            [
+                "add_25",
+                "conv1d_26"
+            ],
+            [
+                "conv1d_26",
+                "activation_26"
+            ],
+            [
+                "activation_26",
+                "batch_normalization_31"
+            ],
+            [
+                "batch_normalization_31",
+                "separable_conv1d_18"
+            ],
+            [
+                "add_25",
+                "add_26"
+            ],
+            [
+                "separable_conv1d_18",
+                "add_26"
+            ],
+            [
+                "add_26",
+                "conv1d_27"
+            ],
+            [
+                "conv1d_27",
+                "activation_27"
+            ],
+            [
+                "activation_27",
+                "batch_normalization_32"
+            ],
+            [
+                "batch_normalization_32",
+                "separable_conv1d_19"
+            ],
+            [
+                "add_26",
+                "add_27"
+            ],
+            [
+                "separable_conv1d_19",
+                "add_27"
+            ],
+            [
+                "add_27",
+                "conv1d_28"
+            ],
+            [
+                "conv1d_28",
+                "activation_28"
+            ],
+            [
+                "activation_28",
+                "batch_normalization_33"
+            ],
+            [
+                "batch_normalization_33",
+                "separable_conv1d_20"
+            ],
+            [
+                "add_27",
+                "add_28"
+            ],
+            [
+                "separable_conv1d_20",
+                "add_28"
+            ],
+            [
+                "add_28",
+                "conv1d_29"
+            ],
+            [
+                "conv1d_29",
+                "activation_29"
+            ],
+            [
+                "activation_29",
+                "batch_normalization_34"
+            ],
+            [
+                "batch_normalization_34",
+                "separable_conv1d_21"
+            ],
+            [
+                "add_28",
+                "add_29"
+            ],
+            [
+                "separable_conv1d_21",
+                "add_29"
+            ],
+            [
+                "add_29",
+                "conv1d_30"
+            ],
+            [
+                "add_29",
+                "conv1d_38"
+            ],
+            [
+                "conv1d_30",
+                "activation_30"
+            ],
+            [
+                "conv1d_38",
+                "activation_38"
+            ],
+            [
+                "activation_30",
+                "batch_normalization_35"
+            ],
+            [
+                "activation_38",
+                "batch_normalization_43"
+            ],
+            [
+                "batch_normalization_35",
+                "separable_conv1d_22"
+            ],
+            [
+                "batch_normalization_43",
+                "separable_conv1d_30"
+            ],
+            [
+                "add_29",
+                "add_30"
+            ],
+            [
+                "separable_conv1d_22",
+                "add_30"
+            ],
+            [
+                "add_29",
+                "add_38"
+            ],
+            [
+                "separable_conv1d_30",
+                "add_38"
+            ],
+            [
+                "add_30",
+                "conv1d_31"
+            ],
+            [
+                "add_38",
+                "conv1d_39"
+            ],
+            [
+                "conv1d_31",
+                "activation_31"
+            ],
+            [
+                "conv1d_39",
+                "activation_39"
+            ],
+            [
+                "activation_31",
+                "batch_normalization_36"
+            ],
+            [
+                "activation_39",
+                "batch_normalization_44"
+            ],
+            [
+                "batch_normalization_36",
+                "separable_conv1d_23"
+            ],
+            [
+                "batch_normalization_44",
+                "separable_conv1d_31"
+            ],
+            [
+                "add_30",
+                "add_31"
+            ],
+            [
+                "separable_conv1d_23",
+                "add_31"
+            ],
+            [
+                "add_38",
+                "add_39"
+            ],
+            [
+                "separable_conv1d_31",
+                "add_39"
+            ],
+            [
+                "add_31",
+                "conv1d_32"
+            ],
+            [
+                "add_39",
+                "conv1d_40"
+            ],
+            [
+                "conv1d_32",
+                "activation_32"
+            ],
+            [
+                "conv1d_40",
+                "activation_40"
+            ],
+            [
+                "activation_32",
+                "batch_normalization_37"
+            ],
+            [
+                "activation_40",
+                "batch_normalization_45"
+            ],
+            [
+                "batch_normalization_37",
+                "separable_conv1d_24"
+            ],
+            [
+                "batch_normalization_45",
+                "separable_conv1d_32"
+            ],
+            [
+                "add_31",
+                "add_32"
+            ],
+            [
+                "separable_conv1d_24",
+                "add_32"
+            ],
+            [
+                "add_39",
+                "add_40"
+            ],
+            [
+                "separable_conv1d_32",
+                "add_40"
+            ],
+            [
+                "add_32",
+                "conv1d_33"
+            ],
+            [
+                "add_40",
+                "conv1d_41"
+            ],
+            [
+                "conv1d_33",
+                "activation_33"
+            ],
+            [
+                "conv1d_41",
+                "activation_41"
+            ],
+            [
+                "activation_33",
+                "batch_normalization_38"
+            ],
+            [
+                "activation_41",
+                "batch_normalization_46"
+            ],
+            [
+                "batch_normalization_38",
+                "separable_conv1d_25"
+            ],
+            [
+                "batch_normalization_46",
+                "separable_conv1d_33"
+            ],
+            [
+                "add_32",
+                "add_33"
+            ],
+            [
+                "separable_conv1d_25",
+                "add_33"
+            ],
+            [
+                "add_40",
+                "add_41"
+            ],
+            [
+                "separable_conv1d_33",
+                "add_41"
+            ],
+            [
+                "add_33",
+                "conv1d_34"
+            ],
+            [
+                "add_41",
+                "conv1d_42"
+            ],
+            [
+                "conv1d_34",
+                "activation_34"
+            ],
+            [
+                "conv1d_42",
+                "activation_42"
+            ],
+            [
+                "activation_34",
+                "batch_normalization_39"
+            ],
+            [
+                "activation_42",
+                "batch_normalization_47"
+            ],
+            [
+                "batch_normalization_39",
+                "separable_conv1d_26"
+            ],
+            [
+                "batch_normalization_47",
+                "separable_conv1d_34"
+            ],
+            [
+                "add_33",
+                "add_34"
+            ],
+            [
+                "separable_conv1d_26",
+                "add_34"
+            ],
+            [
+                "add_41",
+                "add_42"
+            ],
+            [
+                "separable_conv1d_34",
+                "add_42"
+            ],
+            [
+                "add_34",
+                "conv1d_35"
+            ],
+            [
+                "add_42",
+                "conv1d_43"
+            ],
+            [
+                "conv1d_35",
+                "activation_35"
+            ],
+            [
+                "conv1d_43",
+                "activation_43"
+            ],
+            [
+                "activation_35",
+                "batch_normalization_40"
+            ],
+            [
+                "activation_43",
+                "batch_normalization_48"
+            ],
+            [
+                "batch_normalization_40",
+                "separable_conv1d_27"
+            ],
+            [
+                "batch_normalization_48",
+                "separable_conv1d_35"
+            ],
+            [
+                "add_34",
+                "add_35"
+            ],
+            [
+                "separable_conv1d_27",
+                "add_35"
+            ],
+            [
+                "add_42",
+                "add_43"
+            ],
+            [
+                "separable_conv1d_35",
+                "add_43"
+            ],
+            [
+                "add_35",
+                "conv1d_36"
+            ],
+            [
+                "add_43",
+                "conv1d_44"
+            ],
+            [
+                "conv1d_36",
+                "activation_36"
+            ],
+            [
+                "conv1d_44",
+                "activation_44"
+            ],
+            [
+                "activation_36",
+                "batch_normalization_41"
+            ],
+            [
+                "activation_44",
+                "batch_normalization_49"
+            ],
+            [
+                "batch_normalization_41",
+                "separable_conv1d_28"
+            ],
+            [
+                "batch_normalization_49",
+                "separable_conv1d_36"
+            ],
+            [
+                "add_35",
+                "add_36"
+            ],
+            [
+                "separable_conv1d_28",
+                "add_36"
+            ],
+            [
+                "add_43",
+                "add_44"
+            ],
+            [
+                "separable_conv1d_36",
+                "add_44"
+            ],
+            [
+                "add_36",
+                "conv1d_37"
+            ],
+            [
+                "add_44",
+                "conv1d_45"
+            ],
+            [
+                "conv1d_37",
+                "activation_37"
+            ],
+            [
+                "conv1d_45",
+                "activation_45"
+            ],
+            [
+                "activation_37",
+                "batch_normalization_42"
+            ],
+            [
+                "activation_45",
+                "batch_normalization_50"
+            ],
+            [
+                "batch_normalization_42",
+                "separable_conv1d_29"
+            ],
+            [
+                "batch_normalization_50",
+                "separable_conv1d_37"
+            ],
+            [
+                "add_36",
+                "add_37"
+            ],
+            [
+                "separable_conv1d_29",
+                "add_37"
+            ],
+            [
+                "add_44",
+                "add_45"
+            ],
+            [
+                "separable_conv1d_37",
+                "add_45"
+            ],
+            [
+                "add_37",
+                "conv1d_46"
+            ],
+            [
+                "add_45",
+                "conv1d_47"
+            ],
+            [
+                "conv1d_46",
+                "activation_46"
+            ],
+            [
+                "conv1d_47",
+                "activation_47"
+            ],
+            [
+                "activation_46",
+                "reshape_mag"
+            ],
+            [
+                "activation_47",
+                "reshape_phase"
+            ],
+            [
+                "input_1",
+                "lambda_input_samples"
+            ],
+            [
+                "reshape_mag",
+                "lambda_4"
+            ],
+            [
+                "reshape_phase",
+                "lambda_5"
+            ],
+            [
+                "lambda_input_samples",
+                "reshape_1"
+            ],
+            [
+                "lambda_4",
+                "concat_maps"
+            ],
+            [
+                "lambda_5",
+                "concat_maps"
+            ],
+            [
+                "input_2",
+                "concat_maps"
+            ],
+            [
+                "reshape_1",
+                "concat_maps"
+            ]
+        ],
+        "nodes": [
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    257,
+                    500,
+                    2
+                ],
+                "id": "input_2",
+                "class_name": "InputLayer",
+                "name": "input_2"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    257,
+                    2
+                ],
+                "id": "lambda_1",
+                "class_name": "Lambda",
+                "name": "lambda_1"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    257
+                ],
+                "id": "lambda_2",
+                "class_name": "Lambda",
+                "name": "lambda_2"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    257
+                ],
+                "id": "lambda_3",
+                "class_name": "Lambda",
+                "name": "lambda_3"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    514
+                ],
+                "id": "concatenate_1",
+                "class_name": "Concatenate",
+                "name": "concatenate_1"
+            },
+            {
+                "num_parameters": 131840,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_1",
+                "class_name": "Conv1D",
+                "name": "conv1d_1"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_6",
+                "class_name": "Conv1D",
+                "name": "conv1d_6"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_6",
+                "class_name": "Activation",
+                "name": "activation_6"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_11",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_11"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_6",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_6"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_7",
+                "class_name": "Activation",
+                "name": "activation_7"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_12",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_12"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_7",
+                "class_name": "Conv1D",
+                "name": "conv1d_7"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "add_14",
+                "class_name": "Add",
+                "name": "add_14"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_8",
+                "class_name": "Conv1D",
+                "name": "conv1d_8"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_8",
+                "class_name": "Activation",
+                "name": "activation_8"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_13",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_13"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_7",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_7"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_9",
+                "class_name": "Activation",
+                "name": "activation_9"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_14",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_14"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_9",
+                "class_name": "Conv1D",
+                "name": "conv1d_9"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "add_15",
+                "class_name": "Add",
+                "name": "add_15"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_10",
+                "class_name": "Conv1D",
+                "name": "conv1d_10"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_10",
+                "class_name": "Activation",
+                "name": "activation_10"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_15",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_15"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_8",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_8"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_11",
+                "class_name": "Activation",
+                "name": "activation_11"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_16",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_16"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_11",
+                "class_name": "Conv1D",
+                "name": "conv1d_11"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "add_16",
+                "class_name": "Add",
+                "name": "add_16"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_12",
+                "class_name": "Conv1D",
+                "name": "conv1d_12"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_12",
+                "class_name": "Activation",
+                "name": "activation_12"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_17",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_17"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_9",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_9"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    50,
+                    100,
+                    1
+                ],
+                "id": "frames_input",
+                "class_name": "InputLayer",
+                "name": "frames_input"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_13",
+                "class_name": "Activation",
+                "name": "activation_13"
+            },
+            {
+                "num_parameters": 15936,
+                "output_shape": [
+                    null,
+                    125,
+                    32,
+                    32,
+                    64
+                ],
+                "id": "sequential_1",
+                "class_name": "Sequential",
+                "name": "sequential_1"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_18",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_18"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    32,
+                    32,
+                    64
+                ],
+                "id": "lambda2",
+                "class_name": "Lambda",
+                "name": "lambda2"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_13",
+                "class_name": "Conv1D",
+                "name": "conv1d_13"
+            },
+            {
+                "num_parameters": 11378368,
+                "output_shape": [
+                    "multiple"
+                ],
+                "id": "resnet18",
+                "class_name": "Model",
+                "name": "resnet18"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "add_17",
+                "class_name": "Add",
+                "name": "add_17"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    512
+                ],
+                "id": "global_avgpool_resnet",
+                "class_name": "GlobalAveragePooling2D",
+                "name": "global_avgpool_resnet"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_14",
+                "class_name": "Conv1D",
+                "name": "conv1d_14"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    256
+                ],
+                "id": "dense_3",
+                "class_name": "Dense",
+                "name": "dense_3"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_14",
+                "class_name": "Activation",
+                "name": "activation_14"
+            },
+            {
+                "num_parameters": 1024,
+                "output_shape": [
+                    null,
+                    256
+                ],
+                "id": "batch_normalization_5",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_5"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_19",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_19"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    256
+                ],
+                "id": "lambda6",
+                "class_name": "Lambda",
+                "name": "lambda6"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_10",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_10"
+            },
+            {
+                "num_parameters": 2362368,
+                "output_shape": [
+                    null,
+                    125,
+                    1024
+                ],
+                "id": "bidirectional_1",
+                "class_name": "Bidirectional",
+                "name": "bidirectional_1"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_15",
+                "class_name": "Activation",
+                "name": "activation_15"
+            },
+            {
+                "num_parameters": 4721664,
+                "output_shape": [
+                    null,
+                    125,
+                    1024
+                ],
+                "id": "bidirectional_2",
+                "class_name": "Bidirectional",
+                "name": "bidirectional_2"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_20",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_20"
+            },
+            {
+                "num_parameters": 29725,
+                "output_shape": [
+                    null,
+                    125,
+                    29
+                ],
+                "id": "dense_4",
+                "class_name": "Dense",
+                "name": "dense_4"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_15",
+                "class_name": "Conv1D",
+                "name": "conv1d_15"
+            },
+            {
+                "num_parameters": 3840,
+                "output_shape": [
+                    null,
+                    125,
+                    128
+                ],
+                "id": "dense2",
+                "class_name": "Dense",
+                "name": "dense2"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "add_18",
+                "class_name": "Add",
+                "name": "add_18"
+            },
+            {
+                "num_parameters": 33024,
+                "output_shape": [
+                    null,
+                    125,
+                    256
+                ],
+                "id": "dense3",
+                "class_name": "Dense",
+                "name": "dense3"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_16",
+                "class_name": "Conv1D",
+                "name": "conv1d_16"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "conv1d_4",
+                "class_name": "Conv1D",
+                "name": "conv1d_4"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_16",
+                "class_name": "Activation",
+                "name": "activation_16"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "activation_1",
+                "class_name": "Activation",
+                "name": "activation_1"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_21",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_21"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "batch_normalization_6",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_6"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_11",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_11"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "separable_conv1d_1",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_1"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_17",
+                "class_name": "Activation",
+                "name": "activation_17"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "add_9",
+                "class_name": "Add",
+                "name": "add_9"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_22",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_22"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "activation_2",
+                "class_name": "Activation",
+                "name": "activation_2"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_17",
+                "class_name": "Conv1D",
+                "name": "conv1d_17"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "batch_normalization_7",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_7"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "add_19",
+                "class_name": "Add",
+                "name": "add_19"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "separable_conv1d_2",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_2"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_18",
+                "class_name": "Conv1D",
+                "name": "conv1d_18"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "add_10",
+                "class_name": "Add",
+                "name": "add_10"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_18",
+                "class_name": "Activation",
+                "name": "activation_18"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "activation_3",
+                "class_name": "Activation",
+                "name": "activation_3"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_23",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_23"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "batch_normalization_8",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_8"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_12",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_12"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "separable_conv1d_3",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_3"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_19",
+                "class_name": "Activation",
+                "name": "activation_19"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "add_11",
+                "class_name": "Add",
+                "name": "add_11"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_24",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_24"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "activation_4",
+                "class_name": "Activation",
+                "name": "activation_4"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_19",
+                "class_name": "Conv1D",
+                "name": "conv1d_19"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "batch_normalization_9",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_9"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "add_20",
+                "class_name": "Add",
+                "name": "add_20"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "separable_conv1d_4",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_4"
+            },
+            {
+                "num_parameters": 131584,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_20",
+                "class_name": "Conv1D",
+                "name": "conv1d_20"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "add_12",
+                "class_name": "Add",
+                "name": "add_12"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_20",
+                "class_name": "Activation",
+                "name": "activation_20"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "activation_5",
+                "class_name": "Activation",
+                "name": "activation_5"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_25",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_25"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "batch_normalization_10",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_10"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_13",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_13"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "separable_conv1d_5",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_5"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_21",
+                "class_name": "Activation",
+                "name": "activation_21"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    125,
+                    512
+                ],
+                "id": "add_13",
+                "class_name": "Add",
+                "name": "add_13"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_26",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_26"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    125,
+                    256
+                ],
+                "id": "conv1d_5",
+                "class_name": "Conv1D",
+                "name": "conv1d_5"
+            },
+            {
+                "num_parameters": 131328,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "conv1d_21",
+                "class_name": "Conv1D",
+                "name": "conv1d_21"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "up_sampling1d_1",
+                "class_name": "UpSampling1D",
+                "name": "up_sampling1d_1"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    256
+                ],
+                "id": "add_21",
+                "class_name": "Add",
+                "name": "add_21"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "concatenate_2",
+                "class_name": "Concatenate",
+                "name": "concatenate_2"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_22",
+                "class_name": "Conv1D",
+                "name": "conv1d_22"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_22",
+                "class_name": "Activation",
+                "name": "activation_22"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_27",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_27"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_14",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_14"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_22",
+                "class_name": "Add",
+                "name": "add_22"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_23",
+                "class_name": "Conv1D",
+                "name": "conv1d_23"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_23",
+                "class_name": "Activation",
+                "name": "activation_23"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_28",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_28"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_15",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_15"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_23",
+                "class_name": "Add",
+                "name": "add_23"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_24",
+                "class_name": "Conv1D",
+                "name": "conv1d_24"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_24",
+                "class_name": "Activation",
+                "name": "activation_24"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_29",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_29"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_16",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_16"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_24",
+                "class_name": "Add",
+                "name": "add_24"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_25",
+                "class_name": "Conv1D",
+                "name": "conv1d_25"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_25",
+                "class_name": "Activation",
+                "name": "activation_25"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_30",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_30"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_17",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_17"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_25",
+                "class_name": "Add",
+                "name": "add_25"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_26",
+                "class_name": "Conv1D",
+                "name": "conv1d_26"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_26",
+                "class_name": "Activation",
+                "name": "activation_26"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_31",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_31"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_18",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_18"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_26",
+                "class_name": "Add",
+                "name": "add_26"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_27",
+                "class_name": "Conv1D",
+                "name": "conv1d_27"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_27",
+                "class_name": "Activation",
+                "name": "activation_27"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_32",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_32"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_19",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_19"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_27",
+                "class_name": "Add",
+                "name": "add_27"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_28",
+                "class_name": "Conv1D",
+                "name": "conv1d_28"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_28",
+                "class_name": "Activation",
+                "name": "activation_28"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_33",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_33"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_20",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_20"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_28",
+                "class_name": "Add",
+                "name": "add_28"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_29",
+                "class_name": "Conv1D",
+                "name": "conv1d_29"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_29",
+                "class_name": "Activation",
+                "name": "activation_29"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_34",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_34"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_21",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_21"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_29",
+                "class_name": "Add",
+                "name": "add_29"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_30",
+                "class_name": "Conv1D",
+                "name": "conv1d_30"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_38",
+                "class_name": "Conv1D",
+                "name": "conv1d_38"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_30",
+                "class_name": "Activation",
+                "name": "activation_30"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_38",
+                "class_name": "Activation",
+                "name": "activation_38"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_35",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_35"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_43",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_43"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_22",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_22"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_30",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_30"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_30",
+                "class_name": "Add",
+                "name": "add_30"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_38",
+                "class_name": "Add",
+                "name": "add_38"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_31",
+                "class_name": "Conv1D",
+                "name": "conv1d_31"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_39",
+                "class_name": "Conv1D",
+                "name": "conv1d_39"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_31",
+                "class_name": "Activation",
+                "name": "activation_31"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_39",
+                "class_name": "Activation",
+                "name": "activation_39"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_36",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_36"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_44",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_44"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_23",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_23"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_31",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_31"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_31",
+                "class_name": "Add",
+                "name": "add_31"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_39",
+                "class_name": "Add",
+                "name": "add_39"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_32",
+                "class_name": "Conv1D",
+                "name": "conv1d_32"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_40",
+                "class_name": "Conv1D",
+                "name": "conv1d_40"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_32",
+                "class_name": "Activation",
+                "name": "activation_32"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_40",
+                "class_name": "Activation",
+                "name": "activation_40"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_37",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_37"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_45",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_45"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_24",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_24"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_32",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_32"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_32",
+                "class_name": "Add",
+                "name": "add_32"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_40",
+                "class_name": "Add",
+                "name": "add_40"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_33",
+                "class_name": "Conv1D",
+                "name": "conv1d_33"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_41",
+                "class_name": "Conv1D",
+                "name": "conv1d_41"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_33",
+                "class_name": "Activation",
+                "name": "activation_33"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_41",
+                "class_name": "Activation",
+                "name": "activation_41"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_38",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_38"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_46",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_46"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_25",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_25"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_33",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_33"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_33",
+                "class_name": "Add",
+                "name": "add_33"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_41",
+                "class_name": "Add",
+                "name": "add_41"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_34",
+                "class_name": "Conv1D",
+                "name": "conv1d_34"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_42",
+                "class_name": "Conv1D",
+                "name": "conv1d_42"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_34",
+                "class_name": "Activation",
+                "name": "activation_34"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_42",
+                "class_name": "Activation",
+                "name": "activation_42"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_39",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_39"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_47",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_47"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_26",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_26"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_34",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_34"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_34",
+                "class_name": "Add",
+                "name": "add_34"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_42",
+                "class_name": "Add",
+                "name": "add_42"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_35",
+                "class_name": "Conv1D",
+                "name": "conv1d_35"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_43",
+                "class_name": "Conv1D",
+                "name": "conv1d_43"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_35",
+                "class_name": "Activation",
+                "name": "activation_35"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_43",
+                "class_name": "Activation",
+                "name": "activation_43"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_40",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_40"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_48",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_48"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_27",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_27"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_35",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_35"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_35",
+                "class_name": "Add",
+                "name": "add_35"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_43",
+                "class_name": "Add",
+                "name": "add_43"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_36",
+                "class_name": "Conv1D",
+                "name": "conv1d_36"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_44",
+                "class_name": "Conv1D",
+                "name": "conv1d_44"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_36",
+                "class_name": "Activation",
+                "name": "activation_36"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_44",
+                "class_name": "Activation",
+                "name": "activation_44"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_41",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_41"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_49",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_49"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_28",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_28"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_36",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_36"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_36",
+                "class_name": "Add",
+                "name": "add_36"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_44",
+                "class_name": "Add",
+                "name": "add_44"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_37",
+                "class_name": "Conv1D",
+                "name": "conv1d_37"
+            },
+            {
+                "num_parameters": 262656,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "conv1d_45",
+                "class_name": "Conv1D",
+                "name": "conv1d_45"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_37",
+                "class_name": "Activation",
+                "name": "activation_37"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "activation_45",
+                "class_name": "Activation",
+                "name": "activation_45"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_42",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_42"
+            },
+            {
+                "num_parameters": 2048,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "batch_normalization_50",
+                "class_name": "BatchNormalization",
+                "name": "batch_normalization_50"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_29",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_29"
+            },
+            {
+                "num_parameters": 264192,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "separable_conv1d_37",
+                "class_name": "SeparableConv1D",
+                "name": "separable_conv1d_37"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_37",
+                "class_name": "Add",
+                "name": "add_37"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    512
+                ],
+                "id": "add_45",
+                "class_name": "Add",
+                "name": "add_45"
+            },
+            {
+                "num_parameters": 131841,
+                "output_shape": [
+                    null,
+                    500,
+                    257
+                ],
+                "id": "conv1d_46",
+                "class_name": "Conv1D",
+                "name": "conv1d_46"
+            },
+            {
+                "num_parameters": 131841,
+                "output_shape": [
+                    null,
+                    500,
+                    257
+                ],
+                "id": "conv1d_47",
+                "class_name": "Conv1D",
+                "name": "conv1d_47"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    257
+                ],
+                "id": "activation_46",
+                "class_name": "Activation",
+                "name": "activation_46"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    257
+                ],
+                "id": "activation_47",
+                "class_name": "Activation",
+                "name": "activation_47"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    128500
+                ],
+                "id": "input_1",
+                "class_name": "InputLayer",
+                "name": "input_1"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    257,
+                    1
+                ],
+                "id": "reshape_mag",
+                "class_name": "Reshape",
+                "name": "reshape_mag"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    500,
+                    257,
+                    1
+                ],
+                "id": "reshape_phase",
+                "class_name": "Reshape",
+                "name": "reshape_phase"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    128500
+                ],
+                "id": "lambda_input_samples",
+                "class_name": "Lambda",
+                "name": "lambda_input_samples"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    257,
+                    500,
+                    1
+                ],
+                "id": "lambda_4",
+                "class_name": "Lambda",
+                "name": "lambda_4"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    257,
+                    500,
+                    1
+                ],
+                "id": "lambda_5",
+                "class_name": "Lambda",
+                "name": "lambda_5"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    257,
+                    500,
+                    1
+                ],
+                "id": "reshape_1",
+                "class_name": "Reshape",
+                "name": "reshape_1"
+            },
+            {
+                "num_parameters": 0,
+                "output_shape": [
+                    null,
+                    257,
+                    500,
+                    5
+                ],
+                "id": "concat_maps",
+                "class_name": "Concatenate",
+                "name": "concat_maps"
+            }
+        ],
+        "_type": "graph",
+        "format": "keras"
+    },
+    "val_loss": 66.2783203125,
+    "_step": 15,
+    "sdr": 7.0488117825835035,
+    "lr": 6.000000212225132e-06,
+    "epoch": 15,
+    "snr": 6.569121196209806,
+    "_timestamp": 1573531088.3256297,
+    "_runtime": 231739.26573491096,
+    "loss": 117.9006696346755
+}
