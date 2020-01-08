@@ -73,7 +73,7 @@ class TasNet(object):
         
         
         #self.video_input_data=Input(shape=(self.frames,))#video_shape=(125,256)
-        self.audio_input_data=Input(shape=(80000,1),dtype='float32')#audio_shape=(80000,1)
+        self.audio_input_data=Input(shape=(self.t*160,1),dtype='float32')#audio_shape=(80000,1)
         
         #audio_encoding
         self.audio=Conv1D(256,40,padding='same',strides=20)(self.audio_input_data)
@@ -136,7 +136,7 @@ class TasNet(object):
         self.fusion=Conv1D(256,1,activation='relu')(self.fusion)
         self.fusion=Multiply()([self.audio,self.fusion])
         self.decode = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
-        self.decode=Conv2DTranspose(1,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.decode)
+        self.decode=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.decode)
         self.decode=Conv2DTranspose(1,(40,1),strides=(20,1),padding='same',data_format='channels_last')(self.decode)
         self.out = Lambda(lambda x: K.squeeze(x, axis=2))(self.decode)
   
