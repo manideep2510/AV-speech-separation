@@ -1,0 +1,46 @@
+Training data: 360
+Validation data: 240
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+
+==================================================================================================
+Total params: 35,239,198
+Trainable params: 35,192,606
+Non-trainable params: 46,592
+__________________________________________________________________________________________________
+
+Epoch 1/2
+Traceback (most recent call last):
+  File "main_tasnet.py", line 167, in <module>
+    callbacks=[reducelronplateau, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file)], verbose = 1)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 1297, in fit_generator
+    steps_name='steps_per_epoch')
+  File "/usr/local/lib/python3.6/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
+    return old_generator(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_generator.py", line 221, in model_iteration
+    batch_data = _get_next_batch(generator)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_generator.py", line 363, in _get_next_batch
+    generator_output = next(generator)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/utils/data_utils.py", line 918, in get
+    six.reraise(*sys.exc_info())
+  File "/usr/lib/python3/dist-packages/six.py", line 693, in reraise
+    raise value
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/utils/data_utils.py", line 894, in get
+    inputs = self.queue.get(block=True).get()
+  File "/usr/lib/python3.6/multiprocessing/pool.py", line 644, in get
+    raise self._value
+  File "/usr/lib/python3.6/multiprocessing/pool.py", line 119, in worker
+    result = (True, func(*args, **kwds))
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/utils/data_utils.py", line 828, in next_sample
+    return six.next(_SHARED_SEQUENCES[uid])
+  File "/data/AV-speech-separation1/dataloaders.py", line 548, in DataGenerator_sampling_samples
+    X_samples_mix = np.asarray([np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000] for fname in samples_mix])
+  File "/data/AV-speech-separation1/dataloaders.py", line 548, in <listcomp>
+    X_samples_mix = np.asarray([np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000] for fname in samples_mix])
+  File "/usr/local/lib/python3.6/dist-packages/scipy/io/wavfile.py", line 233, in read
+    fid = open(filename, 'rb')
+FileNotFoundError: [Errno 2] No such file or directory: '//mixed_audio_files/data.wav'

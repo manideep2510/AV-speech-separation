@@ -1,3 +1,4 @@
+from metrics import sdr_metric, Metrics_crm, Metrics_samples, Metrics_wandb
 import glob
 import os
 from skimage import io, transform
@@ -27,9 +28,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
 from models.lipnet import LipNet
-from models.tasnet_pred_samples import TasNet
+from models.tdavss import TasNet
 #from models.tasnet_lipnet import TasNet
-from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_train_samples, DataGenerator_sampling_samples
+from dataloaders import DataGenerator_val_samples, DataGenerator_sampling_samples
 #from dataloaders_aug import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
 
 '''from tensorflow.keras.backend.tensorflow_backend import set_session
@@ -38,7 +39,6 @@ config.gpu_options.allow_growth=True
 set_session(tf.Session(config=config))'''
 
 from tensorflow.keras.utils import multi_gpu_model
-from metrics import sdr_metric, Metrics_crm, Metrics_samples
 from argparse import ArgumentParser
 import wandb
 from wandb.keras import WandbCallback
@@ -51,7 +51,7 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
-wandb.init(name='Attention-tasnet-pred_samples', notes='Predict time samples directly.Training with Attention layer, Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 2epochs. TasNet with Resnet LSTM Lipnet. Loss is Root of TF L2 Loss', project="av-speech-seperation")
+wandb.init(name='tdavss_freezeLip_norm', notes='freeze LipNet, Normalize input with 1350, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet LSTM Lipnet. Loss is Si-SNR', project="av-speech-seperation")
 
 # To read the images in numerical order
 import re
@@ -76,10 +76,10 @@ random.seed(10)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
 #random.seed(30)
-#folders_list_val = random.sample(folders_list_val, 120)
-#folders_list_train = random.sample(folders_list_train, 180)
-#folders_list_train = folders_list[:180]
-#folders_list_val = folders_list[180:300]
+'''folders_list_val = random.sample(folders_list_val, 120)
+folders_list_train = random.sample(folders_list_train, 180)
+folders_list_train = folders_list[:180]
+folders_list_val = folders_list[180:300]'''
 
 #print('Training data:', len(folders_list_train1[:55000])*2 + len(folders_list_train2)*3)
 print('Training data:', len(folders_list_train)*2)
@@ -87,8 +87,20 @@ print('Validation data:', len(folders_list_val)*2)
 
 # Building the model
 #tasnet = TasNet(video_ip_shape=(125,50,100,3), time_dimensions=500, frequency_bins=257, n_frames=125, lipnet_pretrained='pretrain', train_lipnet=False)
-tasnet = TasNet(video_ip_shape=(50,50,100,3), time_dimensions=200, frequency_bins=257, n_frames=50, lipnet_pretrained='pretrain',  train_lipnet=None)
+
+# Compile the model
+lrate = args.lrate
+batch_size = args.batch_size
+epochs = args.epochs
+
+#mirrored_strategy = tf.distribute.MirroredStrategy()
+#strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
+#with strategy.scope():
+
+tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=False, lipnet_pretrained=True,  train_lipnet=False)
 model = tasnet.model
+model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
+
 
 from io import StringIO
 tmp_smry = StringIO()
@@ -99,22 +111,17 @@ summary_params = summary_split[-6:]
 summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
-# Compile the model
-lrate = args.lrate
+
 
 #model.load_weights('/data/models/tasnet_ResNetLSTMLip_Lips_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1/weights-17-249.6407.hdf5')
 
 #model = multi_gpu_model(model, gpus=2)
 
-model.compile(optimizer = Adam(lr=lrate), loss = snr_loss, metrics=[snr_acc])
-
-batch_size = args.batch_size
-epochs = args.epochs
-
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'PredTimeSamples_tasnet_Attnention_MishActivation_ResNetLSTMLip_Lips_236kTrain_2secondsClips_RMSLoss_epochs50_lr1e-4_0.35decayNoValDec2epochs_exp1'
+path = 'tdavss_freezeLip_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp2'
+print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 
 try:
@@ -147,7 +154,8 @@ def learningratescheduler():
     learningratescheduler = LearningRateScheduler(step_decay)
     return learningratescheduler
 
-metrics_crm = Metrics_samples(model = model, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
+#metrics_crm = Metrics_samples(model = model, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
+metrics_wandb = Metrics_wandb()
 learningratescheduler = learningratescheduler()
 earlystopping = earlystopping()
 reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.35, patience=3, min_lr = 0.00000001)
@@ -159,12 +167,12 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 folders_per_epoch = int(len(folders_list_train)/3)
 
-history = model.fit_generator(DataGenerator_sampling_samples(folders_list_train, folders_per_epoch, batch_size),
+history = model.fit_generator(DataGenerator_sampling_samples(folders_list_train, folders_per_epoch, int(batch_size)),
                 steps_per_epoch = int(np.ceil(folders_per_epoch/float(batch_size))),
                 epochs=int(epochs),
-                validation_data=DataGenerator_train_samples(folders_list_val, batch_size), 
+                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size)), 
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),
-                callbacks=[reducelronplateau, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm], verbose = 1)
+    callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file)], verbose=1)
 
 #, WandbCallback(save_model=False, data_type="image")
 

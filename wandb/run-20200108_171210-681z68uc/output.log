@@ -1,0 +1,10 @@
+Training data: 360
+Validation data: 240
+Traceback (most recent call last):
+  File "main_tasnet.py", line 90, in <module>
+    tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, lipnet_pretrained=None,  train_lipnet=None)
+  File "/data/AV-speech-separation1/models/tdavss.py", line 70, in __init__
+    self.build()
+  File "/data/AV-speech-separation1/models/tdavss.py", line 84, in build
+    self.lipnet_model = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=self.frames, AbsoluteMaxStringLen=128, every_frame=True, pretrain=lipnet_pretrained)
+NameError: name 'lipnet_pretrained' is not defined

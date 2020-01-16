@@ -1,3 +1,5 @@
+from metrics import metric_eval, si_snr
+from losses import snr_loss, snr_acc
 import glob
 import os
 from skimage import io, transform
@@ -13,37 +15,27 @@ plt.ion()   # interactive mode
 import math
 
 import tensorflow as tf
-from keras.layers import *
-from keras import Model
-import keras.backend as K
-from keras.optimizers import Adam
-from keras.models import load_model
-from keras.layers.core import Lambda
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.layers import *
+from tensorflow.keras import Model
+import tensorflow.keras.backend as K
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import load_model
+from tensorflow.keras.layers import Lambda
+from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
 from callbacks import learningratescheduler, earlystopping, reducelronplateau
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
-from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
 from models.lipnet import LipNet
 #from models.tasnet_lipnet import TasNet
-from models.tasnet_resnetLip import TasNet
+from models.tdavss import TasNet
 from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask, DataGenerator_test_softmask
-from dataloaders import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_softmask
+from dataloaders import DataGenerator_val_samples, DataGenerator_sampling_samples
 
-from keras.backend.tensorflow_backend import set_session
-config = tf.ConfigProto()
-config.gpu_options.allow_growth=True
-set_session(tf.Session(config=config))
-
-from keras.utils import multi_gpu_model
-from metrics import sdr_metric, Metrics_softmask
-from argparse import ArgumentParser
 import shutil
 import re
 
 from mir_eval.separation import bss_eval_sources
-from metrics import metric_eval
 
 from data_preparation.audio_utils import retrieve_samples, compress_crm, inverse_crm, return_samples_complex, audios_sum
 from data_preparation.video_utils import get_video_frames
@@ -80,11 +72,11 @@ def crop_pad_frames(frames, fps, seconds):
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
 
 #folders_list_train = folders_list[:24]
-#import random
+import random
 #random.shuffle(folders_list_train)
 val_folders_pred_all = folders_list[91500:93000] + folders_list[238089:]
 random.seed(200)
-val_folders_pred = random.sample(val_folders_pred, 200)
+val_folders_pred_all = random.sample(val_folders_pred_all, 200)
 #print(folders_list_val[4])
 
 '''val_folders_pred_all = sorted(glob.glob('/data/lrs2/train_20s/*'), key=numericalSort)
@@ -96,9 +88,10 @@ time = 20'''
 '''
 
 # Building the model
-tasnet = TasNet(video_ip_shape=(500,50,100,3), time_dimensions=500, frequency_bins=257, n_frames=125, lipnet_pretrained='pretrain', train_lipnet=None)
+tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=False, lipnet_pretrained=True,  train_lipnet=None)
 model = tasnet.model
-model.load_weights('/data/models/tasnet_ResNetLSTMLip_Lips_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1/weights-20-237.6519.hdf5')
+model.compile(optimizer=Adam(lr=0.0001), loss=snr_loss, metrics=[snr_acc])
+model.load_weights('/data/models/tdavss_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp2/weights-05-nan.hdf5')
 print('Weights Loaded')
 
 from io import StringIO
@@ -113,7 +106,12 @@ print('\n'+summary_params)
 
 sdr_list = []
 
-batch_size = 4
+batch_size = 20
+
+
+#pred = model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all, int(batch_size)),
+#                                steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),
+#                                verbose=1)
 
 print('Predicting on the data')
 num = len(val_folders_pred_all)
@@ -122,7 +120,9 @@ sdr_list = []
 snr_list = []
 for n in range(num_100s):
     val_folders_pred = val_folders_pred_all[n*200:(n+1)*200]
-    val_predict = model.predict_generator(DataGenerator_test_softmask(val_folders_pred, batch_size), steps = np.ceil((len(val_folders_pred))/float(batch_size)), verbose=1)
+    val_predict = model.predict_generator(DataGenerator_val_samples(val_folders_pred_all, int(batch_size)),
+                                steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),
+                                verbose=1)
 
     mixed_spect = val_predict[:,:,:,2]
     mixed_phase = val_predict[:,:,:,3]
@@ -170,7 +170,7 @@ for n in range(num_100s):
     print('SNR:', val_snr)
     print('PESQ:', val_pesq)
 
-    '''samples = []
+'''samples = []
 
     try:
         os.mkdir('/data/pred_tasnet_20s')

@@ -133,7 +133,7 @@ class TasNet(object):
 
         self.fusion=concatenate([self.attn_out, self.outv,self.outa],axis=-1)
         self.fusion=Conv1D(512,1)(self.fusion)
-        print('fusion:', self.fusion.shape)
+        print('fusion:', self.fusion.shape) 
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=512)

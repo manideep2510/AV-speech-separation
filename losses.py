@@ -216,8 +216,8 @@ def vec_l2norm(x):
     return nr
 
 def log10(x):
-  numerator = tf.log(x)
-  denominator = tf.log(tf.constant(10, dtype=numerator.dtype))
+  numerator = tf.math.log(x)
+  denominator = tf.math.log(tf.constant(10, dtype=numerator.dtype))
   return numerator / denominator
 
 
@@ -230,10 +230,11 @@ def snr_loss(s, x):
     """
 
     x = x[:,:,0]
+    #print(x.shape[0])
     #s = x[:,:,1]
 
-    x = tf.reshape(x, (24, 32000))
-    s = tf.reshape(s, (24, 32000))
+    x = tf.reshape(x, (-1, 32000))
+    s = tf.reshape(s, (-1, 32000))
 
     '''print('Pred:', x.shape)
     print('GT:', s.shape)'''
@@ -260,8 +261,8 @@ def snr_acc(s, x):
     x = x[:,:,0]
     #s = x[:,:,1]
 
-    x = tf.reshape(x, (24, 32000))
-    s = tf.reshape(s, (24, 32000))
+    x = tf.reshape(x, (-1, 32000))
+    s = tf.reshape(s, (-1, 32000))
 
     '''print('Pred:', x.shape)
     print('GT:', s.shape)'''

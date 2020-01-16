@@ -1,0 +1,19 @@
+Training data: 360
+Validation data: 240
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+
+==================================================================================================
+Total params: 35,239,198
+Trainable params: 35,192,606
+Non-trainable params: 46,592
+__________________________________________________________________________________________________
+
+Traceback (most recent call last):
+  File "main_tasnet.py", line 165, in <module>
+    validation_data=DataGenerator_train_samples(folders_list_val, batch_size),
+NameError: name 'DataGenerator_train_samples' is not defined

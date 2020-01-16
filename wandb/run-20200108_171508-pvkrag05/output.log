@@ -1,0 +1,43 @@
+Training data: 360
+Validation data: 240
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+
+==================================================================================================
+Total params: 35,239,198
+Trainable params: 35,192,606
+Non-trainable params: 46,592
+__________________________________________________________________________________________________
+
+Traceback (most recent call last):
+  File "main_tasnet.py", line 109, in <module>
+    model.compile(optimizer = Adam(lr=lrate), loss = snr_loss, metrics=[snr_acc])
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/training/tracking/base.py", line 457, in _method_wrapper
+    result = method(self, *args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 366, in compile
+    masks=self._prepare_output_masks())
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 2063, in _handle_metrics
+    target, output, output_mask))
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 2014, in _handle_per_output_metrics
+    metric_fn, y_true, y_pred, weights=weights, mask=mask)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_utils.py", line 1067, in call_metric_function
+    return metric_fn(y_true, y_pred, sample_weight=weights)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/metrics.py", line 193, in __call__
+    replica_local_fn, *args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/distribute/distributed_training_utils.py", line 1135, in call_replica_local_fn
+    return fn(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/metrics.py", line 176, in replica_local_fn
+    update_op = self.update_state(*args, **kwargs)  # pylint: disable=not-callable
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/utils/metrics_utils.py", line 75, in decorated
+    update_op = update_state_fn(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/metrics.py", line 581, in update_state
+    matches = self._fn(y_true, y_pred, **self._fn_kwargs)
+  File "/data/AV-speech-separation1/losses.py", line 275, in snr_acc
+    snr_loss_batch = 20 * log10(vec_l2norm(t) / vec_l2norm(n))
+  File "/data/AV-speech-separation1/losses.py", line 219, in log10
+    numerator = tf.log(x)
+AttributeError: module 'tensorflow' has no attribute 'log'

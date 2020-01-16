@@ -1,6 +1,7 @@
 import sys
 sys.path.append('/data/AV-speech-separation/LipNet')
 sys.path.append('/data/AV-speech-separation/models')
+sys.path.append('/data/AV-speech-separation1/models/classification_models-master/')
 
 import tensorflow as tf
 import keras
@@ -10,13 +11,15 @@ import keras.backend as K
 from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
-from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
+#from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
+from sep_classification_models.tfkeras import Classifiers as Separable_Classifiers
 from lipnet.core.layers import CTC
+from .mish import Mish
 
 def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
 
-    out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', name='gru1'), merge_mode='concat')(x)
-    out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', name='gru2'), merge_mode='concat')(out)
+    out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', reset_after=False, name='gru1'), merge_mode='concat')(x)
+    out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', reset_after=False, name='gru2'), merge_mode='concat')(out)
     if every_frame:
         out = Dense(num_classes, activation='softmax', name='softmax_out')(out)  # predictions based on every time step
     else:
@@ -75,8 +78,9 @@ class Lipreading(object):
         self.x = self.frames_to_batch(self.x)   #x.view(-1, 64, x.size(3), x.size(4))
         print('3D Conv Out Reshape:', self.x.shape)
 
-        #self.channels = int(self.x.shape[-1])
-        self.resnet18 = ResNet18((None, None, 64), weights=None, include_top=False)
+        self.channels = int(self.x.shape[-1])
+        self.ResNet18, self.preprocess_input = Separable_Classifiers.get('resnet18')
+        self.resnet18 = self.ResNet18((None, None, self.channels), weights=None, include_top=False)
 
         self.x = self.resnet18(self.x)
         print('Resnet18 Out:', self.x.shape)

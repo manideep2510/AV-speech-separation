@@ -62,26 +62,29 @@ def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
 
 class TasNet(object):
     
-    def __init__(self,time_dimensions=500,frequency_bins=257,n_frames=125, lipnet_pretrained=None, train_lipnet=None):
+    def __init__(self,time_dimensions=500,frequency_bins=257,n_frames=125, attention=None,lipnet_pretrained=None, train_lipnet=None):
         
         self.t=time_dimensions
         self.f=frequency_bins
         self.frames=n_frames
+        self.lipnet_pretrained = lipnet_pretrained
+        self.train_lipnet = train_lipnet
+        self.attention = attention
         self.build()
         
     def build(self):
         
         
         #self.video_input_data=Input(shape=(self.frames,))#video_shape=(125,256)
-        self.audio_input_data=Input(shape=(self.t*160,1),dtype='float32')#audio_shape=(80000,1)
+        self.audio_input_data=Input(shape=(self.t*160,1))#audio_shape=(80000,1)
         
         #audio_encoding
-        self.audio=Conv1D(256,40,padding='same',strides=20)(self.audio_input_data)
-        self.audio=Conv1D(256,16,padding='same',strides=8)(self.audio)
+        self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_input_data)
+        self.audio=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.audio)
         
         #video_processing
 
-        self.lipnet_model = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=self.frames, AbsoluteMaxStringLen=128, every_frame=True, pretrain=True)
+        self.lipnet_model = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=self.frames, AbsoluteMaxStringLen=128, every_frame=True, pretrain=self.lipnet_pretrained)
 
         if self.train_lipnet == False:
             for layer in self.lipnet_model.layers:
@@ -114,7 +117,23 @@ class TasNet(object):
         #fusion_process
         
         self.outv=UpSampling1D(size=4)(self.outv)
-        self.fusion=concatenate([self.outv,self.outa],axis=-1)
+
+        print('outv:', self.outv.shape)
+        print('outa:', self.outa.shape)
+
+        if self.attention == True:
+            self.attn_layer = AttentionLayer(name='attention_layer')
+            self.attn_out, self.attn_states = self.attn_layer([self.outv, self.outa], verbose=False)
+            print('attn_out:', self.attn_out.shape)
+            print('attn_states:', self.attn_states.shape)
+
+            self.fusion=concatenate([self.attn_out, self.outv, self.outa],axis=-1)
+            self.fusion=Conv1D(512,1)(self.fusion)
+            
+        else:
+            self.fusion=concatenate([self.outv,self.outa],axis=-1)
+        
+        print('fusion:', self.fusion.shape)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=512)
@@ -123,6 +142,7 @@ class TasNet(object):
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=32,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=64,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=512)
+
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=512)
@@ -143,5 +163,3 @@ class TasNet(object):
         
         
         self.model=Model(inputs=[self.lipnet_model.input,self.audio_input_data],outputs=[self.out])
-        
-            

@@ -1,0 +1,35 @@
+{
+    "root": "/data/AV-speech-separation1",
+    "program": "main_tasnet.py",
+    "git": {
+        "remote": "https://github.com/manideep2510/AV-speech-separation",
+        "commit": "0aab0587c76a3f61a37be219f51c0ab7cff78a8f"
+    },
+    "email": null,
+    "startedAt": "2020-01-08T17:09:06.218498",
+    "host": "shell1",
+    "username": "4014",
+    "executable": "/usr/local/bin/python",
+    "os": "Linux-4.15.0-46-generic-x86_64-with-Ubuntu-18.04-bionic",
+    "python": "3.6.8",
+    "gpu": "TITAN Xp",
+    "gpu_count": 2,
+    "cpu_count": 12,
+    "cuda": "10.0.130",
+    "args": [
+        "-epochs",
+        "2",
+        "-batch_size",
+        "20",
+        "-lr",
+        "0.0001"
+    ],
+    "state": "failed",
+    "jobType": null,
+    "mode": "dryrun",
+    "name": "tdavss-pred_samples",
+    "notes": "Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet LSTM Lipnet. Loss is Si-SNR",
+    "project": "av-speech-seperation",
+    "heartbeatAt": "2020-01-08T17:09:22.190085",
+    "exitcode": 1
+}

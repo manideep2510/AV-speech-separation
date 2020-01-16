@@ -524,7 +524,7 @@ def DataGenerator_sampling_samples(folderlist_all, folders_per_epoch, batch_size
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
                 #samples_mix_ = sorted(glob.glob(folder + '/mix_samples.npy'), key=numericalSort)
-                samples_mix_ = home + '/mixed_audio_files/' +folder.split('/')[1]+'.wav'
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
                 for i in range(len(lips_)):
                     lips.append(lips_[i])
                 for i in range(len(samples_)):
@@ -578,14 +578,16 @@ def DataGenerator_sampling_samples(folderlist_all, folders_per_epoch, batch_size
 
             #X_spect_phase = X_spect_phase[:,:,:200,:]
             #X_samples = X_samples[:,:32000]
-            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1)
-            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1)
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+            X_samples_targ = X_samples_targ/1350.0
+            X_samples_mix = X_samples_mix/1350.0
             #print(X_samples_targ.shape)
 
             #X_attns = np.random.rand(batch_size, 200, 200)
 
-            yield [X_lips, X_samples_mix], X_samples_targ
-
+            yield (X_lips, X_samples_mix), X_samples_targ
+            #print(yes)
             batch_start += batch_size
             batch_end += batch_size
 
@@ -612,7 +614,7 @@ def DataGenerator_val_samples(folderlist, batch_size):
             for folder in folders_batch:
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                samples_mix_ = home + '/mixed_audio_files/' +folder.split('/')[1]+'.wav'
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
                 for i in range(len(lips_)):
                     lips.append(lips_[i])
                 for i in range(len(samples_)):
@@ -666,8 +668,10 @@ def DataGenerator_val_samples(folderlist, batch_size):
 
             #X_spect_phase = X_spect_phase[:,:,:200,:]
             #X_samples = X_samples[:,:32000]
-            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1)
-            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1)
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+            X_samples_targ = X_samples_targ/1350.0
+            X_samples_mix = X_samples_mix/1350.0
             #print(X_samples_targ.shape)
 
             #X_attns = np.random.rand(batch_size, 200, 200)
@@ -698,7 +702,7 @@ def DataGenerator_test_samples(folderlist, batch_size):
 
             for folder in folders_batch:
                 lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                samples_mix_ = home + '/mixed_audio_files/' +folder.split('/')[1]+'.wav'
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
                 for i in range(len(lips_)):
                     lips.append(lips_[i])
                 for i in range(len(lips_)):
@@ -749,7 +753,8 @@ def DataGenerator_test_samples(folderlist, batch_size):
 
             #X_spect_phase = X_spect_phase[:,:,:200,:]
             #X_samples = X_samples[:,:32000]
-            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1)
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+            X_samples_mix = X_samples_mix/1350.0
             #print(X_samples_targ.shape)
 
             #X_attns = np.random.rand(batch_size, 200, 200)
@@ -758,3 +763,11 @@ def DataGenerator_test_samples(folderlist, batch_size):
 
             batch_start += batch_size
             batch_end += batch_size
+
+'''samples_mix = sorted(glob.glob('/data/mixed_audio_files/*.wav'), key=numericalSort)
+samples = [np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000] for fname in samples_mix]
+means = []
+stds = []
+for i in samples:
+    means.append(np.mean(i))
+    stds.append(np.std(i))'''

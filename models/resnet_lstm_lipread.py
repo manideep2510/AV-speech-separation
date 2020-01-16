@@ -1,6 +1,7 @@
 import sys
 sys.path.append('/data/AV-speech-separation1/LipNet')
 sys.path.append('/data/AV-speech-separation1/models')
+sys.path.append('/data/AV-speech-separation1/models/classification_models-master/')
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -14,12 +15,13 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import Lambda
 #from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
 from classification_models.tfkeras import Classifiers
+from sep_classification_models.tfkeras import Classifiers as Separable_Classifiers
 from .mish import Mish
 
 def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
 
-    out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', name='gru1'), merge_mode='concat')(x)
-    out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', name='gru2'), merge_mode='concat')(out)
+    out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', reset_after=False, name='gru1'), merge_mode='concat')(x)
+    out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', reset_after=False, name='gru2'), merge_mode='concat')(out)
     if every_frame:
         out = Dense(num_classes)(out)  # predictions based on every time step
     else:
@@ -64,13 +66,13 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
     print('3D Conv Out:', x.shape)
     #x = Lambda(lambda x : tf.transpose(x, [0, 2, 1, 3, 4]), name='lambda1')(x)  #x.transpose(1, 2) tf.tens
     #print('3D Conv Out Transp:', x.shape)
-    x = Lambda(lambda x : tf.reshape(x, [-1, x.shape[2], x.shape[3], x.shape[4]]), name='lambda2')(x)   #x.view(-1, 64, x.size(3), x.size(4))
+    x = Lambda(lambda x : tf.reshape(x, [-1, int(x.shape[2]), int(x.shape[3]), int(x.shape[4])]), name='lambda2')(x)   #x.view(-1, 64, x.size(3), x.size(4))
     print('3D Conv Out Reshape:', x.shape)
 
     channels = int(x.shape[-1])
     #resnet18 = ResNet18((None, None, channels), weights=None, include_top=False)
 
-    ResNet18, preprocess_input = Classifiers.get('resnet18')
+    ResNet18, preprocess_input = Separable_Classifiers.get('resnet18')
     resnet18 = ResNet18((None, None, channels), weights=None, include_top=False)
 
     x = resnet18(x)
