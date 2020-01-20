@@ -38,8 +38,8 @@ combination_no = args.combination_no
 count = args.count'''
 
 dataset_type = 'train'
-combination_no = 1
-count = 2
+'''combination_no = 1
+count = 2'''
 
 '''# To read the images in numerical order
 import re
@@ -53,11 +53,11 @@ if dataset_type == "train":
     files = sorted(glob.glob('/data/lrs2/mvlrs_v1/pretrain/*/*_lips.mp4'), key=numericalSort)
     
     try:
-        os.mkdir('/data/lrs2/train_20s')
+        os.mkdir('/data/lrs2/voxceleb_2comb')
     except OSError:
         pass
     
-    dest_folder = '/data/lrs2/train_20s'
+    dest_folder = '/data/lrs2/voxceleb_2comb'
     
 elif dataset_type == "val":
     files = sorted(glob.glob('/data/lrs2/mvlrs_v1/main/*/*_lips.mp4'), key=numericalSort)
@@ -93,10 +93,10 @@ a = time.time()
 combinations_list = pair_files(files_req, combination_no = combination_no, count = count)
 b = time.time()'''
 
-dest_folder = '/data/lrs2/train_20s'
-combinations_list = np.loadtxt('/data/lrs2/combinations_list_20s.txt', dtype='object')
+dest_folder = '/data/lrs2/voxceleb_2comb'
+combinations_list = np.loadtxt('/data/lrs2/combs_voxceleb_2faces.txt', dtype='object')
 
-with open("/data/AV-speech-separation/data_preparation/log_create_dataset.txt", "w") as myfile:
+with open("/data/AV-speech-separation/data_preparation/log_create_vox_2comb.txt", "w") as myfile:
     myfile.write(str(len(combinations_list)) + ' pairs generated')
 
 print(len(combinations_list), 'pairs generated')
@@ -116,5 +116,5 @@ for combination in combinations_list:
         b = time.time()
         times.append(b)
         print(c, '/', len(combinations_list), 'folders created in ', times[-1] - times[-2], 'seconds')
-        with open("/data/AV-speech-separation/data_preparation/log_create_dataset.txt", "a") as myfile:
+        with open("/data/AV-speech-separation/data_preparation/log_create_vox_2comb.txt", "a") as myfile:
             myfile.write(str(c) + ' / ' + str(len(combinations_list)) + ' folders created in ' + str(times[-1] - times[-2]) + ' seconds \n')

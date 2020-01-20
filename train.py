@@ -20,14 +20,14 @@ from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
-from callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau,LoggingCallback
+from callbacks import learningratescheduler, earlystopping, reducelronplateau,LoggingCallback
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
-from models.lipnet import LipNet
-from models.cocktail_lipnet_unet_softmask import VideoModel
-from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask
+#from models.lipnet import LipNet
+#from models.cocktail_lipnet_unet_softmask import VideoModel
+#from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask
 
 #from keras.optimizers import Adam
 #from keras.callbacks import TensorBoard, CSVLogger, ModelCheckpoint
@@ -46,10 +46,17 @@ import datetime
 import pickle
 
 
-from keras.backend.tensorflow_backend import set_session
-config = tf.ConfigProto()
-config.gpu_options.allow_growth=True
-set_session(tf.Session(config=config))
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
 
 from keras.utils import multi_gpu_model
 #from metrics import sdr_metric, Metrics_softmask
@@ -113,7 +120,7 @@ print('Validation data:', len(folders_list_val)*2)
 #lip=LipNet(pretrained=True,weights_path='/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs10-20_lr1e-4_0.1decay10epochs/weights-04-125.3015.hdf5')
 lip = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True)
 model = lip.model
-model.load_weights('/data/models/combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs8to9_lr1e-4_0.1decay9epochs/weights-01-113.6444.hdf5')
+#model.load_weights('/data/models/combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs8to9_lr1e-4_0.1decay9epochs/weights-01-113.6444.hdf5')
 
 from io import StringIO
 tmp_smry = StringIO()
@@ -148,7 +155,7 @@ epochs = args.epochs
 
 # Path to save model checkpoints
 
-path = 'combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs9to20_lr1e-5_0.1decay9epochs'
+path = 'combResnetLSTM_CTCloss_seperableConv2_236k-train_1to3ratio_valWER_epochs9to20_lr1e-5_0.1decay9epochs'
 
 try:
     os.mkdir('/data/models/'+ path)
@@ -169,9 +176,8 @@ def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
 # callcack
 metrics_wer = Metrics_softmask(model = lip, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
 learningratescheduler = learningratescheduler()
-#earlystopping = earlystopping()
-#reducelronplateau = reducelronplateau()
-#logger = Logger('/data/results')
+earlystopping = earlystopping()
+reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.35, patience=3, min_lr = 0.00000001)
 
 filepath='/data/models/' +  path+ '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
@@ -185,7 +191,7 @@ history = model.fit_generator(DataGenerator_sampling_softmask(folders_list_train
                 epochs=epochs,
                 validation_data=DataGenerator_train_softmask(folders_list_val, batch_size),
                 validation_steps = np.ceil((len(folders_list_val))/float(batch_size)),
-                callbacks=[LoggingCallback(print_fcn=log_to_file), checkpoint_save_weights, learningratescheduler, metrics_wer], verbose = 1)
+                callbacks=[LoggingCallback(print_fcn=log_to_file), checkpoint_save_weights, reducelronplateau, metrics_wer], verbose = 1)
 
 # Plots
 plot_loss_and_acc(history, path)

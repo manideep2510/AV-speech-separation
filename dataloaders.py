@@ -500,7 +500,7 @@ def DataGenerator_sampling_samples(folderlist_all, folders_per_epoch, batch_size
                     indices = []
                     for ind in range(len(folderlist_all)):
                         indices.append(ind)
-                random.seed(100*epoch_number)
+                random.seed(100*(epoch_number+9))
                 pick_indices = random.sample(indices, L)
 
                 for item in pick_indices:

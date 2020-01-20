@@ -26,7 +26,7 @@ from callbacks import learningratescheduler, earlystopping, reducelronplateau
 from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
-from models.lipnet import LipNet
+#from models.lipnet import LipNet
 #from models.tasnet_lipnet import TasNet
 from models.tdavss import TasNet
 from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask, DataGenerator_test_softmask
@@ -80,15 +80,19 @@ def crop_pad_frames(frames, fps, seconds):
     return frames
 
 
-# Read training folders
+'''# Read training folders
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
 
 #folders_list_train = folders_list[:24]
 import random
 #random.shuffle(folders_list_train)
-val_folders_pred_all = folders_list[91500:93000] + folders_list[238089:]
-random.seed(200)
-val_folders_pred_all = random.sample(val_folders_pred_all, 200)
+val_folders_pred_all = folders_list[91500:93000] + folders_list[238089:]'''
+
+val_folders_pred_all = sorted(glob.glob('/data/lrs2/voxceleb_2comb/*'), key=numericalSort)
+#val_folders_pred_all = val_folders_pred_all[:200]
+
+'''random.seed(200)
+val_folders_pred_all = random.sample(val_folders_pred_all, 200)'''
 #print(folders_list_val[4])
 
 '''val_folders_pred_all = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
@@ -103,7 +107,7 @@ time = 20'''
 tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=True, lipnet_pretrained=True,  train_lipnet=None)
 model = tasnet.model
 model.compile(optimizer=Adam(lr=0.0001), loss=snr_loss, metrics=[snr_acc])
-model.load_weights('/data/models/tdavss_Normalize_Attention_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp2/weights-02--9.7304.hdf5')
+model.load_weights('/data/models/tdavss_Normalize_Attention_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp2/weights-19--19.5312.hdf5')
 print('Weights Loaded')
 
 from io import StringIO
@@ -121,11 +125,11 @@ sdr_list = []
 batch_size = 20
 
 
-'''pred = model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all, int(batch_size)),
+pred = model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all, int(batch_size)),
                                 steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),
-                                verbose=1)'''
+                                verbose=1)
 
-print('Predicting on the data')
+'''print('Predicting on the data')
 
 samples_pred = model.predict(DataGenerator_test_samples(val_folders_pred_all, int(batch_size)),
                                 steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),
@@ -177,7 +181,7 @@ for i, item in enumerate(val_folders_pred_all):
 
 npys = sorted(glob.glob('/data/' + fold_name + '/' + '*/*.npy'),key=numericalSort)
 for i in npys:
-    os.remove(i)
+    os.remove(i)'''
 
 
 '''try: 

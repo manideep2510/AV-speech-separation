@@ -102,8 +102,8 @@ def _decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
     """
     decoded = K.ctc_decode(y_pred=y_pred, input_length=input_length,
                            greedy=greedy, beam_width=beam_width, top_paths=top_paths)
-    paths = [path.eval(session=K.get_session()) for path in decoded[0]]
-    logprobs  = decoded[1].eval(session=K.get_session())
+    paths = [path.numpy() for path in decoded[0]]
+    logprobs = decoded[1].numpy()
 
     return (paths, logprobs)
 

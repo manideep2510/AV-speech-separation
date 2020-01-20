@@ -12,7 +12,7 @@ from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
 #from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
-from sep_classification_models.tfkeras import Classifiers as Separable_Classifiers
+from sep_classification_models.keras import Classifiers as Separable_Classifiers
 from lipnet.core.layers import CTC
 from .mish import Mish
 
@@ -81,6 +81,8 @@ class Lipreading(object):
         self.channels = int(self.x.shape[-1])
         self.ResNet18, self.preprocess_input = Separable_Classifiers.get('resnet18')
         self.resnet18 = self.ResNet18((None, None, self.channels), weights=None, include_top=False)
+
+        print('Resnet params:', self.resnet18.count_params())
 
         self.x = self.resnet18(self.x)
         print('Resnet18 Out:', self.x.shape)

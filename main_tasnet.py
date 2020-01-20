@@ -27,7 +27,7 @@ from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
-from models.lipnet import LipNet
+#from models.lipnet import LipNet
 from models.tdavss import TasNet
 #from models.tasnet_lipnet import TasNet
 from dataloaders import DataGenerator_val_samples, DataGenerator_sampling_samples
@@ -51,7 +51,7 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
-wandb.init(name='tdavss_freezeLip_norm', notes='freeze LipNet, Normalize input with 1350, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet LSTM Lipnet. Loss is Si-SNR', project="av-speech-seperation")
+wandb.init(name='tdavss_freezeLip_norm_7to20epochs', notes='freeze LipNet, Normalize input with 1350, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet LSTM Lipnet. Loss is Si-SNR', project="av-speech-seperation")
 
 # To read the images in numerical order
 import re
@@ -76,10 +76,10 @@ random.seed(10)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
 #random.seed(30)
-'''folders_list_val = random.sample(folders_list_val, 120)
-folders_list_train = random.sample(folders_list_train, 180)
-folders_list_train = folders_list[:180]
-folders_list_val = folders_list[180:300]'''
+#folders_list_val = random.sample(folders_list_val, 120)
+#folders_list_train = random.sample(folders_list_train, 180)
+#folders_list_train = folders_list[:180]
+#folders_list_val = folders_list[180:300]
 
 #print('Training data:', len(folders_list_train1[:55000])*2 + len(folders_list_train2)*3)
 print('Training data:', len(folders_list_train)*2)
@@ -99,6 +99,7 @@ epochs = args.epochs
 
 tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=False, lipnet_pretrained=True,  train_lipnet=False)
 model = tasnet.model
+model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
 
 
@@ -120,7 +121,7 @@ print('\n'+summary_params)
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'tdavss_freezeLip_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp2'
+path = 'tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs10to20_lr1e-4_0.35decayNoValDec2epochs_exp4'
 print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 
@@ -160,7 +161,7 @@ learningratescheduler = learningratescheduler()
 earlystopping = earlystopping()
 reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.35, patience=3, min_lr = 0.00000001)
 
-filepath='/data/models/' +  path+ '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
+filepath = '/data/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
 
 # Fit Generator

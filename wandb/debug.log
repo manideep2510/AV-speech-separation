@@ -1,17 +1,21 @@
-2020-01-16 09:32:06,324 DEBUG   MainThread:32497 [wandb_config.py:_load_defaults():111] no defaults not found in config-defaults.yaml
-2020-01-16 09:32:06,370 DEBUG   MainThread:32497 [cmd.py:execute():728] Popen(['git', 'cat-file', '--batch-check'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=<valid stream>)
-2020-01-16 09:32:06,428 DEBUG   MainThread:32497 [cmd.py:execute():728] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=None)
-2020-01-16 09:32:06,436 DEBUG   MainThread:32497 [cmd.py:execute():728] Popen(['git', 'status', '--porcelain', '--untracked-files'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=None)
-2020-01-16 09:32:19,013 DEBUG   MainThread:32497 [run_manager.py:__init__():535] Initialized sync for av-speech-seperation/va1fh4ws
-2020-01-16 09:32:19,018 INFO    MainThread:32497 [run_manager.py:wrap_existing_process():1133] wrapping existing process 32456
-2020-01-16 09:32:19,019 WARNING MainThread:32497 [io_wrap.py:register():104] SIGWINCH handler was not None: <Handlers.SIG_DFL: 0>
-2020-01-16 09:32:19,029 DEBUG   MainThread:32497 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): pypi.org:443
-2020-01-16 09:32:19,054 INFO    Thread-3  :32497 [run_manager.py:_on_file_created():671] file/dir created: /data/AV-speech-separation1/wandb/run-20200116_093202-va1fh4ws/output.log
-2020-01-16 09:32:29,041 INFO    MainThread:32497 [run_manager.py:init_run():918] system metrics and metadata threads started
-2020-01-16 09:32:29,043 INFO    MainThread:32497 [run_manager.py:wrap_existing_process():1150] informing user process we are ready to proceed
-2020-01-16 09:32:29,045 INFO    MainThread:32497 [run_manager.py:_sync_etc():1257] entering loop for messages from user process
-py:wrap_e2020-01-16 14:35:59,496 INFO    MainThread:30121 [run_manager.py:_sync_etc():1313] process received interrupt signal, shutting down
-2020-01-16 14:35:59,509 INFO    MainThread:30121 [run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
-2020-01-16 14:35:59,510 INFO    MainThread:30121 [run_manager.py:shutdown():1057] shutting down system stats and metadata service
-ad:30121 [mr78hhcu:run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
-2020-01-16 14:35:59,510 INFO    MainThread:30121 [mr78hhcu:run_manager.py:shutdown():1057] shutting down system stats and metadata service
+2020-01-20 10:40:57,471 DEBUG   MainThread:10296 [wandb_config.py:_load_defaults():104] wandb dir not provided, skipping defaults
+2020-01-20 10:40:57,490 DEBUG   MainThread:10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-20 10:40:58,285 DEBUG   MainThread:10296 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 485
+2020-01-20 10:40:58,310 DEBUG   MainThread:10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-20 10:40:59,096 DEBUG   MainThread:10296 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /files/manideep2510/av-speech-seperation/eahe1gb1/file_stream HTTP/1.1" 200 311
+2020-01-20 10:41:02,354 DEBUG   MainThread:10296 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /files/manideep2510/av-speech-seperation/eahe1gb1/file_stream HTTP/1.1" 200 311
+2020-01-20 10:41:02,386 DEBUG   MainThread:10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-20 10:41:03,174 DEBUG   MainThread:10296 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 835
+2020-01-20 10:41:03,199 DEBUG   Thread-4  :10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-20 10:41:03,397 DEBUG   Thread-6  :10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-20 10:41:03,529 DEBUG   Thread-5  :10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-20 10:41:03,960 DEBUG   Thread-4  :10296 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 793
+2020-01-20 10:41:03,965 DEBUG   Thread-4  :10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): storage.googleapis.com:443
+2020-01-20 10:41:04,164 DEBUG   Thread-6  :10296 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 803
+2020-01-20 10:41:04,168 DEBUG   Thread-6  :10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): storage.googleapis.com:443
+2020-01-20 10:41:04,293 DEBUG   Thread-5  :10296 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 795
+2020-01-20 10:41:04,298 DEBUG   Thread-5  :10296 [connectionpool.py:_new_conn():813] Starting new HTTPS connection (1): storage.googleapis.com:443
+2020-01-20 10:41:05,249 DEBUG   Thread-6  :10296 [connectionpool.py:_make_request():393] https://storage.googleapis.com:443 "PUT /wandb-production.appspot.com/manideep2510/av-speech-seperation/eahe1gb1/___batch_archive_1.tgz?Expires=1579497144&GoogleAccessId=gorilla-cloud-storage%40wandb-production.iam.gserviceaccount.com&Signature=jFW9tHbAK7lZDEnsQP2VcZKJTWCHu17eg%2F2RdcL3MQT7peHEzKtd6tfvC1YtlZ5d2U5x0FOxbbqg8kGjP3MYhs3f7ibb3NI671jZKiqEKqAIxz3FXGv89bDYgnmmD9yID8oywuJLkfohlI3w8ur9Q%2FEx57G%2FdzgWYuRy68kQ2XLw%2BKySKM%2Bz%2B2vxdP6js5E6CYN2feTmzYCO005Tn9kqG4IDHdTSXNXLxihEEuPJuHO3ZSJYQJT8kbBKhiHKuIvCGmMvH5J4bp5Kb3PNu6SYTHHS1u6UUjVs%2F0KsZiFi2mS1VFNfDY95Ah6cvxDgNWh6KlaoDduwLKXjj3B54ZknfA%3D%3D HTTP/1.1" 200 0
+2020-01-20 10:41:08,245 DEBUG   Thread-4  :10296 [connectionpool.py:_make_request():393] https://storage.googleapis.com:443 "PUT /wandb-production.appspot.com/manideep2510/av-speech-seperation/eahe1gb1/wandb-events.jsonl?Expires=1579497144&GoogleAccessId=gorilla-cloud-storage%40wandb-production.iam.gserviceaccount.com&Signature=gFkhZfESyE5EjDlDwUU5UCln2WWNQfIhnBkXv1agfSnfGRius533Z%2BQ7xldXOKMlu3oK43Y41BbpQ9NeLEQ7WU%2BGtvNlF0Ugk7JwWSB6fw8lspRmUQgWFi2Wt0zm6I4nVdMFW0BvjxP54kr7NB%2Fxr7HVAj28hG67aHlcwPVA2etjHWxgV%2FhaDhHzFETDcuuBapm4IERbCcO1OKxPuIoxtto2%2FfZsKhwrjBXAAeKGfeUyS04RwHzaMnCJHggYxkVWts5Q7HwUEMmrelS5Cc%2FUhApch7QBmIJne56GTySYSdtDHrjfvrdTuqyPrJ7wYR6nhBx2SaoU5sSoCs3VjoDLIg%3D%3D HTTP/1.1" 200 0
+2020-01-20 10:41:19,681 DEBUG   Thread-5  :10296 [connectionpool.py:_make_request():393] https://storage.googleapis.com:443 "PUT /wandb-production.appspot.com/manideep2510/av-speech-seperation/eahe1gb1/output.log?Expires=1579497144&GoogleAccessId=gorilla-cloud-storage%40wandb-production.iam.gserviceaccount.com&Signature=nRAot%2B3%2FzMSmSqnmv2AoU5TMuvzfsdR0%2ByoNKN0N91yUiLRz8a%2B%2BtQKBTHeW0XfTFBm2tBSl%2BNOssaOvxq%2Fx9uucUxu82B3K2Y8zfEerNDCM5YBFYeDv7CMKJdCQz%2BRXY9VUN9w5wkZX1OyCZpKI%2BJqxZ7mZuespfoGJVXrPXWHuJUiJ9o9pPPilGQEUgJJEPxbGTy%2F3saDOLDkqUmB%2FvOwYc5sf3ka%2FbovsYAiCdFH3pZrDH3o69Ti5ZDr0ISzZ%2Fx5YKIjfIBJQll4COhopsIqwPdJf4ufblqfUwksWJJ5qw%2BorkohDlCWFR5g4u6nETb701JMtWurng%2Fsig9bZKQ%3D%3D HTTP/1.1" 200 0
+2020-01-20 10:41:21,031 DEBUG   Thread-1  :10296 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /files/manideep2510/av-speech-seperation/eahe1gb1/file_stream HTTP/1.1" 200 308

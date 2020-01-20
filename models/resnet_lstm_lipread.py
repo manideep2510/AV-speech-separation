@@ -72,7 +72,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
     channels = int(x.shape[-1])
     #resnet18 = ResNet18((None, None, channels), weights=None, include_top=False)
 
-    ResNet18, preprocess_input = Separable_Classifiers.get('resnet18')
+    ResNet18, preprocess_input = Classifiers.get('resnet18')
     resnet18 = ResNet18((None, None, channels), weights=None, include_top=False)
 
     x = resnet18(x)

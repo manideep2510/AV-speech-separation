@@ -81,7 +81,7 @@ def learningratescheduler():
     return learningratescheduler
 
 def earlystopping():
-    earlystopping = EarlyStopping(monitor='val_loss', patience=10)
+    earlystopping = EarlyStopping(monitor='val_loss', patience=6)
     return earlystopping
 
 def reducelronplateau():
@@ -131,4 +131,4 @@ class LoggingCallback(Callback):
     def on_epoch_end(self, epoch, logs={}):
 
         msg = "{Epoch: %i} %s" % (epoch, ", ".join("%s: %f" % (k, v) for k, v in logs.items()))
-        self.print_fcn(msg)
+        self.print_fcn(msg + "\n")

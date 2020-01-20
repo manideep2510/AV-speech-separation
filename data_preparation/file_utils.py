@@ -653,9 +653,9 @@ def gen_comb_folders_3comb(combined_pairs, dest_folder):
         rate, audio_samples = wavfile.read(audio_file)
         np.save(save_path + '/' + file_name, audio_samples)
 
-        # Save txt
+        '''# Save txt
         file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '.txt'
-        shutil.copy(text, save_path + '/' + file_name)
+        shutil.copy(text, save_path + '/' + file_name)'''
             
         # Save the mask
         
