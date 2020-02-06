@@ -28,9 +28,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 #from models.lipnet import LipNet
 #from models.tasnet_lipnet import TasNet
-from models.tdavss import TasNet
+from models.tdavss_attention import TasNet
 from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask, DataGenerator_test_softmask
-from dataloaders import DataGenerator_val_samples, DataGenerator_test_samples
+from dataloaders import DataGenerator_val_samples, DataGenerator_test_samples, DataGenerator_test_samples_attention, Data_predict_attention
 
 import shutil
 import re
@@ -80,25 +80,26 @@ def crop_pad_frames(frames, fps, seconds):
     return frames
 
 
-'''# Read training folders
+# Read training folders
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
 
 #folders_list_train = folders_list[:24]
 import random
 #random.shuffle(folders_list_train)
-val_folders_pred_all = folders_list[91500:93000] + folders_list[238089:]'''
-
-val_folders_pred_all = sorted(glob.glob('/data/lrs2/voxceleb_2comb/*'), key=numericalSort)
-#val_folders_pred_all = val_folders_pred_all[:200]
+val_folders_pred_all = folders_list[91500:93000] + folders_list[238089:]
+val_folders_pred_all=random.sample(val_folders_pred_all,16)
+print('Val folders:',len(val_folders_pred_all))
+'''val_folders_pred_all = sorted(glob.glob('/data/lrs2/voxceleb_2comb/*'), key=numericalSort)
+#val_folders_pred_all = val_folders_pred_all[:200]'''
 
 '''random.seed(200)
 val_folders_pred_all = random.sample(val_folders_pred_all, 200)'''
 #print(folders_list_val[4])
 
 '''val_folders_pred_all = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
-print('Pred folders:', len(val_folders_pred_all))
+print('Pred folders:', len(val_folders_pred_all))'''
 
-time = 20'''
+'''time = 20'''
 
 '''model = VideoModel(256,96,(257,500,2),(125,50,100,3)).FullModel(lipnet_pretrained = 'pretrain', unet_pretrained = 'pretrain')
 '''
@@ -107,8 +108,15 @@ time = 20'''
 tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=True, lipnet_pretrained=True,  train_lipnet=None)
 model = tasnet.model
 model.compile(optimizer=Adam(lr=0.0001), loss=snr_loss, metrics=[snr_acc])
-model.load_weights('/data/models/tdavss_Normalize_Attention_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp2/weights-19--19.5312.hdf5')
+model.load_weights('/data/models/tdavss_Luong_attention_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp1/weights-03-50.0660.hdf5')
 print('Weights Loaded')
+
+weights_ = []
+for layer in model.layers:
+    weights = layer.get_weights()
+    weights_.append(weights)
+
+np.save('./weights.npy', weights_)
 
 from io import StringIO
 
@@ -120,27 +128,39 @@ summary_params = summary_split[-6:]
 summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
+#new_model = Model(inputs=model.input,
+#                  outputs=model.get_layer('attention_weights').output)
+
 sdr_list = []
 
-batch_size = 20
+batch_size = 8
 
 
-pred = model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all, int(batch_size)),
-                                steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),
-                                verbose=1)
+#pred = model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all, int(batch_size)),steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),verbose=1)
 
-'''print('Predicting on the data')
+print('Predicting on the data')
 
-samples_pred = model.predict(DataGenerator_test_samples(val_folders_pred_all, int(batch_size)),
-                                steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),
-                                verbose=1)
 
-samples_pred = samples_pred * 1350.0
-samples_pred = samples_pred.astype('int16')
+#a = np.random.rand(1, 50, 50, 100, 1)
+#b = np.random.rand(1, 32000, 1)
+#c = np.random.rand(1, 256)
+#d = np.random.rand(1, 256)
 
-print(samples_pred.shape)
 
-samples_mix = []
+#samples_pred = model.predict(DataGenerator_test_samples_attention(val_folders_pred_all, int(batch_size)),
+#                                steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),
+#                                verbose=1)
+
+samples_pred = model.predict(Data_predict_attention(val_folders_pred_all), verbose=1)
+
+samples_pred=samples_pred[1]
+#samples_pred = samples_pred * 1350.0
+#samples_pred = samples_pred.astype('int16')
+
+#print(sam_pred.shape)
+for i in range(samples_pred.shape[0]):
+    np.save('./pred_samples/sample_outv_learn_'+str(i)+'.npy',samples_pred[i])
+'''samples_mix = []
 for folder in val_folders_pred_all:
     samples_mix.append('/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav')
     

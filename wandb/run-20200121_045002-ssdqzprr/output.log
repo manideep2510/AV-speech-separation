@@ -1,0 +1,33 @@
+Training data: 473178
+Validation data: 6002
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+3D Conv Out: (?, 50, 32, 32, 64)
+3D Conv Out Reshape: (?, 32, 32, 64)
+Resnet18 Out: (?, 1, 1, 512)
+Resnet18 Linear Out: (?, 256)
+Input to GRU: (?, 50, 256)
+GRU Out: (?, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (?, 200, 256)
+outa: (?, 200, 256)
+fusion: (?, 200, 512)
+Traceback (most recent call last):
+  File "main_tasnet.py", line 102, in <module>
+    model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/network.py", line 1516, in load_weights
+    saving.load_weights_from_hdf5_group(f, self.layers)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/saving.py", line 810, in load_weights_from_hdf5_group
+    layer, weight_values, original_keras_version, original_backend)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/saving.py", line 468, in preprocess_weights_for_loading
+    weights = convert_nested_model(weights)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/saving.py", line 444, in convert_nested_model
+    original_backend=original_backend))
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/saving.py", line 550, in preprocess_weights_for_loading
+    weights[0] = np.transpose(weights[0], (3, 2, 0, 1))
+  File "/usr/local/lib/python3.5/dist-packages/numpy/core/fromnumeric.py", line 639, in transpose
+    return _wrapfunc(a, 'transpose', axes)
+  File "/usr/local/lib/python3.5/dist-packages/numpy/core/fromnumeric.py", line 56, in _wrapfunc
+    return getattr(obj, method)(*args, **kwds)
+ValueError: axes don't match array

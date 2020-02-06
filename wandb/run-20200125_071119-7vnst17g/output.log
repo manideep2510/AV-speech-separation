@@ -1,0 +1,47 @@
+Training data: 100000
+Validation data: 6002
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (None, 200, 256)
+outa: (None, 200, 256)
+hidden (None, 256)
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/ops.py", line 1610, in _create_c_op
+    c_op = c_api.TF_FinishOperation(op_desc)
+tensorflow.python.framework.errors_impl.InvalidArgumentError: Can not squeeze dim[2], expected a dimension of 1, got 200 for 'Squeeze' (op: 'Squeeze') with input shapes: [?,200,200].
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "main_tasnet_attention.py", line 117, in <module>
+    tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=True, lipnet_pretrained=True,  train_lipnet=False)
+  File "/data/AV-speech-separation1/models/tdavss_attention.py", line 75, in __init__
+    self.build()
+  File "/data/AV-speech-separation1/models/tdavss_attention.py", line 156, in build
+    self.attn_weights=K.squeeze(tf.stack(weights,axis=1),axis=-1)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/backend.py", line 3094, in squeeze
+    return array_ops.squeeze(x, [axis])
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/util/dispatch.py", line 180, in wrapper
+    return target(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/util/deprecation.py", line 507, in new_func
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/array_ops.py", line 3649, in squeeze
+    return gen_array_ops.squeeze(input, axis, name)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/gen_array_ops.py", line 10071, in squeeze
+    "Squeeze", input=input, squeeze_dims=axis, name=name)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/op_def_library.py", line 793, in _apply_op_helper
+    op_def=op_def)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/func_graph.py", line 548, in create_op
+    compute_device)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/ops.py", line 3429, in _create_op_internal
+    op_def=op_def)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/ops.py", line 1773, in __init__
+    control_input_ops)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/ops.py", line 1613, in _create_c_op
+    raise ValueError(str(e))
+ValueError: Can not squeeze dim[2], expected a dimension of 1, got 200 for 'Squeeze' (op: 'Squeeze') with input shapes: [?,200,200].

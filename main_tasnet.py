@@ -31,12 +31,20 @@ from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
 from models.tdavss import TasNet
 #from models.tasnet_lipnet import TasNet
 from dataloaders import DataGenerator_val_samples, DataGenerator_sampling_samples
+import random
 #from dataloaders_aug import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
 
-'''from tensorflow.keras.backend.tensorflow_backend import set_session
-config = tf.ConfigProto()
-config.gpu_options.allow_growth=True
-set_session(tf.Session(config=config))'''
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
 
 from tensorflow.keras.utils import multi_gpu_model
 from argparse import ArgumentParser
@@ -51,7 +59,7 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
-wandb.init(name='tdavss_freezeLip_norm_7to20epochs', notes='freeze LipNet, Normalize input with 1350, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet LSTM Lipnet. Loss is Si-SNR', project="av-speech-seperation")
+wandb.init(name='tdavss_25kTrain_freezeLip_norm', notes='25K training folders, random seed 35, freeze LipNet, Normalize input with 1350, Batch size = 8, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet LSTM Lipnet. Loss is Si-SNR', project="av-speech-seperation")
 
 # To read the images in numerical order
 import re
@@ -65,13 +73,18 @@ def numericalSort(value):
 #folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
 folders_list_train = folders_list[:91500] +folders_list[93000:238089]
+'''random.seed(25)
+folders_list_train = random.sample(folders_list_train, 50000)'''
+random.seed(35)
+folders_list_train = random.sample(folders_list_train, 25000)
+
 '''folders_list_train2 = np.loadtxt('/data/AV-speech-separation/data_filenames_3comb.txt', dtype='object').tolist()
 folders_list_train2_=[]
 for item in folders_list_train2:
     fold = '/data/lrs2/'+item
     folders_list_train2_.append(fold)
 folders_list_train = folders_list_train1[:55000] + folders_list_train2_'''
-import random
+
 random.seed(10)
 random.shuffle(folders_list_train)
 folders_list_val = folders_list[91500:93000] + folders_list[238089:]
@@ -99,7 +112,7 @@ epochs = args.epochs
 
 tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=False, lipnet_pretrained=True,  train_lipnet=False)
 model = tasnet.model
-model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
+#model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
 
 
@@ -121,7 +134,7 @@ print('\n'+summary_params)
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs10to20_lr1e-4_0.35decayNoValDec2epochs_exp4'
+path = 'tdavss_25kTrain_randomSeed35_freezeLip_Normalize_ResNetLSTMLip_2secondsClips_epochs40_lr1e-4_0.35decayNoValDec2epochs_exp1'
 print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 
@@ -166,10 +179,10 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 # Fit Generator
 
-folders_per_epoch = int(len(folders_list_train)/3)
+#folders_per_epoch = int(len(folders_list_train)/3)
 
-history = model.fit_generator(DataGenerator_sampling_samples(folders_list_train, folders_per_epoch, int(batch_size)),
-                steps_per_epoch = int(np.ceil(folders_per_epoch/float(batch_size))),
+history = model.fit_generator(DataGenerator_val_samples(folders_list_train, int(batch_size)),
+                steps_per_epoch = int(np.ceil(len(folders_list_train)/float(batch_size))),
                 epochs=int(epochs),
                 validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size)), 
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),

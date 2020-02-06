@@ -158,7 +158,7 @@ class TasNet(object):
         self.decode = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
         self.decode=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.decode)
         self.decode=Conv2DTranspose(1,(40,1),strides=(20,1),padding='same',data_format='channels_last')(self.decode)
-        self.out = Lambda(lambda x: K.squeeze(x, axis=2))(self.decode)
+        self.out = Lambda(lambda x: K.squeeze(x, axis=2), dtype='float32')(self.decode)
   
         
         

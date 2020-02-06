@@ -1,0 +1,54 @@
+Training data: 100000
+Validation data: 6002
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (None, 200, 256)
+outa: (None, 200, 256)
+hidden (None, 256)
+[TensorShape([None, 200, 256]), TensorShape([None, 256]), TensorShape([])]
+attn_out: (None, 200, 256)
+attn_states: (None, 200, 200)
+fusion: (None, 200, 512)
+
+==================================================================================================
+Total params: 36,086,046
+Trainable params: 36,039,454
+Non-trainable params: 46,592
+__________________________________________________________________________________________________
+
+Model weights path: tdavss_Luong_attention_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp1
+
+Epoch 1/20
+Traceback (most recent call last):
+  File "main_tasnet_attention.py", line 194, in <module>
+    callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file)], verbose=1)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 1297, in fit_generator
+    steps_name='steps_per_epoch')
+  File "/usr/local/lib/python3.6/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
+    return old_generator(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_generator.py", line 265, in model_iteration
+    batch_outs = batch_function(*batch_data)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 973, in train_on_batch
+    class_weight=class_weight, reset_metrics=reset_metrics)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_v2_utils.py", line 253, in train_on_batch
+    extract_tensors_from_dataset=True)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 2519, in _standardize_user_data
+    exception_prefix='target')
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_utils.py", line 531, in standardize_input_data
+    str(len(data)) + ' arrays: ' + str(data)[:200] + '...')
+ValueError: Error when checking model target: the list of Numpy arrays that you are passing to your model is not the size the model expected. Expected to see 2 array(s), but instead got the following list of 1 arrays: [array([[[ 0.02740741],
+        [ 0.01777778],
+        [ 0.00296296],
+        ...,
+        [-1.3540741 ],
+        [-1.3051852 ],
+        [-1.1340741 ]],
+
+       [[ 0.07037037],
+        [-0.00888889],
+...

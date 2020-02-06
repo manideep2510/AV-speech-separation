@@ -1,0 +1,55 @@
+Training data: 50000
+Validation data: 6002
+WARNING:tensorflow:Layer mish is casting an input tensor from dtype float16 to the layer's dtype of float32, which is new behavior in TensorFlow 2.  The layer has dtype float32 because it's dtype defaults to floatx.
+
+If you intended to run this layer in float32, you can safely ignore this warning. If in doubt, this warning is likely only an issue if you are porting a TensorFlow 1.X model to TensorFlow 2.
+
+To change all layers to have dtype float16 by default, call `tf.keras.backend.set_floatx('float16')`. To change just this layer, pass dtype='float16' to the layer constructor. If you are the author of this layer, you can disable autocasting by passing autocast=False to the base Layer constructor.
+
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (None, 200, 256)
+outa: (None, 200, 256)
+fusion: (None, 200, 512)
+
+==================================================================================================
+Total params: 35,233,054
+Trainable params: 16,554,753
+Non-trainable params: 18,678,301
+__________________________________________________________________________________________________
+
+Model weights path: tdavss_Mixed_float16_25kTrain_randomSeed35_freezeLip_Normalize_ResNetLSTMLip_2secondsClips_epochs40_lr1e-4_0.35decayNoValDec2epochs_exp1
+
+Epoch 1/40
+Traceback (most recent call last):
+  File "main_tasnet.py", line 193, in <module>
+    callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file)], verbose=1)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 1297, in fit_generator
+    steps_name='steps_per_epoch')
+  File "/usr/local/lib/python3.6/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
+    return old_generator(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_generator.py", line 265, in model_iteration
+    batch_outs = batch_function(*batch_data)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 973, in train_on_batch
+    class_weight=class_weight, reset_metrics=reset_metrics)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_v2_utils.py", line 264, in train_on_batch
+    output_loss_metrics=model._output_loss_metrics)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_eager.py", line 311, in train_on_batch
+    output_loss_metrics=output_loss_metrics))
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_eager.py", line 257, in _process_single_batch
+    scaled_total_loss = model.optimizer.get_scaled_loss(total_loss)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/mixed_precision/experimental/loss_scale_optimizer.py", line 173, in get_scaled_loss
+    return loss * loss_scale
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/math_ops.py", line 899, in binary_op_wrapper
+    return func(x, y, name=name)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/math_ops.py", line 1206, in _mul_dispatch
+    return gen_math_ops.mul(x, y, name=name)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/gen_math_ops.py", line 6698, in mul
+    _six.raise_from(_core._status_to_exception(e.code, message), None)
+  File "<string>", line 3, in raise_from
+tensorflow.python.framework.errors_impl.InvalidArgumentError: cannot compute Mul as input #1(zero-based) was expected to be a half tensor but is a float tensor [Op:Mul] name: mul/

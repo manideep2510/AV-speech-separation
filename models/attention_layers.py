@@ -122,7 +122,7 @@ class AttentionLayer(Layer):
         ]
 
 
-'''class LuongAttention(tf.keras.Model):
+class LuongAttention(tf.keras.Model):
     def __init__(self, rnn_size):
         super(LuongAttention, self).__init__()
         self.wa = tf.keras.layers.Dense(rnn_size)
@@ -140,4 +140,81 @@ class AttentionLayer(Layer):
         # context vector c_t is the average sum of encoder output
         context = tf.matmul(alignment, encoder_output)
 
-        return context, alignment'''
+        return context, alignment
+
+class Luong(Layer):
+    """
+    This class implements Bahdanau attention (https://arxiv.org/pdf/1409.0473.pdf).
+    There are three sets of weights introduced W_a, U_a, and V_a
+     """
+
+    def __init__(self, **kwargs):
+        super(Luong, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        assert isinstance(input_shape, list)
+        # Create a trainable weight variable for this layer.
+
+        self.W_a = self.add_weight(name='W_a',
+                                   shape=tf.TensorShape((input_shape[0][2], input_shape[1][1])),
+                                   initializer='uniform',
+                                   trainable=True)
+        # self.U_a = self.add_weight(name='U_a',
+        #                            shape=tf.TensorShape((input_shape[1][2], input_shape[0][2])),
+        #                            initializer='uniform',
+        #                            trainable=True)
+        # self.V_a = self.add_weight(name='V_a',
+        #                            shape=tf.TensorShape((input_shape[0][2], 1)),
+        #                            initializer='uniform',
+        #                            trainable=True)
+
+        super(Luong, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, inputs, verbose=False):
+
+        encoder_out_seq, decoder_out_seq = inputs
+        U_a_dot_h = K.dot(encoder_out_seq, self.W_a)  # <= batch_size, en_seq_len, latent_dim * latent_dim,dec_dim
+        if verbose:print('U_a_dot_h', U_a_dot_h.shape)
+        """ batch,1,dec_dim"""
+        expanded_target=K.expand_dims(decoder_out_seq, 1)
+        """batch,en_seq_len,1"""
+        if verbose:print('expanded_target', expanded_target.shape)
+
+        e_i=Dot(axes=[2, 2])([U_a_dot_h, expanded_target])
+        if verbose:print('e_i', e_i.shape)
+
+        e_i=K.squeeze(e_i,axis=-1)
+        if verbose:print('e_i', e_i.shape)
+        # <= batch_size, en_seq_len
+        e_i = K.softmax(e_i)
+
+        if verbose:print('ei>', e_i.shape)
+
+        c_i = K.sum(encoder_out_seq * K.expand_dims(e_i, -1), axis=1)
+        if verbose:print('ci>', c_i.shape)
+        return c_i, e_i
+
+class MinimalRNN(Layer):
+
+    def __init__(self, units, **kwargs):
+        self.units = units
+        self.state_size = units
+        super(MinimalRNN, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        self.kernel = self.add_weight(shape=(input_shape[-1], self.units),
+                                      initializer='uniform',
+                                      name='kernel')
+        self.recurrent_kernel = self.add_weight(
+            shape=(self.units, self.units),
+            initializer='uniform',
+            name='recurrent_kernel')
+        
+        super(MinimalRNN, self).build(input_shape)
+        #self.built = True
+
+    def call(self, inputs, states):
+        prev_output,temp = states
+        h = K.dot(inputs, self.kernel)
+        output = h + K.dot(prev_output, self.recurrent_kernel)
+        return output

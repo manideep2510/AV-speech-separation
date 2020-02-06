@@ -1,0 +1,10 @@
+Training data: 48
+Validation data: 16
+Traceback (most recent call last):
+  File "main_tasnet_attention.py", line 102, in <module>
+    tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=False, lipnet_pretrained=True,  train_lipnet=False)
+  File "/data/AV-speech-separation1/models/tdavss_attention.py", line 74, in __init__
+    self.build()
+  File "/data/AV-speech-separation1/models/tdavss_attention.py", line 83, in build
+    hidden_state, cell_state = initial_hidden_state, initial_cell_state
+NameError: name 'initial_hidden_state' is not defined

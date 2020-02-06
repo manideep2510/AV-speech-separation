@@ -1,0 +1,35 @@
+{
+    "name": "tdavss_freezeLip_norm_10to20epochs",
+    "mode": "dryrun",
+    "state": "failed",
+    "email": null,
+    "args": [
+        "-epochs",
+        "11",
+        "-batch_size",
+        "8",
+        "-lr",
+        "0.0001"
+    ],
+    "executable": "/usr/local/bin/python",
+    "cpu_count": 12,
+    "python": "3.5.2",
+    "root": "/data/AV-speech-separation1",
+    "git": {
+        "commit": "cd22e9512289ff3f44cfa6296041f9d7656a2fc4",
+        "remote": "https://github.com/manideep2510/AV-speech-separation"
+    },
+    "os": "Linux-4.15.0-46-generic-x86_64-with-Ubuntu-16.04-xenial",
+    "notes": "freeze LipNet, Normalize input with 1350, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet LSTM Lipnet. Loss is Si-SNR",
+    "project": "av-speech-seperation",
+    "heartbeatAt": "2020-01-21T04:50:27.514396",
+    "startedAt": "2020-01-21T04:50:07.364913",
+    "exitcode": 1,
+    "username": "4014",
+    "program": "main_tasnet.py",
+    "cuda": "10.0.130",
+    "gpu": "TITAN Xp",
+    "jobType": null,
+    "host": "shell1",
+    "gpu_count": 2
+}
