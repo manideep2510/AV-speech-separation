@@ -27,7 +27,7 @@ def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
     return out
 
 class Lipreading(object):
-    def __init__(self, mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, absolute_max_string_len=128, every_frame=True):
+    def __init__(self, mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=28, absolute_max_string_len=128, every_frame=True):
         
         self.mode=mode 
         self.inputDim=inputDim

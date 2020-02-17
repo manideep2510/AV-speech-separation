@@ -19,7 +19,9 @@ def text_to_labels(text):
 
 def text_to_labels_original(text):
     ret = []
-    for char in text:
+    temp=text.lower()
+
+    for char in temp:
         if char >= 'a' and char <= 'z':
             ret.append(ord(char) - ord('a'))
         elif char == ' ':

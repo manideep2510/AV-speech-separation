@@ -1,0 +1,52 @@
+Training data: 360
+Validation data: 240
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (None, 200, 256)
+outa: (None, 200, 256)
+hidden (None, 256)
+attn_out: (None, 200, 512)
+attn_states: (None, 200, 200)
+fusion: (None, 200, 512)
+
+==================================================================================================
+Total params: 29,658,113
+Trainable params: 18,093,569
+Non-trainable params: 11,564,544
+__________________________________________________________________________________________________
+
+Model weights path: test_tdavss_Offset_BothHigh_epochs40_5lr1e-4_exp1
+
+Epoch 1/3
+ 1/30 [>.............................] - ETA: 3:46 - loss: 46.6302 - snr_acc: -46.6302 2/30 [=>............................] - ETA: 2:19 - loss: 42.5926 - snr_acc: -42.5926 3/30 [==>...........................] - ETA: 1:48 - loss: 42.5038 - snr_acc: -42.5038 4/30 [===>..........................] - ETA: 1:32 - loss: 40.6302 - snr_acc: -40.6302 5/30 [====>.........................] - ETA: 1:21 - loss: 40.0220 - snr_acc: -40.0220 6/30 [=====>........................] - ETA: 1:14 - loss: 39.3222 - snr_acc: -39.3222 7/30 [======>.......................] - ETA: 1:07 - loss: 38.4952 - snr_acc: -38.4952 8/30 [=======>......................] - ETA: 1:02 - loss: 37.7948 - snr_acc: -37.7948 9/30 [========>.....................] - ETA: 58s - loss: 36.9728 - snr_acc: -36.9728 10/30 [=========>....................] - ETA: 54s - loss: 36.1269 - snr_acc: -36.126911/30 [==========>...................] - ETA: 50s - loss: 35.1563 - snr_acc: -35.156312/30 [===========>..................] - ETA: 47s - loss: 34.2956 - snr_acc: -34.295613/30 [============>.................] - ETA: 43s - loss: 33.4815 - snr_acc: -33.481514/30 [=============>................] - ETA: 40s - loss: 32.6393 - snr_acc: -32.639315/30 [==============>...............] - ETA: 37s - loss: 31.9591 - snr_acc: -31.959116/30 [===============>..............] - ETA: 34s - loss: 31.2911 - snr_acc: -31.291117/30 [================>.............] - ETA: 32s - loss: 30.7679 - snr_acc: -30.767918/30 [=================>............] - ETA: 29s - loss: 30.1394 - snr_acc: -30.139419/30 [==================>...........] - ETA: 26s - loss: 29.4412 - snr_acc: -29.441220/30 [===================>..........] - ETA: 24s - loss: 28.7976 - snr_acc: -28.797621/30 [====================>.........] - ETA: 21s - loss: 28.1132 - snr_acc: -28.113222/30 [=====================>........] - ETA: 19s - loss: 27.4458 - snr_acc: -27.445823/30 [======================>.......] - ETA: 16s - loss: 26.7844 - snr_acc: -26.784424/30 [=======================>......] - ETA: 14s - loss: 26.1518 - snr_acc: -26.151825/30 [========================>.....] - ETA: 11s - loss: 25.6171 - snr_acc: -25.617126/30 [=========================>....] - ETA: 9s - loss: 25.0619 - snr_acc: -25.0619 27/30 [==========================>...] - ETA: 7s - loss: 24.5450 - snr_acc: -24.545028/30 [===========================>..] - ETA: 4s - loss: 24.0072 - snr_acc: -24.007229/30 [============================>.] - ETA: 2s - loss: 23.5356 - snr_acc: -23.5356Goood till now
+Traceback (most recent call last):
+  File "main_tasnet_unsync.py", line 162, in <module>
+    callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file), metrics_unsync], verbose=1)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 1297, in fit_generator
+    steps_name='steps_per_epoch')
+  File "/usr/local/lib/python3.6/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
+    return old_generator(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_generator.py", line 332, in model_iteration
+    callbacks.on_epoch_end(epoch, epoch_logs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/callbacks.py", line 298, in on_epoch_end
+    callback.on_epoch_end(epoch, logs)
+  File "/data/AV-speech-separation1/metrics.py", line 475, in on_epoch_end
+    12, 32000, 1), np.random.rand(12, 256), np.random.rand(12, 256), np.random.rand(12, 512)])
+  File "/data/AV-speech-separation1/models/tdavss_attention2.py", line 185, in predict
+    return self.test_function([input_batch, 0])  # the first 0 indicates test
+  File "/data/AV-speech-separation1/models/tdavss_attention2.py", line 192, in test_function
+    [self.out, self.attn_states, self.mask])
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/backend.py", line 3773, in function
+    return EagerExecutionFunction(inputs, outputs, updates=updates, name=name)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/backend.py", line 3670, in __init__
+    base_graph=source_graph)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/eager/lift_to_graph.py", line 249, in lift_to_graph
+    visited_ops = set([x.op for x in sources])
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/eager/lift_to_graph.py", line 249, in <listcomp>
+    visited_ops = set([x.op for x in sources])
+AttributeError: 'int' object has no attribute 'op'

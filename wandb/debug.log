@@ -1,20 +1,16 @@
-2020-01-26 08:59:09,195 DEBUG   MainThread:4608 [wandb_config.py:_load_defaults():111] no defaults not found in config-defaults.yaml
-2020-01-26 08:59:09,213 DEBUG   MainThread:4608 [cmd.py:execute():728] Popen(['git', 'cat-file', '--batch-check'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=<valid stream>)
-2020-01-26 08:59:09,228 DEBUG   MainThread:4608 [cmd.py:execute():728] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=None)
-2020-01-26 08:59:09,231 DEBUG   MainThread:4608 [cmd.py:execute():728] Popen(['git', 'status', '--porcelain', '--untracked-files'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=None)
-2020-01-26 08:59:09,820 DEBUG   MainThread:4608 [run_manager.py:__init__():535] Initialized sync for av-speech-seperation/hbd8wef1
-2020-01-26 08:59:09,821 INFO    MainThread:4608 [run_manager.py:wrap_existing_process():1133] wrapping existing process 4526
-2020-01-26 08:59:09,821 WARNING MainThread:4608 [io_wrap.py:register():104] SIGWINCH handler was not None: <Handlers.SIG_DFL: 0>
-2020-01-26 08:59:09,823 DEBUG   MainThread:4608 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): pypi.org:443
-2020-01-26 08:59:10,209 INFO    Thread-3  :4608 [run_manager.py:_on_file_created():671] file/dir created: /data/AV-speech-separation1/wandb/run-20200126_085900-hbd8wef1/output.log
-2020-01-26 08:59:19,836 INFO    MainThread:4608 [run_manager.py:init_run():918] system metrics and metadata threads started
-2020-01-26 08:59:19,837 INFO    MainThread:4608 [run_manager.py:wrap_existing_process():1150] informing user process we are ready to proceed
-2020-01-26 08:59:19,838 INFO    MainThread:4608 [run_manager.py:_sync_etc():1257] entering loop for messages from user process
-2020-01-26 09:02:01,312020-01-27 05:18:10,755 INFO    MainThread:13523 [run_manager.py:_sync_etc():1280] received message from user process: {"exitcode": 0}
-2020-01-27 05:18:10,839 INFO    MainThread:13523 [run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
-2020-01-27 05:18:10,841 INFO    MainThread:13523 [run_manager.py:shutdown():1057] shutting down system stats and metadata service
-manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
-2020-01-26 09:02:01,318 INFO    MainThread:4608 [hbd8wef1:run_manager.py:shutdown():1057] shutting down system stats and metadata service
-2020-01-27 05:18:10,755 INFO    MainThread:13523 [04a5fhkt:run_manager.py:_sync_etc():1280] received message from user process: {"exitcode": 0}
-2020-01-27 05:18:10,839 INFO    MainThread:13523 [04a5fhkt:run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
-2020-01-27 05:18:10,841 INFO    MainThread:13523 [04a5fhkt:run_manager.py:shutdown():1057] shutting down system stats and metadata service
+2020-02-08 08:43:57,140 DEBUG   MainThread:5285 [wandb_config.py:_load_defaults():111] no defaults not found in config-defaults.yaml
+2020-02-08 08:43:57,153 DEBUG   MainThread:5285 [cmd.py:execute():728] Popen(['git', 'cat-file', '--batch-check'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=<valid stream>)
+2020-02-08 08:43:57,166 DEBUG   MainThread:5285 [cmd.py:execute():728] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=None)
+2020-02-08 08:43:57,169 DEBUG   MainThread:5285 [cmd.py:execute():728] Popen(['git', 'status', '--porcelain', '--untracked-files'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=None)
+2020-02-08 08:43:57,499 DEBUG   MainThread:5285 [run_manager.py:__init__():535] Initialized sync for av-speech-seperation/zxn0slm6
+2020-02-08 08:43:57,500 INFO    MainThread:5285 [run_manager.py:wrap_existing_process():1133] wrapping existing process 5204
+2020-02-08 08:43:57,500 WARNING MainThread:5285 [io_wrap.py:register():104] SIGWINCH handler was not None: <Handlers.SIG_DFL: 0>
+2020-02-08 08:43:57,502 DEBUG   MainThread:5285 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): pypi.org:443
+2020-02-08 08:43:58,149 INFO    Thread-3  :5285 [run_manager.py:_on_file_created():671] file/dir created: /data/AV-speech-separation1/wandb/dryrun-20200208_084356-zxn0slm6/output.log
+2020-02-08 08:44:07,513 INFO    MainThread:5285 [run_manager.py:init_run():918] system metrics and metadata threads started
+2020-02-08 08:44:07,513 INFO    MainThread:5285 [run_manager.py:wrap_existing_process():1150] informing user process we are ready to proceed
+2020-02-08 08:44:07,513 INFO    MainThread:5285 [run_manager.py:_sync_etc():1257] entering loop for messages from user process
+2020-02-10 16:20:50,375 INFO    MainThread:5285 [run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
+2020-02-10 16:20:50,387 INFO    MainThread:5285 [run_manager.py:shutdown():1057] shutting down system stats and metadata service
+ad:5285 [zxn0slm6:run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
+2020-02-10 16:20:50,387 INFO    MainThread:5285 [zxn0slm6:run_manager.py:shutdown():1057] shutting down system stats and metadata service

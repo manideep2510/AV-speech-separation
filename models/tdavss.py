@@ -29,10 +29,12 @@ def custom_tanh(x):
 def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
         x = Conv1D(filters,1)(inputs)
-        x = Mish('Mish')(x)
+        #x = Mish('Mish')(x)
+        x = Activation('relu')(x)
         x = BatchNormalization()(x)
         x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
-        x = Mish('Mish')(x)
+        #x = Mish('Mish')(x)
+        x = Activation('relu')(x)
         x = BatchNormalization()(x)
         x = Conv1D(int(inputs.shape[-1]),1)(x)
         x = Add()([inputs,x])
@@ -42,7 +44,8 @@ def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
 def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
     x = Conv1D(filters,1)(inputs)
-    x = Mish('Mish')(x)
+    #x = Mish('Mish')(x)
+    x = Activation('relu')(x)
     x = BatchNormalization()(x)
     x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
     x = Add()([inputs,x])
@@ -52,7 +55,8 @@ def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
 def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
     
-    x = Mish('Mish')(inputs)
+    #x = Mish('Mish')(inputs)
+    x = Activation('relu')(inputs)
     x = BatchNormalization()(x)
     x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
     x = Add()([inputs,x])
@@ -62,7 +66,7 @@ def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
 
 class TasNet(object):
     
-    def __init__(self,time_dimensions=500,frequency_bins=257,n_frames=125, attention=None,lipnet_pretrained=None, train_lipnet=None):
+    def __init__(self,time_dimensions=500,frequency_bins=257,n_frames=125, attention=None, lstm = False,lipnet_pretrained=None, train_lipnet=None):
         
         self.t=time_dimensions
         self.f=frequency_bins
@@ -70,6 +74,7 @@ class TasNet(object):
         self.lipnet_pretrained = lipnet_pretrained
         self.train_lipnet = train_lipnet
         self.attention = attention
+        self.lstm = lstm
         self.build()
         
     def build(self):
@@ -90,10 +95,13 @@ class TasNet(object):
             for layer in self.lipnet_model.layers:
                 layer.trainable = False
 
-        self.outv = self.lipnet_model.output
-        self.outv = Dense(128, kernel_initializer='he_normal', name='dense2')(self.outv)
-        self.outv = Dense(256, kernel_initializer='he_normal', name='dense3')(self.outv)
-        #self.outv = GlobalAveragePooling2D(self.outv)
+        if self.lstm == True:
+            self.outv = self.lipnet_model.output
+            self.outv = Dense(128, kernel_initializer='he_normal', name='dense2')(self.outv)
+            self.outv = Dense(256, kernel_initializer='he_normal', name='dense3')(self.outv)
+            #self.outv = GlobalAveragePooling2D(self.outv)
+        else:
+            self.outv = self.lipnet_model.layers[-4].output
         
         #video_processing
         self.video_data=Conv1D(512,1)(self.outv)

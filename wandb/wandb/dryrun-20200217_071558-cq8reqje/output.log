@@ -1,0 +1,36 @@
+Training data: 50000
+Validation data: 6002
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (None, 200, 256)
+outa: (None, 200, 256)
+hidden (None, 256)
+attn_out: (None, 200, 512)
+attn_states: (None, 200, 200)
+fusion: (None, 200, 512)
+Traceback (most recent call last):
+  File "/data/AV-speech-separation1/main_tasnet_unsync.py", line 100, in <module>
+    model.load_weights('/data/models/tdavss_AttentionGRU_bothTrainVal_unsync_Offset_LowTrain_HighVal_epochs40_5lr1e-4_exp1/weights-10--8.7998.hdf5')
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 181, in load_weights
+    return super(Model, self).load_weights(filepath, by_name)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/network.py", line 1177, in load_weights
+    saving.load_weights_from_hdf5_group(f, self.layers)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/saving/hdf5_format.py", line 689, in load_weights_from_hdf5_group
+    layer, weight_values, original_keras_version, original_backend)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/saving/hdf5_format.py", line 314, in preprocess_weights_for_loading
+    weights = convert_nested_model(weights)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/saving/hdf5_format.py", line 296, in convert_nested_model
+    original_backend=original_backend)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/saving/hdf5_format.py", line 396, in preprocess_weights_for_loading
+    weights[0] = np.transpose(weights[0], (3, 2, 0, 1))
+  File "<__array_function__ internals>", line 6, in transpose
+  File "/usr/local/lib/python3.6/dist-packages/numpy/core/fromnumeric.py", line 650, in transpose
+    return _wrapfunc(a, 'transpose', axes)
+  File "/usr/local/lib/python3.6/dist-packages/numpy/core/fromnumeric.py", line 61, in _wrapfunc
+    return bound(*args, **kwds)
+ValueError: axes don't match array

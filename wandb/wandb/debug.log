@@ -1,0 +1,17 @@
+2020-02-17 23:04:28,148 DEBUG   MainThread:24509 [wandb_config.py:_load_defaults():111] no defaults not found in config-defaults.yaml
+2020-02-17 23:04:28,162 DEBUG   MainThread:24509 [cmd.py:execute():728] Popen(['git', 'cat-file', '--batch-check'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=<valid stream>)
+2020-02-17 23:04:28,172 DEBUG   MainThread:24509 [cmd.py:execute():728] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=None)
+2020-02-17 23:04:28,175 DEBUG   MainThread:24509 [cmd.py:execute():728] Popen(['git', 'status', '--porcelain', '--untracked-files'], cwd=/data/AV-speech-separation1, universal_newlines=False, shell=None, istream=None)
+2020-02-17 23:04:28,486 DEBUG   MainThread:24509 [run_manager.py:__init__():535] Initialized sync for av-speech-seperation/test2
+2020-02-17 23:04:28,487 INFO    MainThread:24509 [run_manager.py:wrap_existing_process():1133] wrapping existing process 24428
+2020-02-17 23:04:28,488 WARNING MainThread:24509 [io_wrap.py:register():104] SIGWINCH handler was not None: <Handlers.SIG_DFL: 0>
+2020-02-17 23:04:28,489 DEBUG   MainThread:24509 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): pypi.org:443
+2020-02-17 23:04:29,157 INFO    Thread-3  :24509 [run_manager.py:_on_file_created():671] file/dir created: /data/AV-speech-separation1/wandb/wandb/dryrun-20200217_230427-test2/output.log
+2020-02-17 23:04:38,506 INFO    MainThread:24509 [run_manager.py:init_run():918] system metrics and metadata threads started
+2020-02-17 23:04:38,507 INFO    MainThread:24509 [run_manager.py:wrap_existing_process():1150] informing user process we are ready to proceed
+2020-02-17 23:04:38,507 INFO    MainThread:24509 [run_manager.py:_sync_etc():1257] entering loop for messages from user process
+2020-02-17 23:11:40,913 INFO    MainThread:24509 [run_manager.py:_sync_etc():1280] received message from user process: {"exitcode": 0}
+2020-02-17 23:11:40,913 INFO    MainThread:24509 [run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
+2020-02-17 23:11:40,914 INFO    MainThread:24509 [run_manager.py:shutdown():1057] shutting down system stats and metadata service
+4509 [test2:run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
+2020-02-17 23:11:40,914 INFO    MainThread:24509 [test2:run_manager.py:shutdown():1057] shutting down system stats and metadata service

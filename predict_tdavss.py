@@ -28,9 +28,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 #from models.lipnet import LipNet
 #from models.tasnet_lipnet import TasNet
-from models.tdavss_attention import TasNet
-from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask, DataGenerator_test_softmask
-from dataloaders import DataGenerator_val_samples, DataGenerator_test_samples, DataGenerator_test_samples_attention, Data_predict_attention
+from models.tdavss_attention2 import TasNet
+from dataloaders import DataGenerator_val_unsync_attention, DataGenerator_val_samples, DataGenerator_test_samples, DataGenerator_test_samples_attention, Data_predict_attention
 
 import shutil
 import re
@@ -82,12 +81,13 @@ def crop_pad_frames(frames, fps, seconds):
 
 # Read training folders
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
+val_folders_pred_all = np.loadtxt('/data/AV-speech-separation1/lrs2_3k_val_split.txt', dtype='object').tolist()
 
 #folders_list_train = folders_list[:24]
 import random
 #random.shuffle(folders_list_train)
-val_folders_pred_all = folders_list[91500:93000] + folders_list[238089:]
-val_folders_pred_all=random.sample(val_folders_pred_all,16)
+'''val_folders_pred_all = folders_list[91500:93000] + folders_list[238089:]
+val_folders_pred_all=random.sample(val_folders_pred_all,16)'''
 print('Val folders:',len(val_folders_pred_all))
 '''val_folders_pred_all = sorted(glob.glob('/data/lrs2/voxceleb_2comb/*'), key=numericalSort)
 #val_folders_pred_all = val_folders_pred_all[:200]'''
@@ -105,18 +105,23 @@ print('Pred folders:', len(val_folders_pred_all))'''
 '''
 
 # Building the model
-tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=True, lipnet_pretrained=True,  train_lipnet=None)
+tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50,
+                attention=False, lstm=False, lipnet_pretrained=True,  train_lipnet=False)
 model = tasnet.model
-model.compile(optimizer=Adam(lr=0.0001), loss=snr_loss, metrics=[snr_acc])
-model.load_weights('/data/models/tdavss_Luong_attention_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs20_lr1e-4_0.35decayNoValDec2epochs_exp1/weights-03-50.0660.hdf5')
+
+model.load_weights('/data/models/tdavss_Offset_BothHigh_epochs40_5lr1e-4_exp1/weights-01--1.2281.hdf5')
 print('Weights Loaded')
 
-weights_ = []
+odel.compile(optimizer=Adam(lr=0.0001), loss=snr_loss, metrics=[snr_acc])
+#model.load_weights('/data/models/tdavss_NoLSTM_BahdanauAttentionNew_25kTrain_freezeLip_ResNetLSTMLip_2secondsClips_epochs40_5lr1e-4_0.35decayNoValDec2epochs_exp2/weights-1--4.1222.hdf5')
+print('Weights Loaded')
+
+'''weights_ = []
 for layer in model.layers:
     weights = layer.get_weights()
-    weights_.append(weights)
+    weights_.append(weights)'''
 
-np.save('./weights.npy', weights_)
+#np.save('./weights.npy', weights_)
 
 from io import StringIO
 
@@ -136,9 +141,12 @@ sdr_list = []
 batch_size = 8
 
 
-#pred = model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all, int(batch_size)),steps = int(np.ceil((len(val_folders_pred_all))/float(batch_size))),verbose=1)
+pred = model.evaluate_generator(DataGenerator_val_unsync_attention(val_folders_pred_all, int(
+    batch_size)), steps=int(np.ceil((len(val_folders_pred_all))/float(batch_size))), verbose=1)
 
-print('Predicting on the data')
+print(pred)
+
+'''print('Predicting on the data')
 
 
 #a = np.random.rand(1, 50, 50, 100, 1)
@@ -154,12 +162,15 @@ print('Predicting on the data')
 samples_pred = model.predict(Data_predict_attention(val_folders_pred_all), verbose=1)
 
 samples_pred=samples_pred[1]
+print('samples_pred:', samples_pred.shape)
 #samples_pred = samples_pred * 1350.0
 #samples_pred = samples_pred.astype('int16')
 
+print('1:', samples_pred[0, :5, :25])
+
 #print(sam_pred.shape)
 for i in range(samples_pred.shape[0]):
-    np.save('./pred_samples/sample_outv_learn_'+str(i)+'.npy',samples_pred[i])
+    np.save('/data/preds_test/sample_weights_'+str(i)+'.npy',samples_pred[i])'''
 '''samples_mix = []
 for folder in val_folders_pred_all:
     samples_mix.append('/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav')

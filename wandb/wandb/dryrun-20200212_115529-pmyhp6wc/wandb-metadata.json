@@ -1,0 +1,29 @@
+{
+    "root": "/",
+    "program": "/data/AV-speech-separation1/main_tasnet.py",
+    "startedAt": "2020-02-12T11:55:29.363313",
+    "host": "train2",
+    "username": "4014",
+    "executable": "/usr/bin/python3",
+    "os": "Linux-4.4.0-21-generic-x86_64-with-Ubuntu-18.04-bionic",
+    "python": "3.6.9",
+    "gpu": "Tesla P100-PCIE-16GB",
+    "gpu_count": 1,
+    "cpu_count": 16,
+    "cuda": "10.0.130",
+    "args": [
+        "-epochs",
+        "40",
+        "-batch_size",
+        "6",
+        "-lr",
+        "0.0005"
+    ],
+    "state": "running",
+    "jobType": null,
+    "mode": "dryrun",
+    "name": "tdavss_25kTrain_NoLSTM_bs6_lr5e-4",
+    "notes": "Remove LSTM Layers in Lip Embidder, 25K training folders, Batch size 6, lr = 5e-4, freeze LipNet, Normalize input with 1350, Batch size = 8, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet without LSTM Lipnet. Loss is Si-SNR",
+    "project": "av-speech-seperation",
+    "heartbeatAt": "2020-02-12T15:28:27.158175"
+}

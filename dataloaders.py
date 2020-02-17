@@ -24,6 +24,12 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import shutil
 import cv2
+import sys
+sys.path.append('/data/AV-speech-separation/LipNet')
+from lipnet.lipreading.helpers import text_to_labels
+from lipnet.lipreading.aligns import Align
+import json
+
 
 '''import imgaug as ia
 import imgaug.augmenters as iaa
@@ -392,94 +398,6 @@ def DataGenerator_test_crm(folderlist, batch_size):
 
 # Data generators for time samples prediction
 
-def DataGenerator_train_samples(folderlist, batch_size):
-
-    L = len(folderlist)
-
-    #this line is just to make the generator infinite, keras needs that
-    while True:
-
-        batch_start = 0
-        batch_end = batch_size
-        while batch_start < L:
-            limit = min(batch_end, L)
-
-            folders_batch = folderlist[batch_start:limit]
-
-            lips = []
-            spect = []
-            phase = []
-            samples = []
-            #phase_mask = []
-            for folder in folders_batch:
-
-                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                #phase_mask_ = sorted(glob.glob(folder + '/*_phasemask.npy'), key=numericalSort)
-                spect_ = folder + '/mixed_spectrogram.npy'
-                phase_ = folder + '/phase_spectrogram.npy'
-
-                lips.append(lips_[0])
-                lips.append(lips_[1])
-
-                samples.append(samples_[0])
-                samples.append(samples_[1])
-
-                spect.append(spect_)
-                spect.append(spect_)
-
-                phase.append(phase_)
-                phase.append(phase_)
-                
-                #phase_mask.append(phase_mask_[0])
-                #phase_mask.append(phase_mask_[1])
-
-            zipped = list(zip(lips, samples, spect, phase))
-            random.shuffle(zipped)
-            lips, samples, spect, phase = zip(*zipped)
-            
-            X_spect = [np.load(fname) for fname in spect]
-            
-            X_phase = [np.load(fname) for fname in phase]
-
-            X_samples = np.asarray([np.pad(np.load(fname), (0, 32000), mode='constant')[:32000] for fname in samples])
-            
-            X_spect_phase = []
-            for i in range(len(X_spect)):
-                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
-                X_spect_phase.append(x_spect_phase)
-
-            X_spect_phase = np.asarray(X_spect_phase)
-
-#            print("X_spect_phase", X_spect_phase.shape)
-            
-            X_lips = []
-            
-            for i in range(len(lips)):
-
-                x_lips = get_video_frames(lips[i], fmt= 'grey')
-                #x_lips = seq.augment_images(x_lips)
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
-                X_lips.append(x_lips)
-
-
-            X_lips = np.asarray(X_lips)
-           # print(X_lips.shape)
-            #X = seq.augment_images(X)
-            
-            #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
-
-            X_spect_phase = X_spect_phase[:,:,:200,:]
-            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1)
-            #X_samples = X_samples[:,:32000]
-
-            #X_attns = np.random.rand(batch_size, 200, 200)
-
-            yield [X_spect_phase, X_lips, X_samples], X_samples_targ
-
-            batch_start += batch_size
-            batch_end += batch_size
-
             
 def DataGenerator_sampling_samples(folderlist_all, folders_per_epoch, batch_size):
     
@@ -783,7 +701,7 @@ def DataGenerator_val_samples(folderlist, batch_size):
             #X_samples = X_samples[:,:32000]
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
-            X_samples_targ = X_samples_targ/1350.0
+            X_samples_targ = X_samples_targ
             X_samples_mix = X_samples_mix/1350.0
             #print(X_samples_targ.shape)
 
@@ -793,7 +711,97 @@ def DataGenerator_val_samples(folderlist, batch_size):
 
             batch_start += batch_size
             batch_end += batch_size
+
+
+def DataGenerator_train_samples(folderlist, batch_size):
+    
+    L = len(folderlist)
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            samples = []
+            samples_mix = []
+
+            for folder in folders_batch:
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+                for i in range(len(lips_)):
+                    lips.append(lips_[i])
+                for i in range(len(samples_)):
+                    samples.append(samples_[i])
+                for i in range(len(lips_)):
+                    samples_mix.append(samples_mix_)
+          
+            zipped = list(zip(lips, samples, samples_mix))
+            random.shuffle(zipped)
+            lips, samples, samples_mix = zip(*zipped)
+
+            #X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
+            #print(X_mask.shape)
+#            print('mask', X_mask.shape)
             
+            #X_spect = [np.load(fname) for fname in spect]
+            
+            #X_phase = [np.load(fname) for fname in phase]
+
+            X_samples = np.asarray([np.pad(np.load(fname), (0, 32000), mode='constant')[:32000] for fname in samples])
+            X_samples_mix = np.asarray([np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000] for fname in samples_mix])
+            
+            '''X_spect_phase = []
+            for i in range(len(X_spect)):
+                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+                X_spect_phase.append(x_spect_phase)
+
+            X_spect_phase = np.asarray(X_spect_phase)'''
+
+#            print("X_spect_phase", X_spect_phase.shape)
+            
+            X_lips = []
+            
+            for i in range(len(lips)):
+
+                x_lips = get_video_frames(lips[i], fmt= 'grey')
+                #x_lips = seq.augment_images(x_lips)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+                X_lips.append(x_lips)
+
+
+            X_lips = np.asarray(X_lips)
+           # print(X_lips.shape)
+            #X = seq.augment_images(X)
+            
+            #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
+
+            '''print('X_spect_phase:', X_spect_phase.shape)
+            print('X_lips', X_lips.shape)
+            print('X_samples')'''
+
+            #X_spect_phase = X_spect_phase[:,:,:200,:]
+            #X_samples = X_samples[:,:32000]
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+            X_samples_targ = X_samples_targ
+            X_samples_mix = X_samples_mix/1350.0
+            #print(X_samples_targ.shape)
+
+            #X_attns = np.random.rand(batch_size, 200, 200)
+
+            yield [X_lips, X_samples_mix], X_samples_targ
+
+            batch_start += batch_size
+            batch_end += batch_size
+
             
 def DataGenerator_val_samples_attention(folderlist, batch_size):
     
@@ -873,15 +881,114 @@ def DataGenerator_val_samples_attention(folderlist, batch_size):
             #X_samples = X_samples[:,:32000]
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
-            X_samples_targ = X_samples_targ/1350.0
+            X_samples_targ = X_samples_targ
             X_samples_mix = X_samples_mix/1350.0
             #print(X_samples_targ.shape)
-            placeholder_1 = tf.zeros(shape=(X_lips.shape[0], 256))
-            placeholder_2 = tf.zeros(shape=(X_lips.shape[0], 256))
+            np.random.seed(100)
+            placeholder_1 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_2 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_3 = tf.constant(np.random.rand(X_lips.shape[0], 512))
 
             #X_attns = np.random.rand(batch_size, 200, 200)
 
-            yield [X_lips, X_samples_mix,placeholder_1,placeholder_2], X_samples_targ
+            yield [X_lips, X_samples_mix,placeholder_1,placeholder_2, placeholder_3], X_samples_targ
+
+            batch_start += batch_size
+            batch_end += batch_size
+
+def DataGenerator_train_samples_attention(folderlist, batch_size):
+    
+    L = len(folderlist)
+    epoch_number = 0
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            if batch_start == 0:
+                epoch_number += 1
+
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            samples = []
+            samples_mix = []
+
+            for folder in folders_batch:
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+                for i in range(len(lips_)):
+                    lips.append(lips_[i])
+                for i in range(len(samples_)):
+                    samples.append(samples_[i])
+                for i in range(len(lips_)):
+                    samples_mix.append(samples_mix_)
+          
+            zipped = list(zip(lips, samples, samples_mix))
+            random.shuffle(zipped)
+            lips, samples, samples_mix = zip(*zipped)
+
+            #X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
+            #print(X_mask.shape)
+#            print('mask', X_mask.shape)
+            
+            #X_spect = [np.load(fname) for fname in spect]
+            
+            #X_phase = [np.load(fname) for fname in phase]
+
+            X_samples = np.asarray([np.pad(np.load(fname), (0, 32000), mode='constant')[:32000] for fname in samples])
+            X_samples_mix = np.asarray([np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000] for fname in samples_mix])
+            
+            '''X_spect_phase = []
+            for i in range(len(X_spect)):
+                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+                X_spect_phase.append(x_spect_phase)
+
+            X_spect_phase = np.asarray(X_spect_phase)'''
+
+#            print("X_spect_phase", X_spect_phase.shape)
+            
+            X_lips = []
+            
+            for i in range(len(lips)):
+
+                x_lips = get_video_frames(lips[i], fmt= 'grey')
+                #x_lips = seq.augment_images(x_lips)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+                X_lips.append(x_lips)
+
+
+            X_lips = np.asarray(X_lips)
+           # print(X_lips.shape)
+            #X = seq.augment_images(X)
+            
+            #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
+
+            '''print('X_spect_phase:', X_spect_phase.shape)
+            print('X_lips', X_lips.shape)
+            print('X_samples')'''
+
+            #X_spect_phase = X_spect_phase[:,:,:200,:]
+            #X_samples = X_samples[:,:32000]
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+            X_samples_targ = X_samples_targ
+            X_samples_mix = X_samples_mix/1350.0
+            #print(X_samples_targ.shape)
+            np.random.seed(100)
+            placeholder_1 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_2 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_3 = tf.constant(np.random.rand(X_lips.shape[0], 512))
+
+            #X_attns = np.random.rand(batch_size, 200, 200)
+
+            yield [X_lips, X_samples_mix,placeholder_1,placeholder_2, placeholder_3], X_samples_targ
 
             batch_start += batch_size
             batch_end += batch_size
@@ -1111,17 +1218,226 @@ def Data_predict_attention(folderlist):
             #X_spect_phase = X_spect_phase[:,:,:200,:]
             #X_samples = X_samples[:,:32000]
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
-            X_samples_mix = X_samples_mix/1350.0
+            X_samples_mix = X_samples_mix
             #print(X_samples_targ.shape)
-            placeholder_1 = np.zeros((X_lips.shape[0], 256)).astype('float32')
-            placeholder_2 = np.zeros((X_lips.shape[0], 256)).astype('float32')
+            np.random.seed(100)
+            placeholder_1 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_2 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_3 = tf.constant(np.random.rand(X_lips.shape[0], 512))
             #X_attns = np.random.rand(batch_size, 200, 200)
 
-            return [X_lips, X_samples_mix,placeholder_1,placeholder_2]
+            return [X_lips, X_samples_mix, placeholder_1, placeholder_2, placeholder_3]
 
             
-            
+def DataGenerator_train_samples_lips(folderlist, batch_size, time=5):
+    
+    L = len(folderlist)
 
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            samples = []
+            samples_mix = []
+            transcripts = []
+            for folder in folders_batch:
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                for i in range(len(lips_)):
+                    lips.append(lips_[i])
+                for i in range(len(samples_)):
+                    samples.append(samples_[i])
+                for i in range(len(lips_)):
+                    samples_mix.append(samples_mix_)
+                for i in range(len(lips_)):
+                    transcripts.append(transcripts_[i])
+          
+            zipped = list(zip(lips, samples, samples_mix, transcripts))
+            random.shuffle(zipped)
+            lips, samples, samples_mix, transcripts = zip(*zipped)
+
+            #X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
+            #print(X_mask.shape)
+#            print('mask', X_mask.shape)
+            
+            #X_spect = [np.load(fname) for fname in spect]
+            
+            #X_phase = [np.load(fname) for fname in phase]
+
+            X_samples = np.asarray([np.pad(np.load(fname), (0, time*16000), mode='constant')[:time*16000] for fname in samples])
+            X_samples_mix = np.asarray([np.pad(wavfile.read(fname)[1], (0, time*16000), mode='constant')[:time*16000] for fname in samples_mix])
+            
+            '''X_spect_phase = []
+            for i in range(len(X_spect)):
+                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+                X_spect_phase.append(x_spect_phase)
+
+            X_spect_phase = np.asarray(X_spect_phase)'''
+
+#            print("X_spect_phase", X_spect_phase.shape)
+            
+            X_lips = []
+            
+            for i in range(len(lips)):
+
+                x_lips = get_video_frames(lips[i], fmt= 'grey')
+                #x_lips = seq.augment_images(x_lips)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = time)
+                X_lips.append(x_lips)
+
+            X_lips = np.asarray(X_lips)
+           # print(X_lips.shape)
+            #X = seq.augment_images(X)
+            
+            #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
+
+            '''print('X_spect_phase:', X_spect_phase.shape)
+            print('X_lips', X_lips.shape)
+            print('X_samples')'''
+
+            align = []
+            Y_data = []
+            label_length = []
+            input_length = []
+            source_str = []
+
+            for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
+            for i in range(X_lips.shape[0]):
+               Y_data.append(align[i].padded_label)
+               label_length.append(align[i].label_length)
+               input_length.append(X_lips.shape[1])
+               source_str.append(align[i].sentence)
+            Y_data = np.array(Y_data)
+
+            #X_spect_phase = X_spect_phase[:,:,:200,:]
+            #X_samples = X_samples[:,:32000]
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], time*16000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], time*16000, 1).astype('float32')
+            X_samples_targ = X_samples_targ/1350.0
+            X_samples_mix = X_samples_mix/1350.0
+            #print(X_samples_targ.shape)
+
+            #X_attns = np.random.rand(batch_size, 200, 200)
+
+            yield [X_lips, X_samples_mix, Y_data, np.array(input_length), np.array(label_length)], [X_samples_targ, np.zeros([X_lips.shape[0]])]
+
+            batch_start += batch_size
+            batch_end += batch_size
+
+def DataGenerator_val_samples_lips(folderlist, batch_size, time=5):
+    
+    L = len(folderlist)
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            samples = []
+            samples_mix = []
+            transcripts = []
+            for folder in folders_batch:
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                for i in range(len(lips_)):
+                    lips.append(lips_[i])
+                for i in range(len(samples_)):
+                    samples.append(samples_[i])
+                for i in range(len(lips_)):
+                    samples_mix.append(samples_mix_)
+                for i in range(len(lips_)):
+                    transcripts.append(transcripts_[i])
+          
+            '''zipped = list(zip(lips, samples, samples_mix, transcripts))
+            random.shuffle(zipped)
+            lips, samples, samples_mix, transcripts = zip(*zipped)'''
+
+            #X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
+            #print(X_mask.shape)
+#            print('mask', X_mask.shape)
+            
+            #X_spect = [np.load(fname) for fname in spect]
+            
+            #X_phase = [np.load(fname) for fname in phase]
+
+            X_samples = np.asarray([np.pad(np.load(fname), (0, time*16000), mode='constant')[:time*16000] for fname in samples])
+            X_samples_mix = np.asarray([np.pad(wavfile.read(fname)[1], (0, time*16000), mode='constant')[:time*16000] for fname in samples_mix])
+            
+            '''X_spect_phase = []
+            for i in range(len(X_spect)):
+                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
+                X_spect_phase.append(x_spect_phase)
+
+            X_spect_phase = np.asarray(X_spect_phase)'''
+
+#            print("X_spect_phase", X_spect_phase.shape)
+            
+            X_lips = []
+            
+            for i in range(len(lips)):
+
+                x_lips = get_video_frames(lips[i], fmt= 'grey')
+                #x_lips = seq.augment_images(x_lips)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = time)
+                X_lips.append(x_lips)
+
+            X_lips = np.asarray(X_lips)
+           # print(X_lips.shape)
+            #X = seq.augment_images(X)
+            
+            #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
+
+            '''print('X_spect_phase:', X_spect_phase.shape)
+            print('X_lips', X_lips.shape)
+            print('X_samples')'''
+
+            align = []
+            Y_data = []
+            label_length = []
+            input_length = []
+            source_str = []
+
+            for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
+            for i in range(X_lips.shape[0]):
+               Y_data.append(align[i].padded_label)
+               label_length.append(align[i].label_length)
+               input_length.append(X_lips.shape[1])
+               source_str.append(align[i].sentence)
+            Y_data = np.array(Y_data)
+
+            #X_spect_phase = X_spect_phase[:,:,:200,:]
+            #X_samples = X_samples[:,:32000]
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], time*16000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], time*16000, 1).astype('float32')
+            X_samples_targ = X_samples_targ/1350.0
+            X_samples_mix = X_samples_mix/1350.0
+            #print(X_samples_targ.shape)
+
+            #X_attns = np.random.rand(batch_size, 200, 200)
+
+            yield [X_lips, X_samples_mix, Y_data, np.array(input_length), np.array(label_length)], [X_samples_targ, np.zeros([X_lips.shape[0]])]
+
+            batch_start += batch_size
+            batch_end += batch_size
 
 '''samples_mix = sorted(glob.glob('/data/mixed_audio_files/*.wav'), key=numericalSort)
 samples = [np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000] for fname in samples_mix]
@@ -1130,3 +1446,379 @@ stds = []
 for i in samples:
     means.append(np.mean(i))
     stds.append(np.std(i))'''
+
+
+def DataGenerator_val_unsync_attention(folderlist, batch_size):
+    
+    L = len(folderlist)
+    #unsync_files = np.loadtxt('/data/AV-speech-separation1/lrs2_1dot5k-unsync_audio_val.json', dtype='object')
+    with open('/data/AV-speech-separation1/lrs2_1dot5k-unsync_audio_val.json') as json_file:
+        unsync_dict = json.load(json_file)
+    
+    unsync_files = unsync_dict['folds']
+    offsets = unsync_dict['offsets']
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            samples = []
+            samples_mix = []
+
+            for folder in folders_batch:
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+                for i in range(len(lips_)):
+                    lips.append(lips_[i])
+                for i in range(len(samples_)):
+                    samples.append(samples_[i])
+                for i in range(len(lips_)):
+                    samples_mix.append(samples_mix_)
+          
+            '''zipped = list(zip(lips, samples, samples_mix))
+            random.shuffle(zipped)
+            lips, samples, samples_mix = zip(*zipped)'''
+
+            #X_samples = np.asarray([np.pad(np.load(fname), (0, 32000), mode='constant')[:32000] for fname in samples])
+            
+            X_samples_mix = []
+            X_samples = []
+            X_lips = []
+            for i, fname in enumerate(samples_mix):
+                fold = fname.split('/')[-1][:-4]
+                if fold in unsync_files:
+                    offset = abs(offsets[fold])
+                    if offset > 12:
+                        offset = 13
+                    #offset = offset-2
+                    aud_offset = int(abs((offset/25)*16000))
+
+                    # Read Mixed Audio with offset
+                    '''mix_aud = np.pad(wavfile.read(fname)[1], (aud_offset, 32000), mode='constant')[:32000]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[:32000]
+                    aud = np.pad(aud[:-aud_offset], (0, 32000), mode='constant')[:32000]'''
+
+                    mix_aud = np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[aud_offset:32000+aud_offset]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[aud_offset:32000+aud_offset]
+                    #aud = np.pad(aud[:-aud_offset], (0, 32000), mode='constant')[:32000]
+
+                    # Read Lips
+                    x_lips = get_video_frames(lips[i], fmt= 'grey')
+                    x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+
+
+                else:
+                    mix_aud = np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[:32000]
+
+                    # Read Lips
+                    x_lips = get_video_frames(lips[i], fmt= 'grey')
+                    x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+                
+                X_samples_mix.append(mix_aud)
+                X_samples.append(aud)
+                X_lips.append(x_lips)
+
+            X_samples_mix = np.asarray(X_samples_mix)
+            X_samples = np.asarray(X_samples)
+            X_lips = np.asarray(X_lips)
+
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+            X_samples_targ = X_samples_targ
+            X_samples_mix = X_samples_mix/1350.0
+            #print(X_samples_targ.shape)
+            np.random.seed(100)
+            placeholder_1 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_2 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_3 = tf.constant(np.random.rand(X_lips.shape[0], 512))
+
+            #X_attns = np.random.rand(batch_size, 200, 200)
+
+            yield [X_lips, X_samples_mix,placeholder_1,placeholder_2, placeholder_3], X_samples_targ
+
+            batch_start += batch_size
+            batch_end += batch_size
+
+def DataGenerator_train_unsync_attention(folderlist, batch_size):
+    
+    L = len(folderlist)
+    #unsync_files = np.loadtxt('/data/AV-speech-separation1/lrs2_8k-unsync_audio_train.json', dtype='object')
+    with open('/data/AV-speech-separation1/lrs2_8k-unsync_audio_train.json') as json_file:
+        unsync_dict = json.load(json_file)
+
+    unsync_files = unsync_dict['folds']
+    offsets = unsync_dict['offsets']
+    
+    epoch_number = 0
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            if batch_start == 0:
+                epoch_number += 1
+
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            samples = []
+            samples_mix = []
+
+            for folder in folders_batch:
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+                for i in range(len(lips_)):
+                    lips.append(lips_[i])
+                for i in range(len(samples_)):
+                    samples.append(samples_[i])
+                for i in range(len(lips_)):
+                    samples_mix.append(samples_mix_)
+          
+            zipped = list(zip(lips, samples, samples_mix))
+            random.shuffle(zipped)
+            lips, samples, samples_mix = zip(*zipped)
+
+            #X_samples = np.asarray([np.pad(np.load(fname), (0, 32000), mode='constant')[:32000] for fname in samples])
+            
+            X_samples_mix = []
+            X_samples = []
+            X_lips = []
+            for i, fname in enumerate(samples_mix):
+                fold = fname.split('/')[-1][:-4]
+                if fold in unsync_files:
+                    offset = abs(offsets[fold])
+                    if offset > 15:
+                        offset = 10
+                    elif offset == 14:
+                        offset = 14
+                    elif offset == 15:
+                        offset = 15
+                    offset = offset-2
+                    aud_offset = int(abs((offset/25)*16000))
+
+                    # Read Mixed Audio with offset
+                    '''mix_aud = np.pad(wavfile.read(fname)[1], (aud_offset, 32000), mode='constant')[:32000]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[:32000]
+                    aud = np.pad(aud[:-aud_offset], (0, 32000), mode='constant')[:32000]'''
+
+                    mix_aud = np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[aud_offset:32000+aud_offset]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[aud_offset:32000+aud_offset]
+                    #aud = np.pad(aud[:-aud_offset], (0, 32000), mode='constant')[:32000]
+
+                    # Read Lips
+                    x_lips = get_video_frames(lips[i], fmt= 'grey')
+                    x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+
+
+                else:
+                    mix_aud = np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[:32000]
+
+                    # Read Lips
+                    x_lips = get_video_frames(lips[i], fmt= 'grey')
+                    x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+                
+                X_samples_mix.append(mix_aud)
+                X_samples.append(aud)
+                X_lips.append(x_lips)
+
+            X_samples_mix = np.asarray(X_samples_mix)
+            X_samples = np.asarray(X_samples)
+            X_lips = np.asarray(X_lips)
+
+            
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+            X_samples_targ = X_samples_targ
+            X_samples_mix = X_samples_mix/1350.0
+            #print(X_samples_targ.shape)
+            np.random.seed(100)
+            placeholder_1 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_2 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_3 = tf.constant(np.random.rand(X_lips.shape[0], 512))
+
+            #X_attns = np.random.rand(batch_size, 200, 200)
+
+            yield [X_lips, X_samples_mix,placeholder_1,placeholder_2, placeholder_3], X_samples_targ
+
+            batch_start += batch_size
+            batch_end += batch_size
+
+
+def DataGenerator_val_unsync_attention_easy(folderlist, batch_size):
+    
+    L = len(folderlist)
+    #unsync_files = np.loadtxt('/data/AV-speech-separation1/lrs2_1dot5k-unsync_audio_val.json', dtype='object')
+    with open('/data/AV-speech-separation1/lrs2_1dot5k-unsync_audio_val.json') as json_file:
+        unsync_dict = json.load(json_file)
+    
+    unsync_files = unsync_dict['folds']
+    offsets = unsync_dict['offsets']
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            limit = min(batch_end, L)
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            samples = []
+            samples_mix = []
+
+            for folder in folders_batch:
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+                for i in range(len(lips_)):
+                    lips.append(lips_[i])
+                for i in range(len(samples_)):
+                    samples.append(samples_[i])
+                for i in range(len(lips_)):
+                    samples_mix.append(samples_mix_)
+          
+            '''zipped = list(zip(lips, samples, samples_mix))
+            random.shuffle(zipped)
+            lips, samples, samples_mix = zip(*zipped)'''
+
+            #X_samples = np.asarray([np.pad(np.load(fname), (0, 32000), mode='constant')[:32000] for fname in samples])
+            
+            X_samples_mix = []
+            X_samples = []
+            X_lips = []
+            for i, fname in enumerate(samples_mix):
+                fold = fname.split('/')[-1][:-4]
+                if fold in unsync_files:
+                    offset = abs(offsets[fold])
+                    if offset > 12:
+                        offset = 10
+                    offset = offset-2
+                    aud_offset = int(abs((offset/25)*16000))
+
+                    # Read Mixed Audio with offset
+                    '''mix_aud = np.pad(wavfile.read(fname)[1], (aud_offset, 32000), mode='constant')[:32000]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[:32000]
+                    aud = np.pad(aud[:-aud_offset], (0, 32000), mode='constant')[:32000]'''
+
+                    mix_aud = np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[aud_offset:32000+aud_offset]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[aud_offset:32000+aud_offset]
+                    #aud = np.pad(aud[:-aud_offset], (0, 32000), mode='constant')[:32000]
+
+                    # Read Lips
+                    x_lips = get_video_frames(lips[i], fmt= 'grey')
+                    x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+
+
+                else:
+                    mix_aud = np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000]
+                    aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[:32000]
+
+                    # Read Lips
+                    x_lips = get_video_frames(lips[i], fmt= 'grey')
+                    x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+                
+                X_samples_mix.append(mix_aud)
+                X_samples.append(aud)
+                X_lips.append(x_lips)
+
+            X_samples_mix = np.asarray(X_samples_mix)
+            X_samples = np.asarray(X_samples)
+            X_lips = np.asarray(X_lips)
+
+            X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
+            X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+            X_samples_targ = X_samples_targ
+            X_samples_mix = X_samples_mix/1350.0
+            #print(X_samples_targ.shape)
+
+            np.random.seed(100)
+            placeholder_1 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_2 = tf.constant(np.random.rand(X_lips.shape[0], 256))
+            placeholder_3 = tf.constant(np.random.rand(X_lips.shape[0], 512))
+
+            #X_attns = np.random.rand(batch_size, 200, 200)
+
+            yield [X_lips, X_samples_mix,placeholder_1,placeholder_2, placeholder_3], X_samples_targ
+
+            batch_start += batch_size
+            batch_end += batch_size
+
+
+def Data_predict_attention(folderlist_dict):
+
+    folderlist = list(folderlist_dict.keys())
+    lips = []
+    samples = []
+    samples_mix = []
+
+    for folder in folderlist:
+        lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+        samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+        samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+        for i in range(len(lips_)):
+            lips.append(lips_[i])
+        for i in range(len(samples_)):
+            samples.append(samples_[i])
+        for i in range(len(lips_)):
+            samples_mix.append(samples_mix_)
+    
+    
+    X_samples_mix = []
+    X_samples = []
+    X_lips = []
+    for i, fname in enumerate(samples_mix):
+        fold = fname.split('/')[-1][:-4]
+        offset = abs(folderlist_dict[lips[i][:-35]])
+        #offset = abs(offsets[fold])
+        aud_offset = int(abs((offset/25)*16000))
+
+        # Read Mixed Audio with offset
+        mix_aud = np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[aud_offset:32000+aud_offset]
+        aud = np.pad(np.load(samples[i]), (0, 32000), mode='constant')[aud_offset:32000+aud_offset]
+
+        # Read Lips
+        x_lips = get_video_frames(lips[i], fmt= 'grey')
+        x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
+        
+        X_samples_mix.append(mix_aud)
+        X_samples.append(aud)
+        X_lips.append(x_lips)
+
+    X_samples_mix = np.asarray(X_samples_mix)
+    X_samples = np.asarray(X_samples)
+    X_lips = np.asarray(X_lips).astype('float32')
+
+    X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
+    X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
+    X_samples_targ = X_samples_targ
+    X_samples_mix = (X_samples_mix/1350.0).astype('float32')
+    #print(X_samples_targ.shape)
+
+    np.random.seed(100)
+    placeholder_1 = np.random.rand(X_lips.shape[0], 256).astype('float32')
+    placeholder_2 = np.random.rand(X_lips.shape[0], 256).astype('float32')
+    placeholder_3 = np.random.rand(X_lips.shape[0], 512).astype('float32')
+
+    #X_attns = np.random.rand(batch_size, 200, 200)
+
+    return [X_lips, X_samples_mix,placeholder_1,placeholder_2, placeholder_3]

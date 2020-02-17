@@ -1,0 +1,57 @@
+Training data: 360
+Validation data: 240
+3D Conv Out: (None, 50, 32, 32, 64)
+3D Conv Out Reshape: (None, 32, 32, 64)
+Resnet18 Out: (None, 1, 1, 512)
+Resnet18 Linear Out: (None, 256)
+Input to GRU: (None, 50, 256)
+GRU Out: (None, 50, 29)
+ResNet LSTM Pretrain weights loaded
+outv: (None, 200, 256)
+outa: (None, 200, 256)
+hidden (None, 256)
+attn_out: (None, 200, 512)
+attn_states: (None, 200, 200)
+fusion: (None, 200, 512)
+
+==================================================================================================
+Total params: 29,658,113
+Trainable params: 18,093,569
+Non-trainable params: 11,564,544
+__________________________________________________________________________________________________
+
+Model weights path: test_tdavss_Offset_BothHigh_epochs40_5lr1e-4_exp1
+
+Epoch 1/3
+ 1/30 [>.............................] - ETA: 3:49 - loss: 45.5343 - snr_acc: -45.5343 2/30 [=>............................] - ETA: 2:21 - loss: 34.8965 - snr_acc: -34.8965 3/30 [==>...........................] - ETA: 1:50 - loss: 30.6947 - snr_acc: -30.6947 4/30 [===>..........................] - ETA: 1:33 - loss: 27.4717 - snr_acc: -27.4717 5/30 [====>.........................] - ETA: 1:22 - loss: 25.0165 - snr_acc: -25.0165 6/30 [=====>........................] - ETA: 1:14 - loss: 23.3221 - snr_acc: -23.3221 7/30 [======>.......................] - ETA: 1:08 - loss: 22.0294 - snr_acc: -22.0294 8/30 [=======>......................] - ETA: 1:03 - loss: 20.7321 - snr_acc: -20.7321 9/30 [========>.....................] - ETA: 58s - loss: 19.7687 - snr_acc: -19.7687 10/30 [=========>....................] - ETA: 54s - loss: 18.8247 - snr_acc: -18.824711/30 [==========>...................] - ETA: 50s - loss: 17.9073 - snr_acc: -17.907312/30 [===========>..................] - ETA: 47s - loss: 17.2562 - snr_acc: -17.256213/30 [============>.................] - ETA: 43s - loss: 16.5706 - snr_acc: -16.570614/30 [=============>................] - ETA: 40s - loss: 15.9599 - snr_acc: -15.959915/30 [==============>...............] - ETA: 37s - loss: 15.4320 - snr_acc: -15.432016/30 [===============>..............] - ETA: 34s - loss: 14.9417 - snr_acc: -14.941717/30 [================>.............] - ETA: 32s - loss: 14.7298 - snr_acc: -14.729818/30 [=================>............] - ETA: 29s - loss: 14.3552 - snr_acc: -14.355219/30 [==================>...........] - ETA: 26s - loss: 13.9703 - snr_acc: -13.970320/30 [===================>..........] - ETA: 24s - loss: 13.6072 - snr_acc: -13.607221/30 [====================>.........] - ETA: 21s - loss: 13.2621 - snr_acc: -13.262122/30 [=====================>........] - ETA: 19s - loss: 12.9325 - snr_acc: -12.932523/30 [======================>.......] - ETA: 16s - loss: 12.6088 - snr_acc: -12.608824/30 [=======================>......] - ETA: 14s - loss: 12.3061 - snr_acc: -12.306125/30 [========================>.....] - ETA: 11s - loss: 12.0863 - snr_acc: -12.086326/30 [=========================>....] - ETA: 9s - loss: 11.8346 - snr_acc: -11.8346 27/30 [==========================>...] - ETA: 7s - loss: 11.6088 - snr_acc: -11.608828/30 [===========================>..] - ETA: 4s - loss: 11.3616 - snr_acc: -11.361629/30 [============================>.] - ETA: 2s - loss: 11.1464 - snr_acc: -11.1464
+Goood till now
+Traceback (most recent call last):
+  File "main_tasnet_unsync.py", line 162, in <module>
+    callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file), metrics_unsync], verbose=1)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training.py", line 1297, in fit_generator
+    steps_name='steps_per_epoch')
+  File "/usr/local/lib/python3.6/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
+    return old_generator(*args, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/engine/training_generator.py", line 332, in model_iteration
+    callbacks.on_epoch_end(epoch, epoch_logs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/callbacks.py", line 298, in on_epoch_end
+    callback.on_epoch_end(epoch, logs)
+  File "/data/AV-speech-separation1/metrics.py", line 492, in on_epoch_end
+    preds = self.model_val.predict(Data_predict_attention(val_folders_samp_dict))
+  File "/data/AV-speech-separation1/models/tdavss_attention2.py", line 185, in predict
+    return self.test_function([input_batch, 0])  # the first 0 indicates test
+  File "/data/AV-speech-separation1/models/tdavss_attention2.py", line 192, in test_function
+    [self.out, self.attn_states, self.mask])
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/backend.py", line 3782, in function
+    return GraphExecutionFunction(inputs, outputs, updates=updates, **kwargs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/keras/backend.py", line 3434, in __init__
+    with ops.control_dependencies([self.outputs[0]]):
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/ops.py", line 5257, in control_dependencies
+    return get_default_graph().control_dependencies(control_inputs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/ops.py", line 4691, in control_dependencies
+    c = self.as_graph_element(c)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/ops.py", line 3610, in as_graph_element
+    return self._as_graph_element_locked(obj, allow_tensor, allow_operation)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/framework/ops.py", line 3689, in _as_graph_element_locked
+    raise ValueError("Tensor %s is not an element of this graph." % obj)
+ValueError: Tensor Tensor("out/Identity:0", shape=(None, 32000, 1), dtype=float32) is not an element of this graph.

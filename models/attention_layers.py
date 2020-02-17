@@ -218,3 +218,255 @@ class MinimalRNN(Layer):
         h = K.dot(inputs, self.kernel)
         output = h + K.dot(prev_output, self.recurrent_kernel)
         return output
+
+class Luong_exp(Layer):
+    """
+    This class implements Bahdanau attention (https://arxiv.org/pdf/1409.0473.pdf).
+    There are three sets of weights introduced W_a, U_a, and V_a
+     """
+
+    def __init__(self, **kwargs):
+        super(Luong_exp, self).__init__(**kwargs)
+        self.decoder_recurrent_layer = LSTM(units=256,return_state=True)
+
+    def build(self, input_shape):
+        assert isinstance(input_shape, list)
+        # Create a trainable weight variable for this layer.
+
+        self.W_a = self.add_weight(name='W_a',
+                                   shape=tf.TensorShape((input_shape[0][2], input_shape[1][2])),
+                                   initializer='uniform',
+                                   trainable=True)
+        # self.U_a = self.add_weight(name='U_a',
+        #                            shape=tf.TensorShape((input_shape[1][2], input_shape[0][2])),
+        #                            initializer='uniform',
+        #                            trainable=True)
+        # self.V_a = self.add_weight(name='V_a',
+        #                            shape=tf.TensorShape((input_shape[0][2], 1)),
+        #                            initializer='uniform',
+        #                            trainable=True)
+
+        super(Luong_exp, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, inputs, verbose=False):
+
+        encoder_out_seq, decoder_out_seq, hidden_state, cell_state = inputs
+
+        self.t=encoder_out_seq.shape[1]
+        self.context_vecs=[]
+        self.attention_weights=[]
+
+
+        for timestep in range(self.t):
+
+            U_a_dot_h = K.dot(encoder_out_seq, self.W_a)  # <= batch_size, en_seq_len, latent_dim * latent_dim,dec_dim
+            if verbose:print('U_a_dot_h', U_a_dot_h.shape)
+            """ batch,1,dec_dim"""
+            expanded_target=K.expand_dims(hidden_state, 1)
+            """batch,en_seq_len,1"""
+            if verbose:print('expanded_target', expanded_target.shape)
+
+            e_i=Dot(axes=[2, 2])([U_a_dot_h, expanded_target])
+            if verbose:print('e_i', e_i.shape)
+
+            e_i=K.squeeze(e_i,axis=-1)
+
+            if verbose:print('e_i', e_i.shape)
+            # <= batch_size, en_seq_len
+            e_i = K.softmax(e_i)
+
+            if verbose:print('ei>', e_i.shape)
+
+            c_i = K.sum(encoder_out_seq * K.expand_dims(e_i, -1), axis=1)
+            if verbose:print('ci>', c_i.shape)
+
+            #context_vector, attn_states = attention_layer([self.outv,hidden_state,timestep])
+            current_word=Lambda(lambda x:K.expand_dims(x[:,timestep,:],axis=1))(decoder_out_seq)
+            #current_word=Lambda(lambda x:x[:,timestep,:])(decoder_out_seq)
+            decoder_input = Concatenate(axis=2)([K.expand_dims(c_i,axis=1), current_word])
+            #decoder_input = Concatenate(axis=1)(c_i, current_word])
+            output, hidden_state, cell_state= self.decoder_recurrent_layer(decoder_input,initial_state=[hidden_state, cell_state])
+            self.context_vecs.append(c_i)
+            self.attention_weights.append(e_i)
+
+        self.attn_out=tf.stack(self.context_vecs,axis=1)
+        self.attn_states=tf.stack(self.attention_weights,axis=2)
+
+        return self.attn_out, self.attn_states
+
+class Luong_exp2(Layer):
+    """
+    This class implements Bahdanau attention (https://arxiv.org/pdf/1409.0473.pdf).
+    There are three sets of weights introduced W_a, U_a, and V_a
+     """
+
+    def __init__(self, **kwargs):
+        super(Luong_exp2, self).__init__(**kwargs)
+        self.decoder_recurrent_layer = LSTM(units=256,return_state=True)
+
+
+
+    def build(self, input_shape):
+        assert isinstance(input_shape, list)
+        # Create a trainable weight variable for this layer.
+
+        self.W_a = self.add_weight(name='W_a',
+                                   shape=tf.TensorShape((input_shape[0][2], input_shape[1][2])),
+                                   initializer='uniform',
+                                   trainable=True)
+
+        super(Luong_exp2, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, inputs, verbose=False):
+
+        encoder_out_seq, decoder_out_seq, hidden_state = inputs
+
+        def energy(inputs, states):
+
+	        #encoder_out_seq=inputs[:,:,:self.latent_dim]
+
+	        U_a_dot_h = K.dot(encoder_out_seq, self.W_a)  # <= batch_size, en_seq_len, latent_dim * latent_dim,dec_dim
+	        if verbose:print('U_a_dot_h', U_a_dot_h.shape)
+	        """ batch,1,dec_dim"""
+	        expanded_target=K.expand_dims(states[0], 1)
+	        """batch,en_seq_len,1"""
+	        if verbose:print('expanded_target', expanded_target.shape)
+
+	        e_i=Dot(axes=[2, 2])([U_a_dot_h, expanded_target])
+	        if verbose:print('e_i', e_i.shape)
+
+	        e_i=K.squeeze(e_i,axis=-1)
+
+	        if verbose:print('e_i', e_i.shape)
+	        # <= batch_size, en_seq_len
+	        e_i = K.softmax(e_i)
+
+	        if verbose:print('ei>', e_i.shape)
+
+	        c_i = K.sum(encoder_out_seq * K.expand_dims(e_i, -1), axis=1)
+	        if verbose:print('ci>', c_i.shape)
+	        
+	        #context_vector, attn_states = attention_layer([self.outv,hidden_state,timestep])
+	        #current_word=Lambda(lambda x:K.expand_dims(x[:,timestep,:],axis=1))(inputs[:,self.time,self.latent_dim:])
+	        current_word=Lambda(lambda x:K.expand_dims(x,axis=1))(inputs)
+	        #current_word=Lambda(lambda x:x[:,timestep,:])(decoder_out_seq)
+	        decoder_input = Concatenate(axis=2)([K.expand_dims(c_i,axis=1), current_word])
+	        #decoder_input = Concatenate(axis=1)(c_i, current_word])
+	        output, hidden_state, cell_state= self.decoder_recurrent_layer(decoder_input,initial_state=[states[0], states[1]])
+
+	        return [c_i,e_i],[hidden_state,cell_state]
+
+        
+        fake_out, outputs, _ = K.rnn(energy, decoder_out_seq , [hidden_state,cell_state])
+            
+        
+        #self.attn_out=tf.stack(self.context_vecs,axis=1)
+        #self.attn_states=tf.stack(self.attention_weights,axis=2)
+
+        return outputs
+
+
+class Bahdanau(Layer):
+    """
+    This class implements Bahdanau attention (https://arxiv.org/pdf/1409.0473.pdf).
+    There are three sets of weights introduced W_a, U_a, and V_a
+     """
+
+    def __init__(self, **kwargs):
+        super(Bahdanau, self).__init__(**kwargs)
+        self.decoder_recurrent_layer = GRU(units=256, return_state=True)
+        self.out_dense1 = Dense(512)
+        self.out_dense2 = Dense(512)
+        self.act_leaky_relu = LeakyReLU(alpha=0.1)
+
+    def build(self, input_shape):
+        assert isinstance(input_shape, list)
+        # Create a trainable weight variable for this layer.
+
+        self.W_a = self.add_weight(name='W_a',
+                                   shape=tf.TensorShape((input_shape[0][2], input_shape[0][2])),
+                                   initializer='uniform',
+                                   trainable=True)
+        self.U_a = self.add_weight(name='U_a',
+                                   shape=tf.TensorShape((input_shape[1][2], input_shape[0][2])),
+                                   initializer='uniform',
+                                   trainable=True)
+        self.V_a = self.add_weight(name='V_a',
+                                   shape=tf.TensorShape((input_shape[0][2], 1)),
+                                   initializer='uniform',
+                                   trainable=True)
+
+        super(Bahdanau, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, inputs, verbose=False):
+        """
+        inputs: [encoder_output_sequence, decoder_output_sequence]
+        """
+        assert type(inputs) == list
+        
+        encoder_out_seq, decoder_out_seq, hidden_state, cell_state, out_state = inputs
+
+        if verbose:
+            print('encoder_out_seq>', encoder_out_seq.shape)
+            print('decoder_out_seq>', decoder_out_seq.shape)
+
+        def energy(inputs, states):
+            """ Step function for computing energy for a single decoder state """
+
+            assert_msg = "States must be a list. However states {} is of type {}".format(states, type(states))
+            assert isinstance(states, list) or isinstance(states, tuple), assert_msg
+
+            """ Some parameters required for shaping tensors"""
+            en_seq_len, en_hidden = encoder_out_seq.shape[1], encoder_out_seq.shape[2]
+            de_hidden = inputs.shape[-1]
+
+            """ Computing S.Wa where S=[s0, s1, ..., si]"""
+            # <= batch_size*en_seq_len, latent_dim
+            reshaped_enc_outputs = K.reshape(encoder_out_seq, (-1, en_hidden))
+            # <= batch_size*en_seq_len, latent_dim
+            W_a_dot_s = K.reshape(K.dot(reshaped_enc_outputs, self.W_a), (-1, en_seq_len, en_hidden))
+            if verbose:
+                print('wa.s>',W_a_dot_s.shape)
+
+            """ Computing hj.Ua """
+            U_a_dot_h = K.expand_dims(K.dot(states[0], self.U_a), 1)  # <= batch_size, 1, latent_dim
+            if verbose:
+                print('Ua.h>',U_a_dot_h.shape)
+
+            """ tanh(S.Wa + hj.Ua) """
+            # <= batch_size*en_seq_len, latent_dim
+            reshaped_Ws_plus_Uh = K.tanh(K.reshape(W_a_dot_s + U_a_dot_h, (-1, en_hidden)))
+            if verbose:
+                print('Ws+Uh>', reshaped_Ws_plus_Uh.shape)
+
+            """ softmax(va.tanh(S.Wa + hj.Ua)) """
+            # <= batch_size, en_seq_len
+            e_i = K.reshape(K.dot(reshaped_Ws_plus_Uh, self.V_a), (-1, en_seq_len))
+            # <= batch_size, en_seq_len
+            e_i = K.softmax(e_i)
+
+            c_i = K.sum(encoder_out_seq * K.expand_dims(e_i, -1), axis=1)
+
+            #context_vector, attn_states = attention_layer([self.outv,hidden_state,timestep])
+            #current_word=Lambda(lambda x:K.expand_dims(x[:,timestep,:],axis=1))(inputs[:,self.time,self.latent_dim:]
+            #current_word=Lambda(lambda x:K.expand_dims(x,axis=1))(inputs)
+            #current_word=Lambda(lambda x:x[:,timestep,:])(decoder_out_seq)
+            decoder_input = Concatenate(axis=2)([K.expand_dims(c_i,axis=1), K.expand_dims(states[1], axis=1)])
+            #decoder_input = Concatenate(axis=1)(c_i, current_word])
+            output, hidden_state = self.decoder_recurrent_layer(decoder_input,initial_state=[states[0]])
+
+            out = self.out_dense1(Concatenate(axis=-1)([inputs, hidden_state, c_i]))
+            out = self.act_leaky_relu(out)
+            out = self.out_dense2(out)
+            #print('states[2]:', states[2])
+            #out_state = out
+
+            return [out, e_i], [hidden_state, out]
+
+        fake_out, outputs, _ = K.rnn(energy, decoder_out_seq , [hidden_state, out_state])
+            
+        
+        #self.attn_out=tf.stack(self.context_vecs,axis=1)
+        #self.attn_states=tf.stack(self.attention_weights,axis=2)
+
+        return outputs

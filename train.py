@@ -38,12 +38,13 @@ from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_
 #from lipnet.lipreading.helpers import labels_to_text
 #from lipnet.utils.spell import Spell
 from LipNet.lipnet.lipreading.callback import Metrics_softmask
-from LipNet.lipnet.lipreading.generator import DataGenerator_train_softmask, DataGenerator_sampling_softmask
+from LipNet.lipnet.lipreading.generator import DataGenerator_train_softmask, DataGenerator_sampling_softmask, DataGenerator_val_softmask
 #from LipNet.lipnet.model2 import LipNet
 from models.resnet_lstm_lipread_ctc import lipreading
 import numpy as np
 import datetime
 import pickle
+import random
 
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -86,8 +87,10 @@ print('numaricalsort Done')
 #folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
 print('Folders_list Done')
 
-with open("/data/AV-speech-separation/folder_filter_1.txt", "rb") as fp:  
-       folders_list = pickle.load(fp) 
+'''with open("/data/AV-speech-separation/folder_filter_1.txt", "rb") as fp:  
+       folders_list = pickle.load(fp)''' 
+
+folders_list = np.loadtxt('/data/AV-speech-separation1/lipread_filenames.txt', dtype='object').tolist()
 
 #folders_list_train = folders_list[:91500] +folders_list[93000:238089]
 #print(folders_list_train[34])
@@ -95,8 +98,8 @@ with open("/data/AV-speech-separation/folder_filter_1.txt", "rb") as fp:
 #folders_list_train=folders_list[:256]
 #folders_list_val=folders_list[256:320]
 
-folders_list_train=folders_list[0:192000]
-folders_list_val=folders_list[192000:204000]
+folders_list_train = folders_list[:9150] + folders_list[9300:23751]
+folders_list_val = folders_list[9150:9300] + folders_list[23751:]
 import random
 random.seed(10)
 random.shuffle(folders_list_train)
@@ -106,8 +109,8 @@ random.shuffle(folders_list_train)
 #folders_list_train = random.sample(folders_list_train, 180)
 #folders_list_val = random.sample(folders_list_val, 100)
 
-print('Training data:', len(folders_list_train)*2)
-print('Validation data:', len(folders_list_val)*2)
+print('Training data:', len(folders_list_train))
+print('Validation data:', len(folders_list_val))
 
 #lips_filelist = sorted(glob.glob('/data/lrs2/train/*/*_lips.mp4'), key=numericalSort)
 
@@ -155,7 +158,7 @@ epochs = args.epochs
 
 # Path to save model checkpoints
 
-path = 'combResnetLSTM_CTCloss_seperableConv2_236k-train_1to3ratio_valWER_epochs9to20_lr1e-5_0.1decay9epochs'
+path = 'combResnetLSTM_CTCloss_seperableConv_236ktrain_1to3ratio_valWER_epochs20_lr1e-4_0.1decay9epochs'
 
 try:
     os.mkdir('/data/models/'+ path)
@@ -184,12 +187,12 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 # Fit Generator
 
-folders_per_epoch = int(len(folders_list_train)/3)
+#folders_per_epoch = int(len(folders_list_train)/3)
 
-history = model.fit_generator(DataGenerator_sampling_softmask(folders_list_train, folders_per_epoch, batch_size),
-                steps_per_epoch = np.ceil((folders_per_epoch)/float(batch_size)),
+history = model.fit_generator(DataGenerator_train_softmask(folders_list_train, batch_size),
+                steps_per_epoch = np.ceil(len(folders_list_train)/float(batch_size)),
                 epochs=epochs,
-                validation_data=DataGenerator_train_softmask(folders_list_val, batch_size),
+                validation_data=DataGenerator_val_softmask(folders_list_val, batch_size),
                 validation_steps = np.ceil((len(folders_list_val))/float(batch_size)),
                 callbacks=[LoggingCallback(print_fcn=log_to_file), checkpoint_save_weights, reducelronplateau, metrics_wer], verbose = 1)
 

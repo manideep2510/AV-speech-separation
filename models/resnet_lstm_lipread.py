@@ -35,7 +35,8 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
                 ZeroPadding3D(padding=(2, 3, 3)),
                 Conv3D(64, kernel_size=(5, 7, 7), strides=(1, 2, 2), padding='valid', use_bias=False),
                 BatchNormalization(),
-                Mish('Mish'),
+                #Mish('Mish'),
+                Activation('relu'),
                 ZeroPadding3D(padding=((0, 4, 8))),
                 MaxPooling3D(pool_size=(1, 2, 3), strides=(1, 1, 2))
                 ])
@@ -43,17 +44,20 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
     backend_conv1 = Sequential([
                 Conv1D(2*inputDim, 5, strides=2, use_bias=False),
                 BatchNormalization(),
-                Mish('Mish'),
+                #Mish('Mish'),
+                Activation('relu'),
                 MaxPooling1D(2, 2),
                 Conv1D(4*inputDim, 5, strides=2, use_bias=False),
                 BatchNormalization(),
-                Mish('Mish'),
+                #Mish('Mish'),
+                Activation('relu'),
                 ])
 
     backend_conv2 = Sequential([
                 Dense(inputDim),
                 BatchNormalization(),
-                Mish('Mish'),
+                #Mish('Mish'),
+                Activation('relu'),
                 Dense(nClasses)
                 ])
 
@@ -79,8 +83,8 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
     print('Resnet18 Out:', x.shape)
 
     x = GlobalAveragePooling2D(name='global_avgpool_resnet')(x)
-    x = Dense(inputDim)(x)
-    x = BatchNormalization()(x)
+    x = Dense(inputDim, name='dense_resnet')(x)
+    x = BatchNormalization(name='bn_resnet')(x)
     print('Resnet18 Linear Out:', x.shape)
 
     if mode == 'temporalConv':

@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, precision_recall_curve, average_precision_score, accuracy_score
 import sys
+from io import StringIO
 
 
 class Metrics(Callback):
@@ -131,4 +132,39 @@ class LoggingCallback(Callback):
     def on_epoch_end(self, epoch, logs={}):
 
         msg = "{Epoch: %i} %s" % (epoch, ", ".join("%s: %f" % (k, v) for k, v in logs.items()))
-        self.print_fcn(msg + "\n")
+        self.print_fcn(msg)
+
+
+class save_weights(Callback):
+
+    def __init__(self, model, path):
+        self.model = model
+        self.path = path
+
+    def on_train_begin(self, logs={}):
+        self.val_sdr = []
+
+ 
+    def on_epoch_end(self, epoch, logs={}):
+        
+        '''tmp_smry = StringIO()
+        self.model.summary(print_fn=lambda x: tmp_smry.write(x + '\n'))
+        summary = tmp_smry.getvalue()
+        summary_split = summary.split('\n')
+        summary_params = summary_split[-6:]
+        summary_params = '\n'.join(summary_params)
+        print('\n'+summary_params)'''
+
+        model_clone = tf.keras.models.clone_model(self.model)
+        
+        self.val_sdr.append(0)
+
+        for layer in model_clone.layers:
+            layer.trainable = True
+
+        model_clone.save_weights('/data/models/' + self.path + '/weights-' + str(int(epoch)) + '-' + str(round(logs['val_loss'], 4)) + '.hdf5')
+        
+        '''for layer in self.model.layers:
+            if 'model_' in layer.name or 'sequential_' in layer.name:
+                layer.trainable = False'''
+        return
