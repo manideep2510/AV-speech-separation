@@ -86,7 +86,7 @@ for item in files:
     if frames>=501 and frames<550:
         files_req.append(item)
 
-print('Files > 20 secs and < 22 secs', len(files_req))
+print('Files > 3 secs and < 21 secs', len(files_req))
 
 # Make combinations
 a = time.time()

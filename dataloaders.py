@@ -623,7 +623,7 @@ def DataGenerator_sampling_samples_attention(folderlist_all, folders_per_epoch, 
 
 
 
-def DataGenerator_val_samples(folderlist, batch_size):
+def DataGenerator_val_samples(folderlist, batch_size, norm=1350.0):
     
     L = len(folderlist)
 
@@ -702,7 +702,7 @@ def DataGenerator_val_samples(folderlist, batch_size):
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
             X_samples_targ = X_samples_targ
-            X_samples_mix = X_samples_mix/1350.0
+            X_samples_mix = X_samples_mix/norm
             #print(X_samples_targ.shape)
 
             #X_attns = np.random.rand(batch_size, 200, 200)
@@ -713,7 +713,7 @@ def DataGenerator_val_samples(folderlist, batch_size):
             batch_end += batch_size
 
 
-def DataGenerator_train_samples(folderlist, batch_size):
+def DataGenerator_train_samples(folderlist, batch_size, norm=1350.0):
     
     L = len(folderlist)
 
@@ -792,7 +792,7 @@ def DataGenerator_train_samples(folderlist, batch_size):
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
             X_samples_targ = X_samples_targ
-            X_samples_mix = X_samples_mix/1350.0
+            X_samples_mix = X_samples_mix/norm
             #print(X_samples_targ.shape)
 
             #X_attns = np.random.rand(batch_size, 200, 200)
@@ -1159,7 +1159,7 @@ def DataGenerator_test_samples_attention(folderlist, batch_size):
             batch_end += batch_size
 
 
-def Data_predict_attention(folderlist):
+def Data_predict_attention1(folderlist):
 
             lips = []
             samples_mix = []
@@ -1811,7 +1811,7 @@ def Data_predict_attention(folderlist_dict):
     X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
     X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
     X_samples_targ = X_samples_targ
-    X_samples_mix = (X_samples_mix/1350.0).astype('float32')
+    X_samples_mix = (X_samples_mix/1950.0).astype('float32')
     #print(X_samples_targ.shape)
 
     np.random.seed(100)

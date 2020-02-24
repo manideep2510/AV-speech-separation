@@ -1,0 +1,35 @@
+{
+    "root": "/data/AV-speech-separation1",
+    "program": "main_tasnet.py",
+    "git": {
+        "remote": "https://github.com/manideep2510/AV-speech-separation",
+        "commit": "6c002f5961336e8eddcb4bd756c526e06ffbcb3e"
+    },
+    "email": null,
+    "startedAt": "2020-02-21T22:02:46.918657",
+    "host": "shell1",
+    "username": "4014",
+    "executable": "/usr/local/bin/python",
+    "os": "Linux-4.15.0-51-generic-x86_64-with-Ubuntu-18.04-bionic",
+    "python": "3.6.9",
+    "gpu": "TITAN Xp",
+    "gpu_count": 1,
+    "cpu_count": 12,
+    "cuda": "10.0.130",
+    "args": [
+        "-epochs",
+        "2",
+        "-batch_size",
+        "6",
+        "-lr",
+        "0.0005"
+    ],
+    "state": "finished",
+    "jobType": null,
+    "mode": "dryrun",
+    "name": "tdavss_OldAttention_OnlyInputNorm",
+    "notes": "Old BahdhanuAttention, Remove LSTM Layers in Lip Embidder, 25K training folders, Batch size 6, lr = 5e-4, freeze LipNet, Normalize input with 1350, Batch size = 8, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet without LSTM Lipnet. Loss is Si-SNR",
+    "project": "av-speech-seperation",
+    "heartbeatAt": "2020-02-21T22:03:55.418209",
+    "exitcode": 0
+}

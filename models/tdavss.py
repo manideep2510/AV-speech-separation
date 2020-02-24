@@ -139,6 +139,10 @@ class TasNet(object):
             self.fusion=Conv1D(512,1)(self.fusion)
             
         else:
+            self.attn_out, self.attn_states = Lambda(
+                lambda x: [x[:, :, :200]*0, x[:, :, :200]*0], name='attention_layer')(self.outv)
+            print('attn_out Fake:', self.attn_out.shape)
+            print('attn_states Fake:', self.attn_states.shape)
             self.fusion=concatenate([self.outv,self.outa],axis=-1)
         
         print('fusion:', self.fusion.shape)
@@ -161,12 +165,12 @@ class TasNet(object):
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=512)
         
         #Decoding
-        self.fusion=Conv1D(256,1,activation='relu')(self.fusion)
-        self.fusion=Multiply()([self.audio,self.fusion])
+        self.mask=Conv1D(256,1,activation='relu', name='mask')(self.fusion)
+        self.fusion=Multiply()([self.audio,self.mask])
         self.decode = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
         self.decode=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.decode)
         self.decode=Conv2DTranspose(1,(40,1),strides=(20,1),padding='same',data_format='channels_last')(self.decode)
-        self.out = Lambda(lambda x: K.squeeze(x, axis=2), dtype='float32')(self.decode)
+        self.out = Lambda(lambda x: K.squeeze(x, axis=2), dtype='float32', name='out')(self.decode)
   
         
         

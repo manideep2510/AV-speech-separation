@@ -68,7 +68,7 @@ def pair_files(files, combination_no=2, count=3):
                 picks.append(pick)
             
         # Sample the audios from the filtered filelist
-        random.seed(1)
+        #random.seed(1)
         picks = random.sample(files_copy, picks_no)
         #print(len(files_copy))
         
@@ -612,19 +612,19 @@ def gen_comb_folders_3comb(combined_pairs, dest_folder):
     mixed_samples = audios_sum(audios, mixed_audio_filepath)
         
     # Compute the spectrogram of mised audio
-    s, n, c = compute_spectrograms(mixed_audio_filepath)
-    mixed_spectogram =s[:,:2000]  # Useful frames
+    #s, n, c = compute_spectrograms(mixed_audio_filepath)
+    #mixed_spectogram =s[:,:2000]  # Useful frames
 
-    phase=np.angle(c)
-    phase=phase[:,:2000]
+    #phase=np.angle(c)
+    #phase=phase[:,:2000]
 
-    mixed_spectogram = np.asarray(mixed_spectogram, dtype='float16')
+    #mixed_spectogram = np.asarray(mixed_spectogram, dtype='float16')
     
-    phase_spectogram = np.asarray(phase, dtype='float16')
+    #phase_spectogram = np.asarray(phase, dtype='float16')
 
     # Save the mixed spectrogram
-    np.save(folder_path + '/' + 'mixed_spectrogram.npy',mixed_spectogram)
-    np.save(folder_path + '/' + 'phase_spectrogram.npy',phase_spectogram)
+    #np.save(folder_path + '/' + 'mixed_spectrogram.npy',mixed_spectogram)
+    #np.save(folder_path + '/' + 'phase_spectrogram.npy',phase_spectogram)
 
     for p in range(len(videos)):
 
@@ -659,14 +659,14 @@ def gen_comb_folders_3comb(combined_pairs, dest_folder):
             
         # Save the mask
         
-        s, n, c_ = compute_spectrograms(audio_file)
-        s_use=s[:, :2000]
-        s_phase = np.angle(c)
-        s_phase=s_phase[:,:2000]
+        #s, n, c_ = compute_spectrograms(audio_file)
+        #s_use=s[:, :2000]
+        #s_phase = np.angle(c)
+        #s_phase=s_phase[:,:2000]
 
-        Cx,Cy = compress_crm(mixed_mag = mixed_spectogram,mixed_phase = phase,signal_mag = s_use,signal_phase = s_phase, K=1,C=2)
-        mask1 = np.stack([Cx,Cy], axis=-1)
-        mask1=np.asarray(mask1, dtype='float16')
-        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_crm.npy'
+        #Cx,Cy = compress_crm(mixed_mag = mixed_spectogram,mixed_phase = phase,signal_mag = s_use,signal_phase = s_phase, K=1,C=2)
+        #mask1 = np.stack([Cx,Cy], axis=-1)
+        #mask1=np.asarray(mask1, dtype='float16')
+        #file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_crm.npy'
 
-        np.save(save_path + '/' + file_name, mask1)
+        #np.save(save_path + '/' + file_name, mask1)

@@ -69,7 +69,7 @@ def audios_sum(audio_filenames_list,file_sum_name, volume_reduction=0):
     s.insert(0, s_max)
 
     # Sort elements in s according to their length
-    #s = [x for _,x in sorted(zip(s_len,s), reverse=True)]
+    s = [x for _,x in sorted(zip(s_len,s), reverse=True)]
     '''s_shift = []
     for i, item in enumerate(s):
         

@@ -145,6 +145,8 @@ class TasNet(object):
            
         else:
             self.attn_out, self.attn_states = Lambda(lambda x: [x[:, :, :200]*0, x[:, :, :200]*0], name='attention_layer')(self.outv)
+            print('attn_out Fake:', self.attn_out.shape)
+            print('attn_states Fake:', self.attn_states.shape)
             self.fusion=concatenate([self.outv,self.outa],axis=-1)
         
         print('fusion:', self.fusion.shape)

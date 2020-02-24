@@ -1,4 +1,4 @@
-from metrics import sdr_metric, Metrics_crm, Metrics_samples, Metrics_wandb
+from metrics import sdr_metric, Metrics_crm, Metrics_samples, Metrics_wandb, Metrics_3speak
 import glob
 import os
 from skimage import io, transform
@@ -29,6 +29,7 @@ import cv2
 from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
 #from models.lipnet import LipNet
 from models.tdavss import TasNet
+from models.tdavss_sepconv import TasNet as TasNetSepCon
 #from models.tasnet_lipnet import TasNet
 from dataloaders import DataGenerator_val_samples, DataGenerator_train_samples
 import random
@@ -60,7 +61,8 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_OldAttention_OnlyInputNorm', notes='Old BahdhanuAttention, Remove LSTM Layers in Lip Embidder, 25K training folders, Batch size 6, lr = 5e-4, freeze LipNet, Normalize input with 1350, Batch size = 8, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet without LSTM Lipnet. Loss is Si-SNR', project="av-speech-seperation", dir='/data/AV-speech-separation1/wandb')
+wandb.init(name='tdavss_SepConv', notes='Old BahdhanuAttention, Remove LSTM Layers in Lip Embidder, 25K training folders, Batch size 6, lr = 5e-4, freeze LipNet, Normalize input with 1350, Batch size = 8, Predict time samples directly.Mish Activation Function, 2 Second clips. 0.35 lr decay if no Val_loss Dec for 3epochs. TasNet with Resnet without LSTM Lipnet. Loss is Si-SNR', 
+                project="av-speech-seperation", dir='/data/wandb')
 
 # To read the images in numerical order
 import re
@@ -94,7 +96,7 @@ random.shuffle(folders_list_train)
 
 
 #random.seed(30)
-#folders_list_val = random.sample(folders_list_val, 120)
+#folders_list_val = random.sample(folders_list_val_, 120)
 #folders_list_train = random.sample(folders_list_train, 180)
 #folders_list_train = folders_list[:180]
 #folders_list_val = folders_list[180:300]
@@ -114,7 +116,8 @@ epochs = args.epochs
 #strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
 #with strategy.scope():
 
-tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=True, lstm = False, lipnet_pretrained=True,  train_lipnet=False)
+tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50,
+                      attention=False, lstm=False, lipnet_pretrained=True,  train_lipnet=False)
 model = tasnet.model
 #model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
@@ -129,8 +132,6 @@ summary_params = summary_split[-6:]
 summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
-
-
 #model.load_weights('/data/models/tasnet_ResNetLSTMLip_Lips_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1/weights-17-249.6407.hdf5')
 
 #model = multi_gpu_model(model, gpus=2)
@@ -138,7 +139,7 @@ print('\n'+summary_params)
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'tdavss_OldAttention_OnlyInputNorm_epochs40_lr5e-4_exp1'
+path = 'tdavss_SepConv_epochs40_lr5e-4_exp1'
 print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 
@@ -160,22 +161,11 @@ def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
 
 # callcack
 
-def step_decay(epoch):
-    initial_lrate = 0.0001
-    drop = 0.1
-    epochs_drop = 10
-    lrate = initial_lrate * math.pow(drop,
-           math.floor((1+epoch)/epochs_drop))
-    return lrate
 
-def learningratescheduler():
-    learningratescheduler = LearningRateScheduler(step_decay)
-    return learningratescheduler
-
-#metrics_crm = Metrics_samples(model = model, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
+metrics_unsync = Metrics_3speak(model=model, val_folders=folders_list_val,
+                                batch_size=batch_size, save_path='/data/results/'+path+'/logs.txt')
 metrics_wandb = Metrics_wandb()
 save_weights = save_weights(model, path)
-learningratescheduler = learningratescheduler()
 earlystopping = earlystopping()
 reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr = 0.00000001)
 
@@ -185,15 +175,32 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 # Fit Generator
 
 #folders_per_epoch = int(len(folders_list_train)/3)
-
-history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size)),
+try:
+    history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size)),
                 steps_per_epoch = int(np.ceil(len(folders_list_train)/float(batch_size))),
                 epochs=int(epochs),
                 validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size)), 
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),
-    callbacks=[reducelronplateau, save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file)], verbose=1)
+        callbacks=[reducelronplateau, save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file), metrics_unsync], verbose=1)
+
+except KeyboardInterrupt:
+    for layer in model.layers:
+        layer.trainable = True
+
+    model.save_weights('/data/models/' + path + '/final.hdf5')
+    print('Final model saved')
+
+except Exception as e:
+    print(e)
 
 #, WandbCallback(save_model=False, data_type="image")
+
+
+for layer in model.layers:
+    layer.trainable = True
+
+model.save_weights('/data/models/' + path + '/final.hdf5')
+print('Final model saved')
 
 # Plots
 plot_loss_and_acc(history, path)

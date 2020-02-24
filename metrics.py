@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model
-from dataloaders import DataGenerator_test_samples, DataGenerator_val_unsync_attention, DataGenerator_val_unsync_attention_easy, Data_predict_attention
+from dataloaders import DataGenerator_test_samples, DataGenerator_val_unsync_attention, DataGenerator_val_unsync_attention_easy, Data_predict_attention, DataGenerator_val_samples
 from pesq import pesq
 import wandb
 import random
@@ -466,7 +466,16 @@ class Metrics_unsync(Callback):
             path = '/data/lrs2/train/' + item
             val_folders_pred_all.append(path)
 
-        val_folders_samp_dict = {'/data/lrs2/train/6265355699075927737_00014_6092759861175370842_00039_2':13, '/data/lrs2/train/6265355699075927737_00014_6084196555380596880_00030_2':12, '/data/lrs2/train/6265355699075927737_00014_5942747390944340934_00018_2':10, '/data/lrs2/train/6265355699075927737_00026_6084196555380596880_00030_2':8, self.val_folders[10]:0, self.val_folders[20]:0, self.val_folders[50]:0, self.val_folders[100]:0, self.val_folders[1600]:0, self.val_folders[1610]:0, self.val_folders[1620]:0, self.val_folders[1630]:0}
+        val_folders_samp_dict = {'/data/lrs2/train/5954958412463581171_00074_6048924136462145896_00033_2':13,  
+                                '/data/lrs2/train/6265355699075927737_00014_5942747390944340934_00018_2':10, 
+                                '/data/lrs2/train/6265243600299093383_00043_5854842724793826670_00018_2':12,
+                                '/data/lrs2/train/5954958412463581171_00078_6049708826987126376_00037_2':8,
+                                '/data/lrs2/train/5954958412463581171_00085_6092785631109560111_00001_2':13,
+                                '/data/lrs2/train/6265243600299093383_00045_5942747390944340934_00018_2':8,
+                                self.val_folders[10]:0, self.val_folders[20]:0, self.val_folders[50]:0, 
+                                self.val_folders[100]:0, self.val_folders[1600]:0, self.val_folders[1610]:0, 
+                                self.val_folders[1620]:0, self.val_folders[1630]:0, self.val_folders[60]:0, 
+                                self.val_folders[1750]:0}
         val_folders_samp = list(val_folders_samp_dict.keys())
 
         folderlist = list(val_folders_samp_dict.keys())
@@ -524,7 +533,7 @@ class Metrics_unsync(Callback):
             caption=save_name_base[i], sample_rate=16000) for i, item in enumerate(samples_mix)]}, commit=False)
 
 
-        val_folders_pred_all = val_folders_pred_all[:100]
+        #val_folders_pred_all = val_folders_pred_all[:100]
 
         _, snr = self.model.evaluate_generator(DataGenerator_val_unsync_attention(val_folders_pred_all, int(self.batch_size)), 
                             steps=int(np.ceil((len(val_folders_pred_all))/float(self.batch_size))), 
@@ -549,6 +558,136 @@ class Metrics_unsync(Callback):
             myfile.write(', Unsync SNR Hard: ' + str(snr) + ', Unsync SNR Easy: ' + str(snr_easy) + '\n')
         return
 
+
+class Metrics_3speak(Callback):
+
+    def __init__(self, model, val_folders, batch_size, save_path):
+        self.model = model
+        self.val_folders = val_folders
+        self.batch_size = batch_size
+        self.save_path = save_path
+
+    def on_train_begin(self, logs={}):
+        self.val_snr = []
+ 
+    def on_epoch_end(self, epoch, logs={}):
+
+        with open('/data/AV-speech-separation1/lrs2_1dot5k-unsync_audio_val.json') as json_file:
+            unsync_dict = json.load(json_file)
+    
+        unsync_files = unsync_dict['folds']
+        offsets = unsync_dict['offsets']
+
+        val_folders_pred_all = []
+        for item in unsync_files:
+            path = '/data/lrs2/train/' + item
+            val_folders_pred_all.append(path)
+
+        '''val_folders_samp_dict = {'/data/lrs2/train/5954958412463581171_00074_6048924136462145896_00033_2':13,  
+                                '/data/lrs2/train/6265355699075927737_00014_5942747390944340934_00018_2':10, 
+                                '/data/lrs2/train/6265243600299093383_00043_5854842724793826670_00018_2':12,
+                                '/data/lrs2/train/5954958412463581171_00078_6049708826987126376_00037_2':8,
+                                '/data/lrs2/train/5954958412463581171_00085_6092785631109560111_00001_2':13,
+                                '/data/lrs2/train/6265243600299093383_00045_5942747390944340934_00018_2':8,
+                                self.val_folders[10]:0, self.val_folders[20]:0, self.val_folders[50]:0, 
+                                self.val_folders[100]:0, self.val_folders[1600]:0, self.val_folders[1610]:0, 
+                                self.val_folders[1620]:0, self.val_folders[1630]:0, self.val_folders[60]:0, 
+                                self.val_folders[1750]:0}'''
+
+        val_folders_samp_dict = {self.val_folders[10]:0, self.val_folders[30]:0, self.val_folders[50]:0, 
+                                self.val_folders[100]:0, self.val_folders[1600]:0, self.val_folders[1620]:0, 
+                                self.val_folders[1640]:0, self.val_folders[1660]:0, self.val_folders[70]:0, 
+                                self.val_folders[1750]:0}
+        val_folders_samp = list(val_folders_samp_dict.keys())
+
+        folderlist = list(val_folders_samp_dict.keys())
+        lips = []
+        samples = []
+        samples_mix = []
+
+        for folder in folderlist:
+            lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+            samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
+            samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+            for i in range(len(lips_)):
+                lips.append(lips_[i])
+            for i in range(len(samples_)):
+                samples.append(samples_[i])
+            for i in range(len(lips_)):
+                samples_mix.append(samples_mix_)
+
+        #attn_states_out_model = Model(inputs=self.model.input, outputs=self.model.get_layer('attention_layer').output)
+        mask_out_model = Model(inputs=self.model.input, outputs=self.model.get_layer('mask').output)
+
+        #pred_weights = attn_states_out_model.predict(Data_predict_attention(val_folders_samp_dict))
+        #pred_weights = pred_weights[1]
+
+        preds_mask = mask_out_model.predict(Data_predict_attention(val_folders_samp_dict))
+
+        preds_audio = self.model.predict(Data_predict_attention(val_folders_samp_dict))
+        preds_audio = preds_audio/np.mean(np.std(preds_audio, axis=1))
+        preds_audio = preds_audio*3500
+        preds_audio = preds_audio.astype('int16')
+        
+        # Log all things to wandb
+        offset = []
+        aud_offset = []
+        save_name_base = []
+        for i, item in enumerate(lips):
+
+            offset_ = val_folders_samp_dict[val_folders_samp[i//3]]
+            aud_offset_ = int(abs((offset_/25)*16000))
+            save_name_base_ = str(i//3) + '_' + item.split('/')[-1][:-9] + '_' + 'off' + str(offset_)
+            offset.append(offset_)
+            aud_offset.append(aud_offset_)
+            save_name_base.append(save_name_base_)
+
+        wandb.log({"Mask Predictions": [wandb.Image(
+            img*100, caption=save_name_base[i]) for i, img in enumerate(preds_mask)]}, commit=False)
+        #wandb.log({"Attention Weights Alignment": [wandb.Image(
+        #    img*1000000, caption=save_name_base[i]) for i, img in enumerate(pred_weights)]}, commit=False)
+        wandb.log({"Predicted Audio": [wandb.Audio(
+            aud, caption=save_name_base[i], sample_rate=16000) for i, aud in enumerate(preds_audio)]}, commit=False)
+        wandb.log({"True Audio": [wandb.Audio(
+            np.pad(np.load(item), (0, 32000), mode='constant')[aud_offset[i]:32000+aud_offset[i]], 
+            caption=save_name_base[i], sample_rate=16000) for i, item in enumerate(samples)]}, commit=False)
+        wandb.log({"Mixed Audio": [wandb.Audio(
+            np.pad(wavfile.read(item)[1], (0, 32000), mode='constant')[aud_offset[i]:32000+aud_offset[i]], 
+            caption=save_name_base[i], sample_rate=16000) for i, item in enumerate(samples_mix)]}, commit=True)
+
+
+        #val_folders_pred_all = val_folders_pred_all[:100]
+
+        '''_, snr = self.model.evaluate_generator(DataGenerator_val_unsync_attention(val_folders_pred_all, int(self.batch_size)), 
+                            steps=int(np.ceil((len(val_folders_pred_all))/float(self.batch_size))), 
+                            verbose=0)
+
+        _, snr_easy = self.model.evaluate_generator(DataGenerator_val_unsync_attention_easy(val_folders_pred_all, int(self.batch_size)), 
+                            steps=int(np.ceil((len(val_folders_pred_all))/float(self.batch_size))), 
+                            verbose=0)'''
+
+        '''_, snr_vox = self.model.evaluate_generator(DataGenerator_val_unsync_attention_easy(val_folders_pred_all, int(self.batch_size)), 
+                            steps=int(np.ceil((len(val_folders_pred_all))/float(self.batch_size))), 
+                            verbose=0)'''
+        
+        val_folders_pred_all1 = np.loadtxt('/data/AV-speech-separation1/lrs2_3k_val_split.txt', dtype='object').tolist()
+
+        _, snr_2speak = self.model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all1, int(self.batch_size), norm=1350.0),
+                            steps=int(np.ceil((len(val_folders_pred_all1))/float(self.batch_size))), 
+                            verbose=0)
+
+        print('\nSNR 2 speak:', snr_2speak)
+
+        #SNR
+        self.val_snr.append(0)
+
+        '''print('\nUnsync SNR Hard:', snr, ' - Unsync SNR Easy:', snr_easy)
+
+        wandb.log({'UnSync-SNR-hard':snr, 'UnSync-SNR-easy':snr_easy})'''
+
+        with open(self.save_path, "a") as myfile:
+            myfile.write(', SNR 2 speak: ' + str(snr_2speak) + '\n')
+        return
 
 #[np.random.rand(12, 50, 50, 100, 1), np.random.rand(12, 32000, 1), np.random.rand(12, 256), np.random.rand(12, 256), np.random.rand(12, 512)]
 

@@ -1,0 +1,29 @@
+{
+    "root": "/",
+    "program": "/data/AV-speech-separation1/main_tasnet_3speak.py",
+    "startedAt": "2020-02-18T15:36:37.334067",
+    "host": "train8",
+    "username": "4014",
+    "executable": "/usr/bin/python3",
+    "os": "Linux-4.15.0-76-generic-x86_64-with-Ubuntu-18.04-bionic",
+    "python": "3.6.9",
+    "gpu": "TITAN Xp",
+    "gpu_count": 1,
+    "cpu_count": 12,
+    "cuda": "10.0.130",
+    "args": [
+        "-epochs",
+        "40",
+        "-batch_size",
+        "5",
+        "-lr",
+        "0.0005"
+    ],
+    "state": "running",
+    "jobType": null,
+    "mode": "dryrun",
+    "name": "tdavss_3speakers_OldBahdhanau",
+    "notes": "3 speakers WITH attention training,Batch = 5, 16.666K training folders. TasNet with Resnet without LSTM Lipnet.",
+    "project": "av-speech-seperation",
+    "heartbeatAt": "2020-02-18T15:38:23.782539"
+}

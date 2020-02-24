@@ -152,15 +152,15 @@ def DataGenerator_train_softmask(folderlist, batch_size):
 
 
 
-                #lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 #masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
                 #samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                #transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
                 #spect_ = folder + '/mixed_spectrogram.npy'
                 #phase_ = folder + '/phase_spectrogram.npy'
 
-                lips.append(folder)
-                #lips.append(lips_[1])
+                lips.append(lips_[0])
+                lips.append(lips_[1])
 
                 # samples.append(samples_[0])
                 # samples.append(samples_[1])
@@ -174,8 +174,8 @@ def DataGenerator_train_softmask(folderlist, batch_size):
                 # phase.append(phase_)
                 # phase.append(phase_)
 
-                transcripts.append(folder[:-9]+'.txt')
-                #transcripts.append(transcripts_[1])
+                transcripts.append(transcripts_[0])
+                transcripts.append(transcripts_[1])
 
             zipped = list(zip(lips, transcripts))
             random.shuffle(zipped)
@@ -205,6 +205,7 @@ def DataGenerator_train_softmask(folderlist, batch_size):
 
             for i in range(len(lips)):
 
+                #print(lips[i])
                 x_lips = get_video_frames(lips[i], fmt = 'grey')
 #                x_lips = seq.augment_images(x_lips)
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
@@ -281,15 +282,15 @@ def DataGenerator_val_softmask(folderlist, batch_size):
 
 
 
-                #lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 #masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
                 #samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                #transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
                 #spect_ = folder + '/mixed_spectrogram.npy'
                 #phase_ = folder + '/phase_spectrogram.npy'
 
-                lips.append(folder)
-                #lips.append(lips_[1])
+                lips.append(lips_[0])
+                lips.append(lips_[1])
 
                 # samples.append(samples_[0])
                 # samples.append(samples_[1])
@@ -303,10 +304,10 @@ def DataGenerator_val_softmask(folderlist, batch_size):
                 # phase.append(phase_)
                 # phase.append(phase_)
 
-                transcripts.append(folder[:-9]+'.txt')
-                #transcripts.append(transcripts_[1])
+                transcripts.append(transcripts_[0])
+                transcripts.append(transcripts_[1])
 
-            '''zipped = list(zip(lips, transcripts))
+            '''zipped = list(zip(lips_, transcripts_))
             random.shuffle(zipped)
             lips, transcripts = zip(*zipped)'''
 

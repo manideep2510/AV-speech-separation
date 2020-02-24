@@ -11,7 +11,7 @@ import keras.backend as K
 from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
-#from classification_models.classification_models.resnet import ResNet18, ResNet34, preprocess_input
+#from classification_models.keras import Classifiers as Separable_Classifiers
 from sep_classification_models.keras import Classifiers as Separable_Classifiers
 from lipnet.core.layers import CTC
 from .mish import Mish

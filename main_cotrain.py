@@ -99,8 +99,8 @@ random.seed(10)
 random.shuffle(folders_list_train)
 
 #random.seed(30)
-folders_list_val = random.sample(folders_list_val, 120)
-folders_list_train = random.sample(folders_list_train, 180)
+#folders_list_val = random.sample(folders_list_val, 120)
+#folders_list_train = random.sample(folders_list_train, 180)
 #folders_list_train = folders_list[:180]
 #folders_list_val = folders_list[180:300]
 
@@ -126,7 +126,8 @@ model = tasnet.model
 #model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
 #model.compile(loss={'speech': snr_loss, 'ctc': lambda outv_classes, y_pred: y_pred}, optimizer=Adam(lr=lrate))
 model.compile(loss={'speech_out': snr_loss, 'ctc': lambda y_true,
-                    y_pred: y_pred}, optimizer=Adam(lr=lrate))
+                    y_pred: y_pred}, optimizer=Adam(lr=lrate), metrics={'speech_out':[snr_acc]},
+                    loss_weights={'speech_out': 1, 'ctc': 0.1})
 
 
 from io import StringIO
@@ -147,7 +148,7 @@ print('\n'+summary_params)
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'test_tdavss_CoTrain_25kTrain_Normalize_ResNetLSTMLip_2secondsClips_epochs40_lr1e-4_0.35decayNoValDec2epochs_exp1'
+path = 'tdavss_CoTrain_epochs40_lr1e-4'
 print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 

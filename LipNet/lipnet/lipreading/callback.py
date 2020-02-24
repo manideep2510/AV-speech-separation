@@ -237,15 +237,15 @@ class Metrics_softmask(Callback):
             transcripts=[]
             for folder in val_folders_100:
 
-                #lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
 
-                #transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
 
-                lips.append(folder)
-                #lips.append(lips_[1])
+                lips.append(lips_[0])
+                lips.append(lips_[1])
 
-                transcripts.append(folder[:-9]+'.txt')
-                #transcripts.append(transcripts_[1])
+                transcripts.append(transcripts_[0])
+                transcripts.append(transcripts_[1])
 
             zipped = list(zip(lips, transcripts))
             random.shuffle(zipped)
@@ -390,6 +390,118 @@ class Metrics_softmask(Callback):
         #print('Weighted validation f1: ', _val_f1_weigh)
         #, '_val_precision: ', _val_precision, '_val_recall', _val_recall
         return
+
+
+class Metrics_lipnet(Callback):
+
+    def __init__(self, model, val_folders, batch_size, save_path):
+        self.model_container = model
+        self.val_folders = val_folders
+        self.batch_size = batch_size
+        self.save_path = save_path
+    def on_train_begin(self, logs={}):
+        self.val_wer = []
+        #self.val_f1s_weigh = []
+        #self.val_recalls = []
+        #self.val_precisions = []
+
+    def on_epoch_end(self, epoch, logs={}):
+        num = len(self.val_folders)
+        div_num = self.batch_size
+        num_100s = int(num/div_num)
+
+        total_list=[]
+        total_norm_list=[]
+        total_wer=[]
+	
+        for n in range(num_100s):
+            val_folders_100 = self.val_folders[n*div_num:(n+1)*div_num]
+            lips=[]
+            transcripts=[]
+            for folder in val_folders_100:
+
+                #lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+
+                #transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+
+                lips.append(folder)
+                #lips.append(lips_[1])
+
+                transcripts.append(folder[:-9]+'.txt')
+                #transcripts.append(transcripts_[1])
+
+            zipped = list(zip(lips, transcripts))
+            random.shuffle(zipped)
+            lips, transcripts = zip(*zipped)
+
+
+
+            X_lips = []
+
+            for i in range(len(lips)):
+
+                x_lips = get_video_frames(lips[i], fmt='grey')
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                X_lips.append(x_lips)
+
+            align=[]
+            Y_data = []
+            label_length = []
+            input_length = []
+            source_str = []
+            X_lips = np.asarray(X_lips)
+
+
+            for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
+            for i in range(X_lips.shape[0]):
+                Y_data.append(align[i].padded_label)
+                label_length.append(align[i].label_length)
+                input_length.append(X_lips.shape[1])
+                #source_str.append(align[i].sentence)
+            Y_data = np.array(Y_data)
+
+            val_predict=self.model_container.predict(X_lips)
+
+        #
+        # for n in range(num_100s):
+        #     val_folders_100 = self.val_folders[n*100:(n+1)*100]
+        #     d0,d1,d2,d3=split(DataGenerator_test(val_folders_100, self.batch_size))
+        #     val_predict = (self.model.predict(d0))
+
+            decode_res=decoder.decode(val_predict, input_length)
+
+            ground_truth=[]
+            for i in range(Y_data.shape[0]):
+                ground_truth.append(labels_to_text(Y_data[i]))
+
+            data=[]
+            for j in range(0, X_lips.shape[0]):
+                data.append((decode_res[j], ground_truth[j]))
+
+
+            mean_individual_length = np.mean([len(pair[1].split()) for pair in data])
+            total       = 0.0
+            total_norm  = 0.0
+            w=0.0
+            length      = len(data)
+            for i in range(0, length):
+                val         = float(wer_sentence(data[i][0], data[i][1]))
+                total      += val
+                total_norm += val / mean_individual_length
+                w+=val/len(data[i][1])
+
+            total_wer.append(w/length)
+            total_list.append(total/length)
+            total_norm_list.append(total_norm/length)
+            
+        total_wer=np.array(total_wer)
+        total_list=np.array(total_list)
+        total_norm_list=np.array(total_norm_list)
+
+        print('Validation WER_original:',np.mean(total_wer),'Validation WER: ', np.mean(total_list),'Validation WER_NORM:',np.mean(total_norm_list))
+        
+        with open(self.save_path, "a") as myfile:
+            myfile.write(', Validation WER_original: ' + str(np.mean(total_wer)) + ', Validation WER: ' + str(np.mean(total_list)) + ', Validation WER_NORM: ' + str(np.mean(total_norm_list)) + '\n')
 
 
 class Metrics_cotrain(Callback):

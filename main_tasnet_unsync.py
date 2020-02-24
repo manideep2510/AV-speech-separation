@@ -61,8 +61,8 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='test', notes='Offset is High+Low in Train and High in Val, Both train and Val AV Unsync WITHOUT attention with GRU inplace of LSTM, 8 to 10 frames offset, Batch = 6, 25K training folders.. TasNet with Resnet without LSTM Lipnet.',
-           project="av-speech-seperation", id='test2', dir='/data/AV-speech-separation1/wandb')
+wandb.init(name='tdavss_Offset_BothHigh_Attention', notes='Offset is High+Low in Train and High in Val, Both train and Val AV Unsync WITH attention with GRU inplace of LSTM, Batch = 6, 25K training folders.',
+           project="av-speech-seperation", id='tdavss_Offset_BothHigh_Attention', dir='/data/wandb')
 
 #id = 'tdavss_Offset_BothHigh1'
 # To read the images in numerical order
@@ -76,15 +76,15 @@ def numericalSort(value):
 # Read training folders
 folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
 folders_list_train= np.loadtxt('/data/AV-speech-separation1/lrs2_25k_split.txt', dtype='object').tolist()
-folders_list_val_ = np.loadtxt('/data/AV-speech-separation1/lrs2_3k_val_split.txt', dtype='object').tolist()
+folders_list_val = np.loadtxt('/data/AV-speech-separation1/lrs2_3k_val_split.txt', dtype='object').tolist()
 
 random.seed(10)
 random.shuffle(folders_list_train)
 
 
-random.seed(30)
-folders_list_val = random.sample(folders_list_val_, 120)
-folders_list_train = random.sample(folders_list_train, 180)
+#random.seed(30)
+#folders_list_val = random.sample(folders_list_val, 120)
+#folders_list_train = random.sample(folders_list_train, 180)
 #folders_list_train = folders_list[:180]
 #folders_list_val = folders_list[180:300]
 
@@ -96,8 +96,10 @@ lrate = args.lrate
 batch_size = args.batch_size
 epochs = args.epochs
 
-tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=True, lstm = False, lipnet_pretrained=True,  train_lipnet=False)
+tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=True, 
+                lstm = False, lipnet_pretrained=True,  train_lipnet=False)
 model = tasnet.model
+
 '''model.load_weights('/data/models/tdavss_AttentionGRU_bothTrainVal_unsync_Offset_LowTrain_HighVal_epochs40_5lr1e-4_exp1/weights-10--8.7998.hdf5')
 print('Weights Loaded')
 for layer in model.layers:
@@ -119,7 +121,7 @@ print('\n'+summary_params)
 
 
 # Path to save model checkpoints
-path = 'test_tdavss_Offset_BothHigh_epochs40_5lr1e-4_exp1'
+path = 'tdavss_Offset_BothHigh_Attention_epochs30_5lr1e-4_exp1'
 print('Model weights path:', path + '\n')
 
 try:
@@ -140,7 +142,7 @@ def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
 
 # callcack
 
-metrics_unsync = Metrics_unsync(model = model, val_folders = folders_list_val_, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
+metrics_unsync = Metrics_unsync(model = model, val_folders = folders_list_val, batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt')
 metrics_wandb = Metrics_wandb()
 save_weights = save_weights(model, path)
 earlystopping = earlystopping()
@@ -153,22 +155,22 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 
 #folders_per_epoch = int(len(folders_list_train)/3)
 
-#try:
-history = model.fit_generator(DataGenerator_train_unsync_attention(folders_list_train, int(batch_size)),
+try:
+    history = model.fit_generator(DataGenerator_train_unsync_attention(folders_list_train, int(batch_size)),
                 steps_per_epoch = int(np.ceil(len(folders_list_train)/float(batch_size))),
                 epochs=int(epochs),
                 validation_data=DataGenerator_val_unsync_attention(folders_list_val, int(batch_size)), 
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),
     callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file), metrics_unsync], verbose=1)
-'''except KeyboardInterrupt:
+except KeyboardInterrupt:
     for layer in model.layers:
         layer.trainable = True
 
-    model.save_weights('/data/models/' + path + '/final1.hdf5')
+    model.save_weights('/data/models/' + path + '/final.hdf5')
     print('Final model saved')
 
 except Exception as e:
-    print(e)'''
+    print(e)
 
 #, WandbCallback(save_model=False, data_type="image")
 

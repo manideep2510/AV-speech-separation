@@ -29,10 +29,11 @@ def custom_tanh(x):
 def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
         x = Conv1D(filters,1)(inputs)
-        x = Mish('Mish')(x)
+        #x = Mish('Mish')(x)
+        x = Activation('relu')(x)
         x = BatchNormalization()(x)
         x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
-        x = Mish('Mish')(x)
+        x = Activation('relu')(x)
         x = BatchNormalization()(x)
         x = Conv1D(int(inputs.shape[-1]),1)(x)
         x = Add()([inputs,x])
@@ -42,7 +43,7 @@ def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
 def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
     x = Conv1D(filters,1)(inputs)
-    x = Mish('Mish')(x)
+    x = Activation('relu')(x)
     x = BatchNormalization()(x)
     x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
     x = Add()([inputs,x])
@@ -52,7 +53,7 @@ def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
 def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
     
-    x = Mish('Mish')(inputs)
+    x = Activation('relu')(inputs)
     x = BatchNormalization()(x)
     x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
     x = Add()([inputs,x])
@@ -98,8 +99,8 @@ class TasNet_cotrain(object):
         self.audio_input_data=Input(shape=(self.t*160,1))#audio_shape=(80000,1)
         
         #audio_encoding
-        self.audio=Conv1D(256,40,padding='same',strides=40, activation='relu')(self.audio_input_data)
-        self.audio=Conv1D(256,16,padding='same',strides=16, activation='relu')(self.audio)
+        self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_input_data)
+        self.audio=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.audio)
         
         #video_processing
 
@@ -110,12 +111,12 @@ class TasNet_cotrain(object):
                 layer.trainable = False
 
         self.outv1 = self.lipnet_model.layers[-4].output
-        self.outv = Dense(128, kernel_initializer='he_normal', name='dense2')(self.outv1)
-        self.outv = Dense(256, kernel_initializer='he_normal', name='dense3')(self.outv)
+        #self.outv = Dense(128, kernel_initializer='he_normal', name='dense2')(self.outv1)
+        #self.outv = Dense(256, kernel_initializer='he_normal', name='dense3')(self.outv)
         #self.outv = GlobalAveragePooling2D(self.outv)
         
         #video_processing
-        self.video_data=Conv1D(512,1)(self.outv)
+        self.video_data=Conv1D(512,1)(self.outv1)
         self.outv=Conv_Block_Video(self.video_data,dialation_rate=1)
         self.outv=Conv_Block_Video(self.outv,dialation_rate=2)
         self.outv=Conv_Block_Video(self.outv,dialation_rate=4)
@@ -135,7 +136,7 @@ class TasNet_cotrain(object):
         
         #fusion_process
         
-        #self.outv=UpSampling1D(size=4)(self.outv)
+        self.outv=UpSampling1D(size=4)(self.outv)
 
         print('outv:', self.outv.shape)
         print('outa:', self.outa.shape)
@@ -168,17 +169,20 @@ class TasNet_cotrain(object):
         print('GRU1:', self.outv1_gru.shape)
         self.outv1_gru = Bidirectional(tf.keras.layers.GRU(512, return_sequences=True, kernel_initializer='Orthogonal', reset_after=False, name='gru2'), merge_mode='concat')(self.outv1_gru)
         print('GRU2:', self.outv1_gru.shape)
-        self.outv1 = Dense(256)(self.outv1_gru) 
+        self.outv1 = Dense(256, activation='relu')(self.outv1_gru) 
         print('Outv1:', self.outv1.shape)
         
         ## Apply some kind of attention b/w mask and outv1 and output a new mask
-        
-        self.outv1 = concatenate([self.mask,self.outv1],axis=-1)
-        self.mask_new = Conv1D(256,1,activation='relu')(self.outv1)
+        self.outv1_1 = UpSampling1D(size=4)(self.outv1)
+        self.outv1_1 = Conv1D(256, 1, activation='relu')(self.outv1_1)
+        self.outv1_1 = Activation('sigmoid')(self.outv1_1)
+        self.mask_new = Multiply()([self.mask, self.outv1_1]) #concatenate([self.mask, self.outv1], axis=-1)
+        #self.mask_new = Conv1D(256,1,activation='relu')(self.outv1_mask)
         
         print('New mask:', self.mask_new.shape)
         
-        self.outv_classes = Dense(29)(self.outv1) # shape = (200,29)
+        # shape = (200,29)
+        self.outv_classes = Dense(29, activation='softmax')(self.outv1)
         print('Outv classes:', self.outv_classes.shape)
 
         self.labels = Input(name='the_labels', shape=[self.absolute_max_string_len], dtype='float32')
@@ -189,8 +193,8 @@ class TasNet_cotrain(object):
         
         self.mul=Multiply()([self.audio,self.mask_new])
         self.decode = Lambda(lambda x: K.expand_dims(x, axis=2))(self.mul)
-        self.decode=Conv2DTranspose(256,(16,1),strides=(16,1),padding='same',data_format='channels_last')(self.decode)
-        self.decode=Conv2DTranspose(1,(40,1),strides=(40,1),padding='same',data_format='channels_last')(self.decode)
+        self.decode=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.decode)
+        self.decode=Conv2DTranspose(1,(40,1),strides=(20,1),padding='same',data_format='channels_last')(self.decode)
         self.out = Lambda(lambda x: K.squeeze(x, axis=2), name='speech_out')(self.decode)
 
         self.model=Model(inputs=[self.lipnet_model.input,self.audio_input_data, self.labels, self.input_length, self.label_length],outputs=[self.out, self.loss_out])
