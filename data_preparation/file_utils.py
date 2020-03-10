@@ -49,6 +49,7 @@ def pair_files(files, combination_no=2, count=3):
                         del_index = int(not index)
                         del_file = done[del_index]
                         files_copy.remove(del_file)
+        print(len(files_copy))
                         
         '''# Get the audio files with difference of > 2 seconds
         files_copy_not_2secs = []
@@ -653,10 +654,10 @@ def gen_comb_folders_3comb(combined_pairs, dest_folder):
         rate, audio_samples = wavfile.read(audio_file)
         np.save(save_path + '/' + file_name, audio_samples)
 
-        '''# Save txt
+        # Save txt
         file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '.txt'
-        shutil.copy(text, save_path + '/' + file_name)'''
-            
+        shutil.copy(text, save_path + '/' + file_name)
+
         # Save the mask
         
         #s, n, c_ = compute_spectrograms(audio_file)

@@ -20,12 +20,10 @@ from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback, ReduceLROnPlateau, EarlyStopping, ReduceLROnPlateau
-from callbacks import Logger, learningratescheduler, earlystopping, reducelronplateau,LoggingCallback
+from callbacks import learningratescheduler, earlystopping, reducelronplateau,LoggingCallback
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
-from models.lipnet import LipNet
-from models.cocktail_lipnet_unet_softmask import VideoModel
 from data_generators import DataGenerator_train_softmask, DataGenerator_sampling_softmask
 
 #from keras.optimizers import Adam
@@ -41,16 +39,11 @@ from LipNet.lipnet.lipreading.generator import DataGenerator_train_softmask, Dat
 from LipNet.lipnet.lipreading.helpers import text_to_labels
 from LipNet.lipnet.lipreading.aligns import Align
 #from LipNet.lipnet.model2 import LipNet
-from models.resnet_lstm_lipread import lipreading
+from models.sep_resnet_lstm_lipread import lipreading
 import numpy as np
 import datetime
 import pickle
 from data_preparation.video_utils import get_video_frames
-
-from keras.backend.tensorflow_backend import set_session
-config = tf.ConfigProto()
-config.gpu_options.allow_growth=True
-set_session(tf.Session(config=config))
 
 from keras.utils import multi_gpu_model
 #from metrics import sdr_metric, Metrics_softmask
@@ -91,9 +84,9 @@ with open("/data/AV-speech-separation/folder_filter_1.txt", "rb") as fp:
 
 video_file = args.video_file
 transcript_file = video_file[:-9]+'.txt'
-lips = get_video_frames(video_file, fmt='rgb')
+lips = get_video_frames(video_file, fmt='grey')
 lips = crop_pad_frames(frames = lips, fps = 25, seconds = 5)
-lips = lips.reshape(1, 125,50,100,3)
+lips = lips.reshape(1, 125,50,100,1)
 print('lips shape:', lips.shape)
 
 # Read text
@@ -107,8 +100,12 @@ input_length=125
 
 #lip = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29, frameLen=125, AbsoluteMaxStringLen=128, every_frame=True)
 #model = lip
-model=LipNet(input_shape=(125,50,100,3), pretrained='pretrain', output_size = 29, absolute_max_string_len=128)
+#model=LipNet(input_shape=(125,50,100,3), pretrained='pretrain', output_size = 29, absolute_max_string_len=128)
 #model.load_weights('/data/models/combResnetLSTM_CTCloss_236k-train_1to3ratio_valWER_epochs20_lr1e-4_0.1decay9epochs/weights-07-117.3701.hdf5')
+
+model = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29,
+                    frameLen=125, AbsoluteMaxStringLen=128, every_frame=True, pretrain=True)
+
 
 from io import StringIO
 tmp_smry = StringIO()
@@ -181,8 +178,8 @@ def _decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
     """
     decoded = K.ctc_decode(y_pred=y_pred, input_length=input_length,
                            greedy=greedy, beam_width=beam_width, top_paths=top_paths)
-    paths = [path.eval(session=K.get_session()) for path in decoded[0]]
-    logprobs  = decoded[1].eval(session=K.get_session())
+    paths = [path.numpy() for path in decoded[0]]
+    logprobs  = decoded[1].numpy()
 
     return (paths, logprobs)
 

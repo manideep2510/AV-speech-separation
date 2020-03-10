@@ -12,8 +12,8 @@ from data_generators import DataGenerator_test
 import glob
 import random
 import cv2
-from lipnet.lipreading.aligns import Align
-from lipnet.lipreading.helpers import text_to_labels
+from LipNet.lipnet.lipreading.aligns import Align, Align_1
+from LipNet.lipnet.lipreading.helpers import text_to_labels,text_to_labels_original,pad
 
 def labels_to_text(labels):
     # 26 is space, 27 is CTC blank char
@@ -211,7 +211,7 @@ def split(data):
 
 class Metrics_softmask(Callback):
 
-    def __init__(self, model, val_folders, batch_size, save_path):
+    def __init__(self, model, val_folders, batch_size, save_path, rule, time):
         self.model_container = model
         self.val_folders = val_folders
         self.batch_size = batch_size
@@ -224,12 +224,36 @@ class Metrics_softmask(Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         num = len(self.val_folders)
-        div_num = 12
+        div_num = 8
         num_100s = int(num/div_num)
 
         total_list=[]
         total_norm_list=[]
         total_wer=[]
+
+        '''if epoch <= 5:
+            rule = 1
+            time = 1
+            augment = False
+        elif epoch > 5 and epoch <= 10:
+            rule = 2
+            time = 2
+            augment = False
+        elif epoch > 10 and epoch <= 15:
+            rule = 2
+            time = 2
+            augment = True
+        elif epoch > 15 and epoch <= 20:
+            rule = 3
+            time = 3
+            augment = True
+        else:
+            rule = 5
+            time = 5
+            augment = True'''
+
+        rule = 4
+        time = 4
 	
         for n in range(num_100s):
             val_folders_100 = self.val_folders[n*div_num:(n+1)*div_num]
@@ -237,15 +261,18 @@ class Metrics_softmask(Callback):
             transcripts=[]
             for folder in val_folders_100:
 
-                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                #lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
 
-                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                #transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
 
-                lips.append(lips_[0])
-                lips.append(lips_[1])
+                lips_ = folder
+                transcripts_ = folder[:-9]+'.txt'
 
-                transcripts.append(transcripts_[0])
-                transcripts.append(transcripts_[1])
+                lips.append(lips_)
+                #lips.append(lips_[1])
+
+                transcripts.append(transcripts_)
+                #transcripts.append(transcripts_[1])
 
             zipped = list(zip(lips, transcripts))
             random.shuffle(zipped)
@@ -258,7 +285,7 @@ class Metrics_softmask(Callback):
             for i in range(len(lips)):
 
                 x_lips = get_video_frames(lips[i], fmt='grey')
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                x_lips = crop_pad_frames(frames=x_lips, fps=25, seconds=time)
                 X_lips.append(x_lips)
 
             align=[]
@@ -266,19 +293,60 @@ class Metrics_softmask(Callback):
             label_length = []
             input_length = []
             source_str = []
-            X_lips = np.asarray(X_lips)
+            X_lips = np.asarray(X_lips)/255.0
+            spliced_lips=[]
 
+            if(rule==1):
+                absolute_max_string_len=32
+                length=1
+                index=0
+            elif(rule==2):
+                absolute_max_string_len=64
+                length=2
+                index=0
+            elif(rule==3):
+                absolute_max_string_len=128
+                length=3
+                index=0
+            elif(rule==4):
+                absolute_max_string_len=128
+                length=4
+                index=0
+            else:
+                absolute_max_string_len=128
+                length=5
+                index=0
 
-            for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
-            for i in range(X_lips.shape[0]):
-                Y_data.append(align[i].padded_label)
-                label_length.append(align[i].label_length)
-                input_length.append(X_lips.shape[1])
-                #source_str.append(align[i].sentence)
+            for i in range(len(transcripts)):
+                a=Align_1(absolute_max_string_len, text_to_labels,length,index).from_file(transcripts[i])
+                if(a.label_length!=0 and a.label_length <= length*25):
+                    align.append(a)
+                    start,end=a.video_range()
+                    spliced_lips.append(pad(X_lips[i][start:end+1],length*25))
+                #else:
+                    #print(transcripts[i])
+                #align.append(a)
+                #start,end=a.video_range()
+                #spliced_lips.append(pad(X_lips[i][start:end+1],length*25))
+
+            for i in range(len(spliced_lips)):
+               Y_data.append(align[i].padded_label)
+               label_length.append(align[i].label_length)
+               input_length.append(length*75)
+               source_str.append(align[i].sentence)
             Y_data = np.array(Y_data)
+            spliced_lips=np.asarray(spliced_lips)
 
-            val_predict=self.model_container.predict(X_lips)
+            #for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
+           # for i in range(X_lips.shape[0]):
+           #     Y_data.append(align[i].padded_label)
+           #     label_length.append(align[i].label_length)
+           #     input_length.append(X_lips.shape[1])
+           #     source_str.append(align[i].sentence)
+           # Y_data = np.array(Y_data)
 
+            #val_predict=self.model_container.predict(X_lips)
+            val_predict=self.model_container.predict(spliced_lips)
         #
         # for n in range(num_100s):
         #     val_folders_100 = self.val_folders[n*100:(n+1)*100]
@@ -292,7 +360,7 @@ class Metrics_softmask(Callback):
                 ground_truth.append(labels_to_text(Y_data[i]))
 
             data=[]
-            for j in range(0, X_lips.shape[0]):
+            for j in range(0, spliced_lips.shape[0]):
                 data.append((decode_res[j], ground_truth[j]))
 
 

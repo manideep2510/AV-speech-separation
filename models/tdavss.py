@@ -54,7 +54,6 @@ def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
 
 def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
     
-    
     #x = Mish('Mish')(inputs)
     x = Activation('relu')(inputs)
     x = BatchNormalization()(x)

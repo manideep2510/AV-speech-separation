@@ -1,3 +1,4 @@
+import numpy as np
 def text_to_labels(text):
     labels=[]
     temp=text.lower()
@@ -14,8 +15,6 @@ def text_to_labels(text):
                 
         elif temp[i]==' ':labels.append(26)
     return labels
-
-
 
 def text_to_labels_original(text):
     ret = []
@@ -37,3 +36,17 @@ def labels_to_text(labels):
         elif c == 26:
             text += ' '
     return text
+
+def pad(video, length):
+
+        video_length=len(video)
+
+        pad_length = max(length - video_length, 0)
+        video_length = min(length, video_length)
+
+        mouth_padding = np.ones((pad_length, video.shape[1], video.shape[2], video.shape[3]), dtype=np.float32) * 0
+
+        video_mouth = np.concatenate((video[0:video_length], mouth_padding), 0)
+
+        return video_mouth
+

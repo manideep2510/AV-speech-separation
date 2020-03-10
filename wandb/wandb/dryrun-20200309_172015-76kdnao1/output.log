@@ -1,0 +1,10 @@
+Training data: 180
+Validation data: 120
+Traceback (most recent call last):
+  File "main_tasnet_attention1.py", line 103, in <module>
+    attention=True, lstm = False, lipnet_pretrained=True,  train_lipnet=False)
+  File "/data/AV-speech-separation1/models/tdavss_attention2.py", line 81, in __init__
+    self.build()
+  File "/data/AV-speech-separation1/models/tdavss_attention2.py", line 93, in build
+    self.norm = vec_l2norm(self.audio_input_data)
+NameError: name 'vec_l2norm' is not defined

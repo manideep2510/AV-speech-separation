@@ -13,7 +13,8 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import Lambda
 from tensorflow.compat.v1.keras.layers import CuDNNLSTM
 
-from .resnet_lstm_lipread import lipreading
+#from .resnet_lstm_lipread import lipreading
+from .sep_resnet_lstm_lipread import lipreading
 from .attention_layers import AttentionLayer,Luong,MinimalRNN,Luong_exp,Luong_exp2,Bahdanau
 from .layers import Attention
 from .mish import Mish
@@ -66,6 +67,13 @@ def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
     return x
 
 
+def vec_l2norm(x):
+
+    nr = K.sqrt(tf.math.reduce_sum(K.square(x), axis=1))
+    nr = tf.reshape(nr, (-1, 1, 1))
+    #nr = tf.broadcast_to(nr, (int(x.shape[1]), int(x.shape[0])))
+    return nr
+
 class TasNet(object):
     
     def __init__(self,time_dimensions=500,frequency_bins=257,n_frames=125, attention=None, lstm = False,lipnet_pretrained=None, train_lipnet=None):
@@ -88,10 +96,13 @@ class TasNet(object):
         self.initial_hidden_state = Input(shape=(256,), name='hidden_state')
         self.initial_out_state = Input(shape=(512,), name='out_state')
         hidden_state, cell_state, out_state = self.initial_hidden_state, self.initial_cell_state, self.initial_out_state
+
+        self.norm = vec_l2norm(self.audio_input_data)
+        self.audio_normalized = self.audio_input_data/self.norm
         
         #audio_encoding
-        self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_input_data)
-        self.audio=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.audio)
+        self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_normalized)
+        #self.audio=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.audio)
         
         #video_processing
 
@@ -130,18 +141,28 @@ class TasNet(object):
         
         #fusion_process
         
-        self.outv=UpSampling1D(size=4)(self.outv)
+        if self.attention == True:
+            self.outv = UpSampling1D(size=4)(self.outv)
+        else:
+            self.outv = UpSampling1D(size=4*8)(self.outv)
 
         print('outv:', self.outv.shape)
         print('outa:', self.outa.shape)
         print('hidden',hidden_state.shape)
         if self.attention == True:
-            
-            self.attn_out,self.attn_states=Bahdanau(name='attention_layer')([self.outv,self.outa,hidden_state,cell_state, out_state])
+            self.outa1=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.outa)
+            self.attn_out,self.attn_states=Bahdanau(name='attention_layer')([self.outv,self.outa1,hidden_state,cell_state, out_state])
             #self.fusion=concatenate([self.attn_out, self.outa],axis=-1)
             self.fusion = self.attn_out
             print('attn_out:', self.attn_out.shape)
             print('attn_states:', self.attn_states.shape)
+
+            self.fusion = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
+            self.fusion=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.fusion) # B, 1600, 256
+            self.fusion = Lambda(lambda x: K.squeeze(x, axis=2), name='fusion_out')(self.fusion)
+
+            self.fusion = concatenate([self.fusion, self.outa], axis=-1)
+            self.fusion = Conv1D(512, 1)(self.fusion)
            
         else:
             self.attn_out, self.attn_states = Lambda(lambda x: [x[:, :, :200]*0, x[:, :, :200]*0], name='attention_layer')(self.outv)
@@ -173,13 +194,16 @@ class TasNet(object):
         self.mask=Conv1D(256,1,activation='relu', name='mask')(self.fusion)
         self.fusion=Multiply()([self.audio,self.mask])
         self.decode = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
-        self.decode=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.decode)
+        #self.decode=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.decode)
         self.decode=Conv2DTranspose(1,(40,1),strides=(20,1),padding='same',data_format='channels_last')(self.decode)
         self.out = Lambda(lambda x: K.squeeze(x, axis=2), name = 'out')(self.decode)
-  
+
+        self.out_norm = vec_l2norm(self.out)
+        self.out_normalized = self.out/self.out_norm
+        self.out_denormalized = self.out_normalized*self.norm
         
         self.model = Model(inputs=[self.lipnet_model.input, self.audio_input_data, self.initial_hidden_state,
-                                   self.initial_cell_state, self.initial_out_state], outputs=[self.out])
+                                   self.initial_cell_state, self.initial_out_state], outputs=[self.out_denormalized])
 
         return self.model
 
@@ -191,4 +215,4 @@ class TasNet(object):
         # captures output of softmax so we can decode the output during visualization
         return K.function([[self.lipnet_model.input, self.audio_input_data, self.initial_hidden_state,
                                    self.initial_cell_state, self.initial_out_state], K.learning_phase()], 
-                                   [self.out, self.attn_states, self.mask])
+                                   [self.out_denormalized, self.attn_states, self.mask])

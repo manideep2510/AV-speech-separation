@@ -606,7 +606,7 @@ class Metrics_3speak(Callback):
         samples_mix = []
 
         for folder in folderlist:
-            lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+            '''lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
             samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
             samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
             for i in range(len(lips_)):
@@ -614,7 +614,15 @@ class Metrics_3speak(Callback):
             for i in range(len(samples_)):
                 samples.append(samples_[i])
             for i in range(len(lips_)):
-                samples_mix.append(samples_mix_)
+                samples_mix.append(samples_mix_)'''
+
+            lips_ = folder
+            samples_ = folder[:-9] + '_samples.npy'
+            samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+
+            lips.append(lips_)
+            samples.append(samples_)
+            samples_mix.append(samples_mix_)
 
         #attn_states_out_model = Model(inputs=self.model.input, outputs=self.model.get_layer('attention_layer').output)
         mask_out_model = Model(inputs=self.model.input, outputs=self.model.get_layer('mask').output)
@@ -625,9 +633,11 @@ class Metrics_3speak(Callback):
         preds_mask = mask_out_model.predict(Data_predict_attention(val_folders_samp_dict))
 
         preds_audio = self.model.predict(Data_predict_attention(val_folders_samp_dict))
-        preds_audio = preds_audio/np.mean(np.std(preds_audio, axis=1))
-        preds_audio = preds_audio*3500
+        #preds_audio = preds_audio/np.mean(np.std(preds_audio, axis=1))
+        #preds_audio = preds_audio*1350
         preds_audio = preds_audio.astype('int16')
+        '''print('Pred max', np.max(preds_audio))
+        print('Pred min', np.min(preds_audio))'''
         
         # Log all things to wandb
         offset = []
@@ -635,17 +645,17 @@ class Metrics_3speak(Callback):
         save_name_base = []
         for i, item in enumerate(lips):
 
-            offset_ = val_folders_samp_dict[val_folders_samp[i//3]]
+            offset_ = val_folders_samp_dict[val_folders_samp[i]]
             aud_offset_ = int(abs((offset_/25)*16000))
-            save_name_base_ = str(i//3) + '_' + item.split('/')[-1][:-9] + '_' + 'off' + str(offset_)
+            save_name_base_ = str(i) + '_' + item.split('/')[-1][:-9] + '_' + 'off' + str(offset_)
             offset.append(offset_)
             aud_offset.append(aud_offset_)
             save_name_base.append(save_name_base_)
 
         wandb.log({"Mask Predictions": [wandb.Image(
             img*100, caption=save_name_base[i]) for i, img in enumerate(preds_mask)]}, commit=False)
-        #wandb.log({"Attention Weights Alignment": [wandb.Image(
-        #    img*1000000, caption=save_name_base[i]) for i, img in enumerate(pred_weights)]}, commit=False)
+        '''wandb.log({"Attention Weights Alignment": [wandb.Image(
+            img*1000000, caption=save_name_base[i]) for i, img in enumerate(pred_weights)]}, commit=False)'''
         wandb.log({"Predicted Audio": [wandb.Audio(
             aud, caption=save_name_base[i], sample_rate=16000) for i, aud in enumerate(preds_audio)]}, commit=False)
         wandb.log({"True Audio": [wandb.Audio(
@@ -670,13 +680,14 @@ class Metrics_3speak(Callback):
                             steps=int(np.ceil((len(val_folders_pred_all))/float(self.batch_size))), 
                             verbose=0)'''
         
-        val_folders_pred_all1 = np.loadtxt('/data/AV-speech-separation1/lrs2_3k_val_split.txt', dtype='object').tolist()
-
-        _, snr_2speak = self.model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all1, int(self.batch_size), norm=1350.0),
+        '''folders_list_val_all = np.loadtxt('/data/AV-speech-separation1/lrs2_comb2_val_snr_filter.txt', dtype='object').tolist()
+        random.seed(1234)
+        val_folders_pred_all1 = random.sample(folders_list_val_all, 5000)
+        _, snr_2speak = self.model.evaluate_generator(DataGenerator_val_samples(val_folders_pred_all1, int(self.batch_size), norm=1),
                             steps=int(np.ceil((len(val_folders_pred_all1))/float(self.batch_size))), 
                             verbose=0)
 
-        print('\nSNR 2 speak:', snr_2speak)
+        print('\nSNR 2 speak:', snr_2speak)'''
 
         #SNR
         self.val_snr.append(0)
@@ -685,8 +696,8 @@ class Metrics_3speak(Callback):
 
         wandb.log({'UnSync-SNR-hard':snr, 'UnSync-SNR-easy':snr_easy})'''
 
-        with open(self.save_path, "a") as myfile:
-            myfile.write(', SNR 2 speak: ' + str(snr_2speak) + '\n')
+        '''with open(self.save_path, "a") as myfile:
+            myfile.write(', SNR 2 speak: ' + str(snr_2speak) + '\n')'''
         return
 
 #[np.random.rand(12, 50, 50, 100, 1), np.random.rand(12, 32000, 1), np.random.rand(12, 256), np.random.rand(12, 256), np.random.rand(12, 512)]

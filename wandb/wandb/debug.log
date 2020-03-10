@@ -1,14 +1,11 @@
-2020-02-22 08:01:15,760 DEBUG   MainThread:86 [wandb_config.py:_load_defaults():111] no defaults not found in config-defaults.yaml
-2020-02-22 08:01:15,772 DEBUG   MainThread:86 [git_repo.py:repo():30] git repository is invalid
-2020-02-22 08:01:15,782 DEBUG   MainThread:86 [run_manager.py:__init__():535] Initialized sync for av-speech-seperation/uag9afd9
-2020-02-22 08:01:15,787 INFO    MainThread:86 [run_manager.py:wrap_existing_process():1133] wrapping existing process 1
-2020-02-22 08:01:15,793 DEBUG   MainThread:86 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): pypi.org:443
-2020-02-22 08:01:16,776 INFO    Thread-3  :86 [run_manager.py:_on_file_created():671] file/dir created: /data/AV-speech-separation1/wandb/wandb/dryrun-20200222_080115-uag9afd9/output.log
-2020-02-22 08:01:25,810 INFO    MainThread:86 [run_manager.py:init_run():918] system metrics and metadata threads started
-2020-02-22 08:01:25,811 INFO    MainThread:86 [run_manager.py:wrap_existing_process():1150] informing user process we are ready to proceed
-2020-02-22 08:01:25,812 INFO    MainThread:86 [run_manager.py:_sync_etc():1257] entering loop for messages from user process
-2020-02-23 13:34:56,079 INFO    MainThread:86 [run_manager.py:_sync_etc():1280] received message from user process: {"exitcode": 0}
-2020-02-23 13:34:56,118 INFO    MainThread:86 [run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
-2020-02-23 13:34:56,119 INFO    MainThread:86 [run_manager.py:shutdown():1057] shutting down system stats and metadata service
- INFO    MainThread:86 [uag9afd9:run_manager.py:_sync_etc():1366] closing log streams and sending exitcode to W&B
-2020-02-23 13:34:56,119 INFO    MainThread:86 [uag9afd9:run_manager.py:shutdown():1057] shutting down system stats and metadata service
+2020-03-10 09:08:06,900 DEBUG   MainThread:86 [wandb_config.py:_load_defaults():111] no defaults not found in config-defaults.yaml
+2020-03-10 09:08:06,907 DEBUG   MainThread:86 [git_repo.py:repo():30] git repository is invalid
+2020-03-10 09:08:06,915 DEBUG   MainThread:86 [run_manager.py:__init__():535] Initialized sync for av-speech-seperation/gxov8wne
+2020-03-10 09:08:06,917 INFO    MainThread:86 [run_manager.py:wrap_existing_process():1133] wrapping existing process 1
+2020-03-10 09:08:06,918 DEBUG   MainThread:86 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): pypi.org:443
+2020-03-10 09:08:07,907 INFO    Thread-3  :86 [run_manager.py:_on_file_created():671] file/dir created: /data/AV-speech-separation1/wandb/wandb/dryrun-20200310_090806-gxov8wne/wandb-metadata.json
+2020-03-10 09:08:16,929 INFO    MainThread:86 [run_manager.py:init_run():918] system metrics and metadata threads started
+2020-03-10 09:08:16,930 INFO    MainThread:86 [run_manager.py:wrap_existing_process():1150] informing user process we are ready to proceed
+2020-03-10 09:08:16,930 INFO    MainThread:86 [run_manager.py:_sync_etc():1257] entering loop for messages from user process
+v8wne:run_manager.py:wrap_existing_process():1150] informing user process we are ready to proceed
+2020-03-10 09:08:16,930 INFO    MainThread:86 [gxov8wne:run_manager.py:_sync_etc():1257] entering loop for messages from user process

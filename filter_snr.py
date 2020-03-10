@@ -4,8 +4,9 @@ from scipy import signal
 import math
 import scipy
 import matplotlib.pyplot as plt
-from mir_eval.separation import bss_eval_sources
+#from mir_eval.separation import bss_eval_sources
 import glob
+import random
 
 def si_snr(x, s, remove_dc=True):
     """
@@ -37,11 +38,28 @@ def numericalSort(value):
     parts[1::2] = map(int, parts[1::2])
     return parts
 
-folders = np.loadtxt('/data/AV-speech-separation1/lrs2_3k_val_split.txt', dtype='object').tolist()
-true_samples=[]
+print('Ok')
+
+#folders = np.loadtxt('/data/AV-speech-separation1/lrs2_comb3_100k_train.txt', dtype='object').tolist()
+#folders = random.sample(folders, 10000)
+
+folders = np.loadtxt(
+    '/data/AV-speech-separation1/lrs2_comb3_val_snr_filter.txt', dtype='object').tolist()
+random.seed(1234)
+folders = random.sample(folders, 5000)
+
+true_samples = []
 for item in folders:
+    true_samples.append(item[:-9]+'_samples.npy')
+
+'''true_samples=[]
+for i, item in enumerate(folders):
     fss = sorted(glob.glob(item+'/*_samples.npy'), key=numericalSort)
     true_samples = true_samples + fss
+    if i % 100 == 0:
+        print(i, 'Done')'''
+
+#print(true_samples[1])
 
 print('Done reading true samples')
 
@@ -50,21 +68,36 @@ for item in true_samples:
     mixed_wav = '/data/mixed_audio_files/' + item.split('/')[-2] + '.wav'
     mix_samples.append(mixed_wav)
 
+#print(mix_samples[1])
+
 print('Done reading mixed samples')
 
 snrs = []
+snrs_files = []
 for i, item in enumerate(true_samples):
     true_samp = np.load(item)[:32000]
     mix_samp = wavfile.read(mix_samples[i])[1][:32000]
-    snrs.append(si_snr(mix_samp, true_samp))
+    snr_ =  si_snr(mix_samp, true_samp)
+    if snr_ >= -5 and snr_ <= 5:
+        snrs_files.append(item[:-12]+'_lips.mp4')
+    snrs.append(snr_)
     if i%1000 == 0:
         print(i, 'Done')
 
-np.savetxt('/data/snrs_2comb_val.txt', snrs)
-
+print('SNR mean:', np.mean(snrs))
+#np.savetxt('/data/snrs_2comb_val.txt', snrs)
+#np.savetxt('/data/lrs2_comb3_train_snr_filter.txt', snrs_files, fmt='%s')
 #snrs = np.loadtxt('/data/snrs_3comb.txt')
 
-c = 0
+plt.hist(snrs, 10, facecolor='g')
+
+plt.xlabel('SNR')
+plt.ylabel('Count')
+plt.title('SNR Histogram 3 speakers Val')
+plt.grid(True)
+plt.savefig('/data/AV-speech-separation1/snr_hist_3speak_val.png')
+
+'''c = 0
 for i in range(len(snrs)):
     if snrs[i]>= -5 and snrs[i]<=5:
         c = c+1
@@ -85,4 +118,4 @@ for i in range(len(snrs)):
 
 print('SNRs less than -5:', c)
 
-print('Mean SNR:', np.mean(snrs))
+print('Mean SNR:', np.mean(snrs))'''

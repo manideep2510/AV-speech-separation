@@ -230,6 +230,7 @@ def snr_loss(s, x):
     """
 
     x = x[:,:,0]
+
     #print(x.shape[0])
     #s = x[:,:,1]
 

@@ -470,3 +470,84 @@ class Bahdanau(Layer):
         #self.attn_states=tf.stack(self.attention_weights,axis=2)
 
         return outputs
+
+class multi_head_self_attention(Layer):
+
+    def __init__(self, n_head, d_model, **kwargs):
+        super(multi_head_self_attention, self).__init__(**kwargs)
+        self.n_head = n_head
+        self.d_q = self.d_v =self.d_k = d_model // n_head
+        self.normalize = tf.sqrt(tf.cast(self.d_k, dtype='float32'))
+
+        self.dense1=TimeDistributed(Dense(d_model))
+        self.activation=TimeDistributed(Activation('relu'))
+        self.dense2=TimeDistributed(Dense(d_model))
+    
+    def build(self, input_shape):
+        
+        #assert isinstance(input_shape, list)
+        
+        self.Q_a={}
+        self.K_a={}
+        self.V_a={} 
+
+        for i in range(self.n_head):
+            self.Q_a[str(i)] = self.add_weight(name='Q_a'+str(i),
+                                   shape=tf.TensorShape((input_shape[2], self.d_q)),
+                                   initializer='uniform',
+                                   trainable=True)
+            self.K_a[str(i)] = self.add_weight(name='K_a'+str(i),
+                                   shape=tf.TensorShape((input_shape[2], self.d_k)),
+                                   initializer='uniform',
+                                   trainable=True)
+            self.V_a[str(i)] = self.add_weight(name='V_a'+str(i),
+                                   shape=tf.TensorShape((input_shape[2], self.d_v)),
+                                   initializer='uniform',
+                                   trainable=True)
+
+        self.W=self.add_weight(name='W_a',
+                                   shape=tf.TensorShape((input_shape[2], input_shape[2])),
+                                   initializer='uniform',
+                                   trainable=True)
+
+        super(multi_head_self_attention, self).build(input_shape)
+
+
+
+    def call(self, inputs, verbose=False):
+
+        
+        self.features=inputs
+        self.concat_features=[]
+        #self.batch_size=inputs.shape[0]
+        # self.dummy_inputs=tf.zeros((self.batch_size,self.n_head,1))
+        # self.dummy_states=tf.zeors((self.batch_size,1))
+        # self.head_time=0
+
+        for j in range(self.n_head):
+            
+
+            new_q=K.dot(self.features,self.Q_a[str(j)])
+            new_k=K.dot(self.features,self.K_a[str(j)])
+            new_v=K.dot(self.features,self.V_a[str(j)])
+            #print('new_v',new_v.shape)
+            weights=K.batch_dot(new_q,new_k,axes=[2,2])/self.normalize
+            weights=K.softmax(weights)
+            #print('weights',weights.shape)
+            attn=K.batch_dot(weights,new_v,axes=[2,1])
+
+            self.concat_features.append(attn)
+
+        self.out=K.dot(Concatenate()(self.concat_features),self.W)
+        self.out1=Add()([self.features,self.out])
+        self.out1=BatchNormalization()(self.out1)
+
+        #self.out=K.dot(tf.convert_to_tensor(self.concat_features),self.W)
+
+        self.out2=self.dense1(self.out1)
+        self.out2=self.activation(self.out2)
+        self.out2=self.dense2(self.out2)
+        self.out3=Add()([self.out1,self.out2])
+        self.final_out=BatchNormalization()(self.out3)
+
+        return self.final_out

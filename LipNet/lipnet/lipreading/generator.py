@@ -25,9 +25,9 @@ from pathlib import Path
 import shutil
 import cv2
 import sys
-sys.path.append('/data/AV-speech-separation/LipNet')
-from lipnet.lipreading.helpers import text_to_labels,text_to_labels_original
-from lipnet.lipreading.aligns import Align
+sys.path.append('/data/AV-speech-separation1/LipNet')
+from LipNet.lipnet.lipreading.aligns import Align, Align_1
+from LipNet.lipnet.lipreading.helpers import text_to_labels,text_to_labels_original,pad
 from tensorflow.keras import backend as K
 
 home = str(Path.home())
@@ -128,9 +128,10 @@ seq6 = iaa.Sequential(
     ]
 )
 
-def DataGenerator_train_softmask(folderlist, batch_size):
+def DataGenerator_train_softmask(folderlist, batch_size, time, augment):
 
     L = len(folderlist)
+    epoch_number = 0
 
     #this line is just to make the generator infinite, keras needs that
     while True:
@@ -138,6 +139,10 @@ def DataGenerator_train_softmask(folderlist, batch_size):
         batch_start = 0
         batch_end = batch_size
         while batch_start < L:
+
+            if batch_start == 0:
+                epoch_number += 1
+
             limit = min(batch_end, L)
 
             folders_batch = folderlist[batch_start:limit]
@@ -152,15 +157,18 @@ def DataGenerator_train_softmask(folderlist, batch_size):
 
 
 
-                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                #lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 #masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
                 #samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                #transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
                 #spect_ = folder + '/mixed_spectrogram.npy'
                 #phase_ = folder + '/phase_spectrogram.npy'
 
-                lips.append(lips_[0])
-                lips.append(lips_[1])
+                lips_ = folder
+                transcripts_ = folder[:-9]+'.txt'
+
+                lips.append(lips_)
+                #lips.append(lips_[1])
 
                 # samples.append(samples_[0])
                 # samples.append(samples_[1])
@@ -174,8 +182,8 @@ def DataGenerator_train_softmask(folderlist, batch_size):
                 # phase.append(phase_)
                 # phase.append(phase_)
 
-                transcripts.append(transcripts_[0])
-                transcripts.append(transcripts_[1])
+                transcripts.append(transcripts_)
+                #transcripts.append(transcripts_[1])
 
             zipped = list(zip(lips, transcripts))
             random.shuffle(zipped)
@@ -207,8 +215,15 @@ def DataGenerator_train_softmask(folderlist, batch_size):
 
                 #print(lips[i])
                 x_lips = get_video_frames(lips[i], fmt = 'grey')
-#                x_lips = seq.augment_images(x_lips)
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                
+                if augment == True:
+                    choices = [1,2,3,4]
+                    choice = random.choice(choices)
+                    if choice == 1:
+                        x_lips = seq2.augment_images(x_lips)
+
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = time)
+                x_lips = x_lips/255.0
                 X_lips.append(x_lips)
 
             align=[]
@@ -237,8 +252,10 @@ def DataGenerator_train_softmask(folderlist, batch_size):
            #  yield [np.array(X_lip),Y_data,np.array(input_length),np.array(label_length)],np.zeros([len(X_lip)])
 
             X_lips = np.asarray(X_lips)
+            frame_length = X_lips.shape[1]
 
-            for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
+            for i in range(len(transcripts)):
+                align.append(Align(128, text_to_labels).from_file(transcripts[i]))
             for i in range(X_lips.shape[0]):
                Y_data.append(align[i].padded_label)
                label_length.append(align[i].label_length)
@@ -258,7 +275,282 @@ def DataGenerator_train_softmask(folderlist, batch_size):
             batch_start += batch_size
             batch_end += batch_size
 
-def DataGenerator_val_softmask(folderlist, batch_size):
+
+def DataGenerator_train(folderlist, batch_size):
+
+    L = len(folderlist)
+    epoch_number = 26
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+
+            if batch_start == 0:
+                epoch_number += 1
+
+            if epoch_number<=5:
+                rule = 1
+                time = 1
+                augment = False
+            elif epoch_number > 5 and epoch_number <= 10:
+                rule = 2
+                time = 2
+                augment = False
+            elif epoch_number > 10 and epoch_number <= 15:
+                rule = 2
+                time = 2
+                augment = True
+            elif epoch_number > 15 and epoch_number <= 25:
+                rule = 3
+                time = 3
+                augment = True
+            else:
+                rule = 4
+                time = 4
+                augment = True
+
+            limit = min(batch_end, L)
+            #rule = 2
+            #time = 2
+            #augment = True
+
+            folders_batch = folderlist[batch_start:limit]
+
+            lips = []
+            mask = []
+            spect = []
+            phase = []
+            samples = []
+            transcripts=[]
+            for folder in folders_batch:
+
+                lips_ = folder
+                transcripts_ = folder[:-9]+'.txt'
+
+                lips.append(lips_)
+                transcripts.append(transcripts_)
+
+            zipped = list(zip(lips, transcripts))
+            random.shuffle(zipped)
+            lips, transcripts = zip(*zipped)
+            X_lips = []
+
+            for i in range(len(lips)):
+
+                #print(lips[i])
+                x_lips = get_video_frames(lips[i], fmt = 'grey')
+                
+                if augment == True:
+                    choices = [1,2,3,4]
+                    choice = random.choice(choices)
+                    if choice == 1:
+                        x_lips = seq2.augment_images(x_lips)
+
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = time)
+                x_lips = x_lips/255.0
+                X_lips.append(x_lips)
+
+            align=[]
+            Y_data = []
+            label_length = []
+            input_length = []
+            source_str = []
+            
+            spliced_lips=[]
+            X_lips = np.asarray(X_lips)
+            #frame_length = X_lips.shape[1]
+
+            if(rule==1): 
+                absolute_max_string_len=32 
+                length=1 
+                index=0
+            elif(rule==2):
+                absolute_max_string_len=64
+                length=2
+                index=0
+            elif(rule==3):
+                absolute_max_string_len=128
+                length=3
+                index=0
+            elif(rule==4):
+                absolute_max_string_len=128
+                length=4
+                index=0
+            else:
+                absolute_max_string_len=128
+                length=5
+                index=0
+
+            for i in range(len(transcripts)):
+                #print('Train trans:', transcripts[i])
+                a=Align_1(absolute_max_string_len, text_to_labels,length,index).from_file(transcripts[i])
+                if(a.label_length!=0 and a.label_length <= length*25):
+                    align.append(a)
+                    start,end=a.video_range()
+                    spliced_lips.append(pad(X_lips[i][start:end+1],length*25))
+                #else: 
+                    #print(transcripts[i])
+
+            for i in range(len(spliced_lips)):
+               Y_data.append(align[i].padded_label)
+               label_length.append(align[i].label_length)
+               input_length.append(length*75)
+               source_str.append(align[i].sentence)
+            Y_data = np.array(Y_data)
+            spliced_lips=np.asarray(spliced_lips)
+
+            yield [spliced_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([spliced_lips.shape[0]])
+            batch_start += batch_size
+            batch_end += batch_size
+
+def DataGenerator_val(folderlist, batch_size):
+    
+    L = len(folderlist)
+    epoch_number = 26
+
+    #this line is just to make the generator infinite, keras needs that
+    while True:
+
+        batch_start = 0
+        batch_end = batch_size
+        while batch_start < L:
+            limit = min(batch_end, L)
+
+            if batch_start == 0:
+                epoch_number += 1
+
+            if epoch_number <= 5:
+                rule = 1
+                time = 1
+                augment = False
+            elif epoch_number > 5 and epoch_number <= 10:
+                rule = 2
+                time = 2
+                augment = False
+            elif epoch_number > 10 and epoch_number <= 15:
+                rule = 2
+                time = 2
+                augment = True
+            elif epoch_number > 15 and epoch_number <= 25:
+                rule = 3
+                time = 3
+                augment = True
+            else:
+                rule = 4
+                time = 4
+                augment = True
+
+            folders_batch = folderlist[batch_start:limit]
+            #rule = 2
+            #time = 2
+
+            lips = []
+            mask = []
+            spect = []
+            phase = []
+            samples = []
+            transcripts=[]
+            for folder in folders_batch:
+
+                lips_ = folder
+                transcripts_ = folder[:-9]+'.txt'
+
+                lips.append(lips_)
+               
+                transcripts.append(transcripts_)
+                #transcripts.append(transcripts_[1])
+
+            '''zipped = list(zip(lips_, transcripts_))
+            random.shuffle(zipped)
+            lips, transcripts = zip(*zipped)'''
+
+            X_lips = []
+
+            for i in range(len(lips)):
+
+                x_lips = get_video_frames(lips[i], fmt = 'grey')
+#                x_lips = seq.augment_images(x_lips)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = time)
+                x_lips = x_lips/255.0
+                X_lips.append(x_lips)
+
+            align=[]
+            Y_data = []
+            label_length = []
+            input_length = []
+            source_str = []
+            spliced_lips=[]
+
+            X_lips = np.asarray(X_lips)
+            #frame_length = X_lips.shape[1]
+            if(rule==1): 
+                absolute_max_string_len=32 
+                length=1 
+                index=0
+            elif(rule==2):
+                absolute_max_string_len=64
+                length=2
+                index=0
+            elif(rule==3):
+                absolute_max_string_len=128
+                length=3
+                index=0
+            elif(rule==4):
+                absolute_max_string_len=128
+                length=4
+                index=0
+            else:
+                absolute_max_string_len=128
+                length=5
+                index=0
+
+            for i in range(len(transcripts)):
+                #print('Val trans:', transcripts[i])
+                a=Align_1(absolute_max_string_len, text_to_labels,length,index).from_file(transcripts[i])
+                if(a.label_length!=0 and a.label_length <= length*25):
+                    align.append(a)
+                    start,end=a.video_range()
+                    spliced_lips.append(pad(X_lips[i][start:end+1],length*25))
+                #else:
+                    #print(transcripts[i])
+                #align.append(a)
+                #start,end=a.video_range()
+                #spliced_lips.append(pad(X_lips[i][start:end+1],length*25))
+
+            for i in range(len(spliced_lips)):
+               Y_data.append(align[i].padded_label)
+               label_length.append(align[i].label_length)
+               input_length.append(length*75)
+               source_str.append(align[i].sentence)
+            Y_data = np.array(Y_data)
+            spliced_lips=np.asarray(spliced_lips)
+
+
+            #for i in range(len(transcripts)):align.append(Align(frame_length, text_to_labels_original).from_file(transcripts[i]))
+            #for i in range(X_lips.shape[0]):
+            #   Y_data.append(align[i].padded_label)
+            #   label_length.append(align[i].label_length)
+            #   input_length.append(X_lips.shape[1])
+            #   source_str.append(align[i].sentence)
+            #Y_data = np.array(Y_data)
+            #  inputs = {'the_input': X_lips,
+            #       'the_labels': Y_data,
+            #       'input_length': input_length,
+            #       'label_length': label_length,
+            #       'source_str': source_str
+            #       }
+            # outputs = {'ctc': np.zeros([X_lips.shape[0]])}  # dummy data for dummy loss function
+            #
+            # yield (inputs,outputs)
+            yield [spliced_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([spliced_lips.shape[0]])
+            batch_start += batch_size
+            batch_end += batch_size
+
+
+def DataGenerator_val_softmask(folderlist, batch_size, time):
 
     L = len(folderlist)
 
@@ -280,17 +572,18 @@ def DataGenerator_val_softmask(folderlist, batch_size):
             transcripts=[]
             for folder in folders_batch:
 
-
-
-                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                #lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 #masks_ = sorted(glob.glob(folder + '/*_softmask.npy'), key=numericalSort)
                 #samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
+                #transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
                 #spect_ = folder + '/mixed_spectrogram.npy'
                 #phase_ = folder + '/phase_spectrogram.npy'
 
-                lips.append(lips_[0])
-                lips.append(lips_[1])
+                lips_ = folder
+                transcripts_ = folder[:-9]+'.txt'
+
+                lips.append(lips_)
+                #lips.append(lips_[1])
 
                 # samples.append(samples_[0])
                 # samples.append(samples_[1])
@@ -304,8 +597,8 @@ def DataGenerator_val_softmask(folderlist, batch_size):
                 # phase.append(phase_)
                 # phase.append(phase_)
 
-                transcripts.append(transcripts_[0])
-                transcripts.append(transcripts_[1])
+                transcripts.append(transcripts_)
+                #transcripts.append(transcripts_[1])
 
             '''zipped = list(zip(lips_, transcripts_))
             random.shuffle(zipped)
@@ -337,7 +630,8 @@ def DataGenerator_val_softmask(folderlist, batch_size):
 
                 x_lips = get_video_frames(lips[i], fmt = 'grey')
 #                x_lips = seq.augment_images(x_lips)
-                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 5)
+                x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = time)
+                x_lips = x_lips/255.0
                 X_lips.append(x_lips)
 
             align=[]
@@ -366,8 +660,10 @@ def DataGenerator_val_softmask(folderlist, batch_size):
            #  yield [np.array(X_lip),Y_data,np.array(input_length),np.array(label_length)],np.zeros([len(X_lip)])
 
             X_lips = np.asarray(X_lips)
+            frame_length = X_lips.shape[1]
 
-            for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
+            for i in range(len(transcripts)):
+                align.append(Align(128, text_to_labels_original).from_file(transcripts[i]))
             for i in range(X_lips.shape[0]):
                Y_data.append(align[i].padded_label)
                label_length.append(align[i].label_length)

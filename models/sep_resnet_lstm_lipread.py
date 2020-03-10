@@ -108,7 +108,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
 
     if pretrain == True:
         model.load_weights(
-            '/data/models/combResnetLSTM_CTCloss_seperableConv_236ktrain_1to3ratio_valWER_epochs20_lr1e-4_0.1decay9epochs/weights-10-116.9441.hdf5')
+            '/data/models/combResnetLSTM_CTCloss_seperableConv_236ktrain_1to3ratio_valWER_epochs11_to_20_lr1e-4_0.1decay9epochs/weights-07-118.8296.hdf5')
         print('Separable Conv ResNet LSTM Pretrain weights loaded')
 
     return model

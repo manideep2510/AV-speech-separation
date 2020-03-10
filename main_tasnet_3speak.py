@@ -29,7 +29,7 @@ import cv2
 from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
 #from models.lipnet import LipNet
 from models.tdavss import TasNet
-#from models.tasnet_lipnet import TasNet
+from models.tdavss_sepconv import TasNet as TasNetSepCon
 from dataloaders import DataGenerator_train_samples, DataGenerator_val_samples, DataGenerator_val_unsync_attention, DataGenerator_train_unsync_attention
 import random
 #from dataloaders_aug import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
@@ -60,8 +60,8 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_3speakers_120kTrain_Attention', notes='120K train data. 3 speakers WITH attention training,Batch = 5, 20K training folders. TasNet with Resnet without LSTM Lipnet.', 
-           project="av-speech-seperation", id='tdavss_3speakers_120kTrain_Attention', dir='/data/wandb')
+wandb.init(name='tdavss_3speakers_L2Norm_100kTrain', notes='100K train data. 3 speakers WITHOUT attention training,Batch = 5, 20K training folders. TasNet with Resnet without LSTM Lipnet.', 
+           project="av-speech-seperation", id='tdavss_3speakers_100kTrain', dir='/data/wandb')
 
 # To read the images in numerical order
 import re
@@ -87,34 +87,44 @@ random.seed(1234)
 folders_list_train = random.sample(folders_list[:-3000], 16666)'''
 
 '''folders_list_train = np.loadtxt(
-    '/data/AV-speech-separation1/lrs2_3comb_20k_split_train.txt', dtype='object').tolist()'''
+    '/data/AV-speech-separation1/lrs2_3comb_20k_split_train.txt', dtype='object').tolist()
     
 folders_list_train = np.loadtxt(
     '/data/AV-speech-separation1/lrs2_3comb_train_all_45k.txt', dtype='object').tolist()
 
 folders_list_val = np.loadtxt(
     '/data/AV-speech-separation1/lrs2_3comb_2k_split_val.txt', dtype='object').tolist()
-#folders_list_train = folders_list_train[:16666]
+#folders_list_train = folders_list_train[:16666]'''
 
-random.seed(10)
+folders_list_train_all = np.loadtxt(
+    '/data/AV-speech-separation1/lrs2_comb3_train_snr_filter.txt', dtype='object').tolist()
+
+folders_list_val_all = np.loadtxt(
+    '/data/AV-speech-separation1/lrs2_comb3_val_snr_filter.txt', dtype='object').tolist()
+
+random.seed(123)
+folders_list_train = random.sample(folders_list_train_all, 100000)
+random.seed(12345)
+folders_list_val = random.sample(folders_list_val_all, 5000)
+random.seed(123456)
 random.shuffle(folders_list_train)
 
 #random.seed(30)
-#folders_list_val = random.sample(folders_list_val, 120)
-#folders_list_train = random.sample(folders_list_train, 1800)
+#folders_list_val = random.sample(folders_list_val_, 120)
+#folders_list_train = random.sample(folders_list_train, 180)
 #folders_list_train = folders_list[:180]
 #folders_list_val = folders_list[180:300]
 
-print('Training data:', len(folders_list_train)*3)
-print('Validation data:', len(folders_list_val)*3)
+print('Training data:', len(folders_list_train))
+print('Validation data:', len(folders_list_val))
 
 # Compile the model
 lrate = args.lrate
 batch_size = args.batch_size
 epochs = args.epochs
 
-tasnet = TasNet(time_dimensions=200, frequency_bins=257, n_frames=50, attention=True, 
-                lstm = False, lipnet_pretrained=True,  train_lipnet=False)
+tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50, attention=False,
+                lstm = False, lipnet_pretrained=True, train_lipnet=False)
 model = tasnet.model
 #model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
@@ -136,7 +146,7 @@ print('\n'+summary_params)
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'tdavss_3speakers_120kTrain_Attention_epochs40_1lr1e-4_exp1'
+path = 'tdavss_3speakers_L2Norm_100kTrain_epochs40_5lr1e-4_exp1'
 print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 
@@ -164,9 +174,9 @@ metrics_unsync = Metrics_3speak(model=model, val_folders=folders_list_val,
 metrics_wandb = Metrics_wandb()
 save_weights = save_weights(model, path)
 earlystopping = earlystopping()
-reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr = 0.00000001)
+reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, min_lr = 0.00000001)
 
-filepath = '/data/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.hdf5'
+filepath = '/data/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.tf'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
 
 # Fit Generator
@@ -174,22 +184,22 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 #folders_per_epoch = int(len(folders_list_train)/3)
 
 try:
-    history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1950.0),
+    history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1),
                 steps_per_epoch = int(np.ceil(len(folders_list_train)/float(batch_size))),
                 epochs=int(epochs),
-                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1950.0), 
+                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1), 
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),
         callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file), metrics_unsync], verbose=1)
 
 except KeyboardInterrupt:
 
-    model.save_weights('/data/models/' + path + '/final_freez.hdf5')
+    model.save_weights('/data/models/' + path + '/final_freez.tf')
     print('Final model saved')
 
     for layer in model.layers:
         layer.trainable = True
 
-    model.save_weights('/data/models/' + path + '/final_unfreez.hdf5')
+    model.save_weights('/data/models/' + path + '/final_unfreez.tf')
     print('Final model saved')
 
 except Exception as e:
@@ -197,13 +207,13 @@ except Exception as e:
 
 #, WandbCallback(save_model=False, data_type="image")
 
-model.save_weights('/data/models/' + path + '/final_freez.hdf5')
+model.save_weights('/data/models/' + path + '/final_freez.tf')
 print('Final model saved')
 
 for layer in model.layers:
     layer.trainable = True
 
-model.save_weights('/data/models/' + path + '/final_unfreez.hdf5')
+model.save_weights('/data/models/' + path + '/final_unfreez.tf')
 print('Final unfreezed model saved')
 
 # Plots

@@ -103,6 +103,10 @@ class Lipreading(object):
         elif self.mode == 'backendGRU' or mode == 'finetuneGRU':
             self.x = Lambda(lambda x : tf.reshape(x, [-1, self.frameLen, self.inputDim]), name='lambda6')(self.x)    #x.view(-1, frameLen, inputDim)
             print('Input to GRU:', self.x.shape)
+            self.x = Lambda(lambda x: K.expand_dims(x, axis=2))(self.x)
+            self.x=Conv2DTranspose(self.inputDim,(3,1),strides=(3,1),padding='same',data_format='channels_last')(self.x)
+            self.x = Lambda(lambda x: K.squeeze(x, axis=2))(self.x)
+            print('upsample dim:',self.x.shape)
             self.y_pred = GRU(self.x, self.inputDim, self.hiddenDim, self.nLayers, self.nClasses, self.every_frame)
             print('GRU Out:', self.y_pred.shape)
 

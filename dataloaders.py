@@ -643,39 +643,27 @@ def DataGenerator_val_samples(folderlist, batch_size, norm=1350.0):
             samples_mix = []
 
             for folder in folders_batch:
-                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                '''lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
                 samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+
                 for i in range(len(lips_)):
                     lips.append(lips_[i])
                 for i in range(len(samples_)):
                     samples.append(samples_[i])
                 for i in range(len(lips_)):
-                    samples_mix.append(samples_mix_)
-          
-            '''zipped = list(zip(lips, samples, samples_mix))
-            random.shuffle(zipped)
-            lips, samples, samples_mix = zip(*zipped)'''
+                    samples_mix.append(samples_mix_)'''
 
-            #X_phasemask = np.asarray([np.load(fname) for fname in phase_mask])
-            #print(X_mask.shape)
-#            print('mask', X_mask.shape)
-            
-            #X_spect = [np.load(fname) for fname in spect]
-            
-            #X_phase = [np.load(fname) for fname in phase]
+                lips_ = folder
+                samples_ = folder[:-9] + '_samples.npy'
+                samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+
+                lips.append(lips_)
+                samples.append(samples_)
+                samples_mix.append(samples_mix_)
 
             X_samples = np.asarray([np.pad(np.load(fname), (0, 32000), mode='constant')[:32000] for fname in samples])
             X_samples_mix = np.asarray([np.pad(wavfile.read(fname)[1], (0, 32000), mode='constant')[:32000] for fname in samples_mix])
-            
-            '''X_spect_phase = []
-            for i in range(len(X_spect)):
-                x_spect_phase = np.stack([X_spect[i], X_phase[i]], axis=-1)
-                X_spect_phase.append(x_spect_phase)
-
-            X_spect_phase = np.asarray(X_spect_phase)'''
-
-#            print("X_spect_phase", X_spect_phase.shape)
             
             X_lips = []
             
@@ -686,23 +674,13 @@ def DataGenerator_val_samples(folderlist, batch_size, norm=1350.0):
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
                 X_lips.append(x_lips)
 
-
             X_lips = np.asarray(X_lips)
-           # print(X_lips.shape)
-            #X = seq.augment_images(X)
-            
-            #X_mag_phase_mask = np.stack([X_mask,X_phasemask], axis=-1)
 
-            '''print('X_spect_phase:', X_spect_phase.shape)
-            print('X_lips', X_lips.shape)
-            print('X_samples')'''
-
-            #X_spect_phase = X_spect_phase[:,:,:200,:]
-            #X_samples = X_samples[:,:32000]
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
             X_samples_targ = X_samples_targ
-            X_samples_mix = X_samples_mix/norm
+            if norm != 1:
+                X_samples_mix = X_samples_mix/norm
             #print(X_samples_targ.shape)
 
             #X_attns = np.random.rand(batch_size, 200, 200)
@@ -733,15 +711,24 @@ def DataGenerator_train_samples(folderlist, batch_size, norm=1350.0):
             samples_mix = []
 
             for folder in folders_batch:
-                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+                '''lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
                 samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
                 samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+
                 for i in range(len(lips_)):
                     lips.append(lips_[i])
                 for i in range(len(samples_)):
                     samples.append(samples_[i])
                 for i in range(len(lips_)):
-                    samples_mix.append(samples_mix_)
+                    samples_mix.append(samples_mix_)'''
+
+                lips_ = folder
+                samples_ = folder[:-9] + '_samples.npy'
+                samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+
+                lips.append(lips_)
+                samples.append(samples_)
+                samples_mix.append(samples_mix_)
           
             zipped = list(zip(lips, samples, samples_mix))
             random.shuffle(zipped)
@@ -792,7 +779,8 @@ def DataGenerator_train_samples(folderlist, batch_size, norm=1350.0):
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
             X_samples_targ = X_samples_targ
-            X_samples_mix = X_samples_mix/norm
+            if norm != 1:
+                X_samples_mix = X_samples_mix/norm
             #print(X_samples_targ.shape)
 
             #X_attns = np.random.rand(batch_size, 200, 200)
@@ -823,15 +811,13 @@ def DataGenerator_val_samples_attention(folderlist, batch_size):
             samples_mix = []
 
             for folder in folders_batch:
-                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
-                for i in range(len(lips_)):
-                    lips.append(lips_[i])
-                for i in range(len(samples_)):
-                    samples.append(samples_[i])
-                for i in range(len(lips_)):
-                    samples_mix.append(samples_mix_)
+                lips_ = folder
+                samples_ = folder[:-9] + '_samples.npy'
+                samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+
+                lips.append(lips_)
+                samples.append(samples_)
+                samples_mix.append(samples_mix_)
           
             '''zipped = list(zip(lips, samples, samples_mix))
             random.shuffle(zipped)
@@ -920,15 +906,13 @@ def DataGenerator_train_samples_attention(folderlist, batch_size):
             samples_mix = []
 
             for folder in folders_batch:
-                lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
-                samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
-                samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
-                for i in range(len(lips_)):
-                    lips.append(lips_[i])
-                for i in range(len(samples_)):
-                    samples.append(samples_[i])
-                for i in range(len(lips_)):
-                    samples_mix.append(samples_mix_)
+                lips_ = folder
+                samples_ = folder[:-9] + '_samples.npy'
+                samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+
+                lips.append(lips_)
+                samples.append(samples_)
+                samples_mix.append(samples_mix_)
           
             zipped = list(zip(lips, samples, samples_mix))
             random.shuffle(zipped)
@@ -1772,15 +1756,24 @@ def Data_predict_attention(folderlist_dict):
     samples_mix = []
 
     for folder in folderlist:
-        lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
+        '''lips_ = sorted(glob.glob(folder + '/*_lips.mp4'), key=numericalSort)
         samples_ = sorted(glob.glob(folder + '/*_samples.npy'), key=numericalSort)
         samples_mix_ = '/data/mixed_audio_files/' +folder.split('/')[-1]+'.wav'
+
         for i in range(len(lips_)):
             lips.append(lips_[i])
         for i in range(len(samples_)):
             samples.append(samples_[i])
         for i in range(len(lips_)):
-            samples_mix.append(samples_mix_)
+            samples_mix.append(samples_mix_)'''
+
+        lips_ = folder
+        samples_ = folder[:-9] + '_samples.npy'
+        samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+
+        lips.append(lips_)
+        samples.append(samples_)
+        samples_mix.append(samples_mix_)
     
     
     X_samples_mix = []
@@ -1788,7 +1781,8 @@ def Data_predict_attention(folderlist_dict):
     X_lips = []
     for i, fname in enumerate(samples_mix):
         fold = fname.split('/')[-1][:-4]
-        offset = abs(folderlist_dict[lips[i][:-35]])
+        #offset = abs(folderlist_dict[lips[i][:-35]])
+        offset = abs(folderlist_dict[lips[i]])
         #offset = abs(offsets[fold])
         aud_offset = int(abs((offset/25)*16000))
 
@@ -1811,7 +1805,7 @@ def Data_predict_attention(folderlist_dict):
     X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
     X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
     X_samples_targ = X_samples_targ
-    X_samples_mix = (X_samples_mix/1950.0).astype('float32')
+    X_samples_mix = (X_samples_mix).astype('float32')
     #print(X_samples_targ.shape)
 
     np.random.seed(100)
