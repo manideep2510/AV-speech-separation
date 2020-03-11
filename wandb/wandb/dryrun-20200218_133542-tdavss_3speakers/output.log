@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/data/AV-speech-separation1/main_tasnet_attention1.py", line 91, in <module>
-    folders_list_train = random.choice(folders_list[:-3000], 16666)
-TypeError: choice() takes 2 positional arguments but 3 were given

@@ -1,49 +1,0 @@
-Training data: 360
-Validation data: 240
-input_samples (?, 51400)
-input_samples_reshape (?, 257, 200, 1)
-WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Colocations handled automatically by placer.
-3D Conv Out: (?, 50, 32, 32, 64)
-3D Conv Out Reshape: (?, 32, 32, 64)
-Resnet18 Out: (?, 1, 1, 512)
-Resnet18 Linear Out: (?, 256)
-Input to GRU: (?, 50, 256)
-GRU Out: (?, 50, 29)
-ResNet LSTM Pretrain weights loaded
-outv: (?, 200, 256)
-outa: (?, 200, 256)
-attn_out: (?, 200, 256)
-attn_states: (?, 200, 200)
-fusion: (?, 200, 512)
-
-==================================================================================================
-Total params: 38,135,071
-Trainable params: 38,080,287
-Non-trainable params: 54,784
-__________________________________________________________________________________________________
-
-WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use tf.cast instead.
-Epoch 1/2
-1/5 [=====>........................] - ETA: 1:37 - loss: 1128.77102/5 [===========>..................] - ETA: 37s - loss: 1108.1283 3/5 [=================>............] - ETA: 17s - loss: 1090.32124/5 [=======================>......] - ETA: 6s - loss: 1074.7323  1/10 [==>...........................] - ETA: 22s - loss: 962.9680 2/10 [=====>........................] - ETA: 10s - loss: 964.1273 3/10 [========>.....................] - ETA: 6s - loss: 965.6737  4/10 [===========>..................] - ETA: 4s - loss: 966.6063 5/10 [==============>...............] - ETA: 3s - loss: 967.1729 6/10 [=================>............] - ETA: 2s - loss: 967.3209 7/10 [====================>.........] - ETA: 1s - loss: 967.2546 8/10 [=======================>......] - ETA: 1s - loss: 967.4109 9/10 [==========================>...] - ETA: 0s - loss: 966.989010/10 [==============================] - 6s 593ms/step - loss: 967.4613
-120
-0
-Traceback (most recent call last):
-  File "main_tasnet.py", line 167, in <module>
-    callbacks=[reducelronplateau, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm], verbose = 1)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training.py", line 1426, in fit_generator
-    initial_epoch=initial_epoch)
-  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
-    return old_generator(*args, **kwargs)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training_generator.py", line 232, in model_iteration
-    callbacks.on_epoch_end(epoch, epoch_logs, mode=mode)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/callbacks.py", line 251, in on_epoch_end
-    callback.on_epoch_end(epoch, logs)
-  File "/data/AV-speech-separation1/metrics.py", line 232, in on_epoch_end
-    val_folders_samp = random.sample(self.val_folders[:1500], 8) + random.sample(self.val_folders[1500:], 8)
-  File "/usr/lib/python3.5/random.py", line 315, in sample
-    raise ValueError("Sample larger than population")
-ValueError: Sample larger than population

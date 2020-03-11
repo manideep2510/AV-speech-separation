@@ -1,50 +1,0 @@
-Training data: 360
-Validation data: 240
-input_samples (?, 51400)
-input_samples_reshape (?, 257, 200, 1)
-WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Colocations handled automatically by placer.
-3D Conv Out: (?, 50, 32, 32, 64)
-3D Conv Out Reshape: (?, 32, 32, 64)
-Resnet18 Out: (?, 1, 1, 512)
-Resnet18 Linear Out: (?, 256)
-Input to GRU: (?, 50, 256)
-GRU Out: (?, 50, 29)
-ResNet LSTM Pretrain weights loaded
-outv: (?, 200, 256)
-outa: (?, 200, 256)
-attn_out: (?, 200, 256)
-attn_states: (?, 200, 200)
-fusion: (?, 200, 512)
-
-==================================================================================================
-Total params: 38,135,071
-Trainable params: 38,080,287
-Non-trainable params: 54,784
-__________________________________________________________________________________________________
-
-WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use tf.cast instead.
-Epoch 1/2
-1/5 [=====>........................] - ETA: 1:09 - loss: 1140.14612/5 [===========>..................] - ETA: 27s - loss: 1118.9458 3/5 [=================>............] - ETA: 12s - loss: 1099.78314/5 [=======================>......] - ETA: 4s - loss: 1082.9386  1/10 [==>...........................] - ETA: 35s - loss: 969.4412 2/10 [=====>........................] - ETA: 18s - loss: 971.2233 3/10 [========>.....................] - ETA: 15s - loss: 973.0015 4/10 [===========>..................] - ETA: 13s - loss: 974.5883 5/10 [==============>...............] - ETA: 10s - loss: 974.9651 6/10 [=================>............] - ETA: 8s - loss: 975.2683  7/10 [====================>.........] - ETA: 6s - loss: 975.1578 8/10 [=======================>......] - ETA: 4s - loss: 975.3276 9/10 [==========================>...] - ETA: 2s - loss: 974.828310/10 [==============================] - 21s 2s/step - loss: 975.3583
-Val SDR: -4.77429204221003  -  Val Si_SNR: -8.079758057816772  -  Val PESQ: 1.084890609383583
-Traceback (most recent call last):
-  File "main_tasnet.py", line 167, in <module>
-    callbacks=[earlystopping, learningratescheduler, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), metrics_crm, WandbCallback(save_model=False, data_type="image")], verbose = 1)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training.py", line 1426, in fit_generator
-    initial_epoch=initial_epoch)
-  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
-    return old_generator(*args, **kwargs)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training_generator.py", line 232, in model_iteration
-    callbacks.on_epoch_end(epoch, epoch_logs, mode=mode)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/callbacks.py", line 251, in on_epoch_end
-    callback.on_epoch_end(epoch, logs)
-  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 293, in on_epoch_end
-    num_images=self.predictions)}, commit=False)
-  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 431, in _log_images
-    predictions = self.model.predict(np.stack(test_data))
-  File "/usr/local/lib/python3.5/dist-packages/numpy/core/shape_base.py", line 416, in stack
-    raise ValueError('all input arrays must have the same shape')
-ValueError: all input arrays must have the same shape

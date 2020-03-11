@@ -1,26 +1,0 @@
-Training data: 360
-Validation data: 240
-input_samples (?, 128500)
-input_samples_reshape (?, 257, 500, 1)
-WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Colocations handled automatically by placer.
-3D Conv Out: (?, 125, 32, 32, 64)
-3D Conv Out Reshape: (?, 32, 32, 64)
-Resnet18 Out: (?, 1, 1, 512)
-Resnet18 Linear Out: (?, 256)
-Input to GRU: (?, 125, 256)
-GRU Out: (?, 125, 29)
-ResNet LSTM Pretrain weights loaded
-
-==================================================================================================
-Total params: 37,610,015
-Trainable params: 37,555,231
-Non-trainable params: 54,784
-__________________________________________________________________________________________________
-
-WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use tf.cast instead.
-Epoch 1/2
- 1/12 [=>............................] - ETA: 3:43 - loss: 1147.5841 2/12 [====>.........................] - ETA: 1:45 - loss: 1137.9030 3/12 [======>.......................] - ETA: 1:05 - loss: 1127.8493 4/12 [=========>....................] - ETA: 44s - loss: 1116.1562  5/12 [===========>..................] - ETA: 32s - loss: 1107.7129 6/12 [==============>...............] - ETA: 24s - loss: 1097.8633

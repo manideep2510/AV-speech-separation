@@ -1,61 +1,0 @@
-Training data: 360
-Validation data: 240
-input_samples (?, 32000)
-input_samples_reshape (?, 32000, 1)
-WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Colocations handled automatically by placer.
-3D Conv Out: (?, 50, 32, 32, 64)
-3D Conv Out Reshape: (?, 32, 32, 64)
-Resnet18 Out: (?, 1, 1, 512)
-Resnet18 Linear Out: (?, 256)
-Input to GRU: (?, 50, 256)
-GRU Out: (?, 50, 29)
-ResNet LSTM Pretrain weights loaded
-outv: (?, 200, 256)
-outa: (?, 200, 256)
-attn_out: (?, 200, 256)
-attn_states: (?, 200, 200)
-fusion: (?, 200, 512)
-up1: (?, 700, 256)
-up2: (?, 2700, 64)
-up3: (?, 10700, 16)
-up4: (?, 32025, 4)
-out_samples: (?, 32000, 1)
-output_concats: (?, 32000, 2)
-
-==================================================================================================
-Total params: 40,300,399
-Trainable params: 40,245,615
-Non-trainable params: 54,784
-__________________________________________________________________________________________________
-
-Pred: (24, 32000)
-GT: (24, 32000)
-Pred: (24, 32000)
-GT: (24, 32000)
-Pred: (24, 32000)
-GT: (24, 32000)
-WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use tf.cast instead.
-Epoch 1/2
-1/5 [=====>........................] - ETA: 9:43 - loss: 46.2803 - snr_acc: -46.28032/5 [===========>..................] - ETA: 3:40 - loss: 45.5654 - snr_acc: -45.56543/5 [=================>............] - ETA: 1:38 - loss: 44.8806 - snr_acc: -44.88064/5 [=======================>......] - ETA: 37s - loss: 44.7403 - snr_acc: -44.7403  1/10 [==>...........................] - ETA: 1:31 - loss: 45.6304 - snr_acc: -45.6304 2/10 [=====>........................] - ETA: 42s - loss: 47.4109 - snr_acc: -47.4109  3/10 [========>.....................] - ETA: 25s - loss: 48.0960 - snr_acc: -48.0960 4/10 [===========>..................] - ETA: 16s - loss: 48.0554 - snr_acc: -48.0554 5/10 [==============>...............] - ETA: 11s - loss: 47.6147 - snr_acc: -47.6147 6/10 [=================>............] - ETA: 7s - loss: 47.2253 - snr_acc: -47.2253  7/10 [====================>.........] - ETA: 5s - loss: 46.8583 - snr_acc: -46.8583 8/10 [=======================>......] - ETA: 3s - loss: 47.2444 - snr_acc: -47.2444 9/10 [==========================>...] - ETA: 1s - loss: 46.8138 - snr_acc: -46.813810/10 [==============================] - 13s 1s/step - loss: 46.5110 - snr_acc: -46.5110
-Traceback (most recent call last):
-  File "main_tasnet.py", line 167, in <module>
-    callbacks=[reducelronplateau, checkpoint_save_weights, LoggingCallback(print_fcn=log_to_file), WandbCallback(save_model=False, data_type="image")], verbose = 1)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training.py", line 1426, in fit_generator
-    initial_epoch=initial_epoch)
-  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 104, in new_generator
-    return old_generator(*args, **kwargs)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/engine/training_generator.py", line 232, in model_iteration
-    callbacks.on_epoch_end(epoch, epoch_logs, mode=mode)
-  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/keras/callbacks.py", line 251, in on_epoch_end
-    callback.on_epoch_end(epoch, logs)
-  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 293, in on_epoch_end
-    num_images=self.predictions)}, commit=False)
-  File "/usr/local/lib/python3.5/dist-packages/wandb/keras/__init__.py", line 431, in _log_images
-    predictions = self.model.predict(np.stack(test_data))
-  File "/usr/local/lib/python3.5/dist-packages/numpy/core/shape_base.py", line 416, in stack
-    raise ValueError('all input arrays must have the same shape')
-ValueError: all input arrays must have the same shape
