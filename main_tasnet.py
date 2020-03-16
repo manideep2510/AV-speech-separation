@@ -28,14 +28,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
 #from models.lipnet import LipNet
-from models.tdavss import TasNet
+#from models.tdavss import TasNet
 from models.tdavss_sepconv import TasNet as TasNetSepCon
+#from models.tdavss_sepconv1 import TasNet as TasNetSepCon
 #from models.tasnet_lipnet import TasNet
 from dataloaders import DataGenerator_val_samples, DataGenerator_train_samples
 import random
 #from dataloaders_aug import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
 
-'''gpus = tf.config.experimental.list_physical_devices('GPU')
+gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
     # Currently, memory growth needs to be the same across GPUs
@@ -46,7 +47,7 @@ if gpus:
   except RuntimeError as e:
     # Memory growth must be set before GPUs have been initialized
     print(e)
-'''
+
 from tensorflow.keras.utils import multi_gpu_model
 from argparse import ArgumentParser
 import wandb
@@ -61,7 +62,7 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_SepConv_self_Attention', notes='Attention, 50K training folders, Batch size 12, lr = 5e-4, Normalize input with L2 Norm, Loss is Si-SNR', 
+wandb.init(name='tdavss_SepConv_400Frames', notes='400Frames, 50K training folders, Batch size 12, lr = 5e-4, Normalize input with L2 Norm, Loss is Si-SNR',
                 project="av-speech-seperation", dir='/data/wandb')
 
 # To read the images in numerical order
@@ -126,10 +127,10 @@ epochs = args.epochs
 tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50,
                       attention=False, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 model = tasnet.model
-#model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
-#model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
-parallel_model=tf.keras.utils.multi_gpu_model(model, gpus=2)
-parallel_model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
+#model.load_weights('/data/models/tdavss_SepConv_400Frames_Attention_epochs40_lr5e-4_exp1/weights-03--3.1715.tf')
+model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
+#parallel_model=tf.keras.utils.multi_gpu_model(model, gpus=2)
+#parallel_model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
 
 from io import StringIO
 tmp_smry = StringIO()
@@ -141,7 +142,7 @@ summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
 
-path = 'tdavss_SepConv_self_Attention_epochs40_lr5e-4_exp1'
+path = 'tdavss_SepConv_400Frames_epochs40_lr5e-4_exp1'
 print('Model weights path:', path + '\n')
 
 try:
@@ -181,7 +182,7 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
     
 
 try:
-    history = parallel_model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1),
+    history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1),
                 steps_per_epoch = int(np.ceil(len(folders_list_train)/float(batch_size))),
                 epochs=int(epochs),
                 validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1),

@@ -43,10 +43,9 @@ print('Ok')
 #folders = np.loadtxt('/data/AV-speech-separation1/lrs2_comb3_100k_train.txt', dtype='object').tolist()
 #folders = random.sample(folders, 10000)
 
-folders = np.loadtxt(
-    '/data/AV-speech-separation1/lrs2_comb3_val_snr_filter.txt', dtype='object').tolist()
-random.seed(1234)
-folders = random.sample(folders, 5000)
+folders = np.loadtxt('/data/AV-speech-separation1/lrs2_comb3_train_snr_filter.txt', dtype='object').tolist()
+'''random.seed(1234)
+folders = random.sample(folders, 5000)'''
 
 true_samples = []
 for item in folders:
@@ -74,19 +73,30 @@ print('Done reading mixed samples')
 
 snrs = []
 snrs_files = []
+snrs1_files=[]
+sn=[]
 for i, item in enumerate(true_samples):
     true_samp = np.load(item)[:32000]
     mix_samp = wavfile.read(mix_samples[i])[1][:32000]
     snr_ =  si_snr(mix_samp, true_samp)
-    if snr_ >= -5 and snr_ <= 5:
+    if snr_ >= 0 and snr_ <= 5:
         snrs_files.append(item[:-12]+'_lips.mp4')
-    snrs.append(snr_)
+        snrs.append(snr_)
+    elif snr_>=-5 and snr_<0:
+        snrs1_files.append(item[:-12]+'_lips.mp4')
+        snrs.append(snr_)
+    #snrs.append(snr_)
     if i%1000 == 0:
         print(i, 'Done')
 
+sn=sn+snrs_files
+l=len(snrs_files)
+print('len l',l)
+sn=sn+random.sample(snrs1_files,50000-l)
+print('len of files',len(sn))
 print('SNR mean:', np.mean(snrs))
 #np.savetxt('/data/snrs_2comb_val.txt', snrs)
-#np.savetxt('/data/lrs2_comb3_train_snr_filter.txt', snrs_files, fmt='%s')
+np.savetxt('/data/lrs2_comb3_train_snr_filter1.txt', sn, fmt='%s')
 #snrs = np.loadtxt('/data/snrs_3comb.txt')
 
 plt.hist(snrs, 10, facecolor='g')
@@ -95,7 +105,7 @@ plt.xlabel('SNR')
 plt.ylabel('Count')
 plt.title('SNR Histogram 3 speakers Val')
 plt.grid(True)
-plt.savefig('/data/AV-speech-separation1/snr_hist_3speak_val.png')
+plt.savefig('/data/AV-speech-separation1/snr_hist_3speak_train1.png')
 
 '''c = 0
 for i in range(len(snrs)):

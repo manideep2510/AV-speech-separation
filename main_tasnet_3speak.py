@@ -60,8 +60,8 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_3speakers_L2Norm_100kTrain', notes='100K train data. 3 speakers WITHOUT attention training,Batch = 5, 20K training folders. TasNet with Resnet without LSTM Lipnet.', 
-           project="av-speech-seperation", id='tdavss_3speakers_100kTrain', dir='/data/wandb')
+wandb.init(name='tdavss_3speakers_SepConv_400Frames', notes='3 speakers WITHOUT attention training,Batch = 5, 20K training folders. TasNet with Resnet without LSTM Lipnet.', 
+           project="av-speech-seperation", dir='/data/wandb')
 
 # To read the images in numerical order
 import re
@@ -103,10 +103,10 @@ folders_list_val_all = np.loadtxt(
     '/data/AV-speech-separation1/lrs2_comb3_val_snr_filter.txt', dtype='object').tolist()
 
 random.seed(123)
-folders_list_train = random.sample(folders_list_train_all, 100000)
-random.seed(12345)
+folders_list_train = random.sample(folders_list_train_all, 50000)
+random.seed(1234)
 folders_list_val = random.sample(folders_list_val_all, 5000)
-random.seed(123456)
+random.seed(12345)
 random.shuffle(folders_list_train)
 
 #random.seed(30)
@@ -146,7 +146,7 @@ print('\n'+summary_params)
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'tdavss_3speakers_L2Norm_100kTrain_epochs40_5lr1e-4_exp1'
+path = 'tdavss_3speakers_SepConv_400Frames_epochs40_5lr1e-4_exp1'
 print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 

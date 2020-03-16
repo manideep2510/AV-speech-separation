@@ -107,7 +107,7 @@ class TasNet(object):
         
         #audio_encoding
         self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_normalized)
-        self.audio=Conv1D(256,16,padding='same',strides=2, activation='relu')(self.audio)
+        self.audio=Conv1D(256,16,padding='same',strides=4, activation='relu')(self.audio)
         
         #video_processing
 
@@ -145,53 +145,40 @@ class TasNet(object):
         self.outa=Conv_Block(self.outa,dialation_rate=128)
         
         #fusion_process
-
-        if self.attention == True:
         
-            self.outv=UpSampling1D(size=4)(self.outv)
-        else:
-            self.outv = UpSampling1D(size=4*4)(self.outv)
+        self.outv=UpSampling1D(size=4*2)(self.outv)
 
         print('outv:', self.outv.shape)
         print('outa:', self.outa.shape)
 
         if self.attention == True:
-            self.outa1=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.outa)
+            #self.outa1=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.outa)
             self.attn_layer = AttentionLayer(name='attention_layer')
-            self.attn_out, self.attn_states = self.attn_layer([self.outv, self.outa1], verbose=False)
+            self.attn_out, self.attn_states = self.attn_layer([self.outv, self.outa], verbose=False)
             print('attn_out:', self.attn_out.shape)
             print('attn_states:', self.attn_states.shape)
 
             
-            self.fusion=concatenate([self.attn_out, self.outv],axis=-1)  # B, 200, 512
+            self.fusion=concatenate([self.attn_out, self.outv, self.outa],axis=-1)  # B, 200, 512
             #self.fusion = Conv1D(512, 1)(self.fusion)
-            self.fusion = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
-            self.fusion=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.fusion) # B, 1600, 256
-            self.fusion = Lambda(lambda x: K.squeeze(x, axis=2), name='fusion_out')(self.fusion)
+            #self.fusion = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
+            #self.fusion=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.fusion) # B, 1600, 256
+            #self.fusion = Lambda(lambda x: K.squeeze(x, axis=2), name='fusion_out')(self.fusion)
             
-            self.fusion=concatenate([self.fusion, self.outa],axis=-1)  # B, 200, 512
+            #self.fusion=concatenate([self.fusion, self.outa],axis=-1)  # B, 200, 512
             self.fusion=Conv1D(512,1)(self.fusion)
         else:
             self.fusion=concatenate([self.outv,self.outa],axis=-1)
         
         print('fusion:', self.fusion.shape)
 
+        '''self.fusion=multi_head_self_attention(8,512)(self.fusion)
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
-        self.fusion=multi_head_self_attention(8,512)(self.fusion)
-        print('self attention fusion shape',self.fusion.shape)
-
-        '''self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=8,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=16,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=32,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=64,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=512)
+        print('self attention fusion shape',self.fusion.shape)'''
 
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)
@@ -209,14 +196,23 @@ class TasNet(object):
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=16,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=32,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=64,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=512)'''
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=512)
+
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=512)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=8,filters=512)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=16,filters=512)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=32,filters=512)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=64,filters=512)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=512)
         
         #Decoding
         self.mask=Conv1D(256,1,activation='relu', name='mask')(self.fusion)
         self.fusion=Multiply()([self.audio,self.mask])
         self.decode = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
 
-        self.decode=Conv2DTranspose(256,(16,1),strides=(2,1),padding='same',data_format='channels_last')(self.decode)
+        self.decode=Conv2DTranspose(256,(16,1),strides=(4,1),padding='same',data_format='channels_last')(self.decode)
         self.decode=Conv2DTranspose(1,(40,1),strides=(20,1),padding='same',data_format='channels_last')(self.decode)
         self.out = Lambda(lambda x: K.squeeze(x, axis=2), name='out')(self.decode)
         print('Out:', self.out.shape)

@@ -18,7 +18,7 @@ from tensorflow.keras.layers import Lambda
 from sep_classification_models.tfkeras import Classifiers as Separable_Classifiers
 from .mish import Mish
 
-def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
+def gru(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
 
     out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', reset_after=False, name='gru1'), merge_mode='concat')(x)
     out = Bidirectional(keras.layers.GRU(hidden_size, return_sequences=True, kernel_initializer='Orthogonal', reset_after=False, name='gru2'), merge_mode='concat')(out)
@@ -98,7 +98,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
     elif mode == 'backendGRU' or mode == 'finetuneGRU':
         x = Lambda(lambda x : tf.reshape(x, [-1, frameLen, inputDim]), name='lambda6')(x)    #x.view(-1, frameLen, inputDim)
         print('Input to GRU:', x.shape)
-        x = GRU(x, inputDim, hiddenDim, nLayers, nClasses, every_frame)
+        x = gru(x, inputDim, hiddenDim, nLayers, nClasses, every_frame)
         print('GRU Out:', x.shape)
 
     else:
