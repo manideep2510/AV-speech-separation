@@ -60,7 +60,7 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 args = parser.parse_args()
 os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_3speakers_SepConv_400Frames', notes='3 speakers WITHOUT attention training,Batch = 5, 20K training folders. TasNet with Resnet without LSTM Lipnet.', 
+wandb.init(name='tdavss_3speakers_SepConv_1600Frames', notes='3 speakers baseline training,Batch = 5, 20K training folders. TasNet with Resnet without LSTM Lipnet.', 
            project="av-speech-seperation", dir='/data/wandb')
 
 # To read the images in numerical order
@@ -96,16 +96,16 @@ folders_list_val = np.loadtxt(
     '/data/AV-speech-separation1/lrs2_3comb_2k_split_val.txt', dtype='object').tolist()
 #folders_list_train = folders_list_train[:16666]'''
 
-folders_list_train_all = np.loadtxt(
-    '/data/AV-speech-separation1/lrs2_comb3_train_snr_filter.txt', dtype='object').tolist()
+folders_list_train = np.loadtxt(
+    '/data/AV-speech-separation1/lrs2_comb3_train_snr_filter2.txt', dtype='object').tolist()
 
-folders_list_val_all = np.loadtxt(
-    '/data/AV-speech-separation1/lrs2_comb3_val_snr_filter.txt', dtype='object').tolist()
+folders_list_val = np.loadtxt(
+    '/data/AV-speech-separation1/lrs2_comb3_val_snr_filter2.txt', dtype='object').tolist()
 
-random.seed(123)
+'''random.seed(123)
 folders_list_train = random.sample(folders_list_train_all, 50000)
 random.seed(1234)
-folders_list_val = random.sample(folders_list_val_all, 5000)
+folders_list_val = random.sample(folders_list_val_all, 5000)'''
 random.seed(12345)
 random.shuffle(folders_list_train)
 
@@ -123,8 +123,8 @@ lrate = args.lrate
 batch_size = args.batch_size
 epochs = args.epochs
 
-tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50, attention=False,
-                lstm = False, lipnet_pretrained=True, train_lipnet=False)
+tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50, 
+                    attention=False, lstm = False, lipnet_pretrained=True, train_lipnet=True)
 model = tasnet.model
 #model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
