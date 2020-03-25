@@ -87,7 +87,7 @@ def DataGenerator_train(folderlist, batch_size, norm=1):
             for folder in folders_batch:
                 lips_ = folder
                 samples_ = folder[:-9] + '_samples.npy'
-                samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+                samples_mix_ = '/home/manideepkolla/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
 
                 lips.append(lips_)
                 samples.append(samples_)
@@ -152,7 +152,7 @@ def DataGenerator_val(folderlist, batch_size, norm=1):
             for folder in folders_batch:
                 lips_ = folder
                 samples_ = folder[:-9] + '_samples.npy'
-                samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+                samples_mix_ = '/home/manideepkolla/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
 
                 lips.append(lips_)
                 samples.append(samples_)

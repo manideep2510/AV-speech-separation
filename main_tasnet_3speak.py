@@ -97,10 +97,10 @@ folders_list_val = np.loadtxt(
 #folders_list_train = folders_list_train[:16666]'''
 
 folders_list_train = np.loadtxt(
-    '/data/AV-speech-separation1/lrs2_comb3_train_snr_filter2.txt', dtype='object').tolist()
+    '/home/manideepkolla/lrs2_train_comb3.txt', dtype='object').tolist()
 
 folders_list_val = np.loadtxt(
-    '/data/AV-speech-separation1/lrs2_comb3_val_snr_filter2.txt', dtype='object').tolist()
+    '/home/manideepkolla/lrs2_val_comb3.txt', dtype='object').tolist()
 
 '''random.seed(123)
 folders_list_train = random.sample(folders_list_train_all, 50000)

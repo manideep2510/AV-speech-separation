@@ -1,7 +1,7 @@
 import sys
 #sys.path.append('/data/AV-speech-separation1/LipNet')
 #sys.path.append('/data/AV-speech-separation1/models')
-sys.path.append('/data/AV-speech-separation1/models/classification_models-master/')
+sys.path.append('/home/manideepkolla/av-speech-separation/models/classification_models-master/')
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
@@ -105,7 +105,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
 
     if pretrain == True:
         model.load_weights(
-            '/data/models/combResnetLSTM_CTCloss_seperableConv_236ktrain_1to3ratio_valWER_epochs11_to_20_lr1e-4_0.1decay9epochs/weights-07-118.8296.hdf5')
+            '/home/manideepkolla/lrs2/sepconv_lipreading_weights.hdf5')
         print('Separable Conv ResNet LSTM Pretrain weights loaded')
 
     return model
@@ -204,7 +204,7 @@ def vec_l2norm(x):
 
 
 # Generator
-def Generator(time_dimensions=500,frequency_bins=257,n_frames=125, attention=None, 
+def Generator(time_dimensions=500,frequency_bins=257,n_frames=125, 
                 lstm = False,lipnet_pretrained=None, train_lipnet=None):
             
     t=time_dimensions
@@ -212,7 +212,6 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125, attention=Non
     frames=n_frames
     lipnet_pretrained = lipnet_pretrained
     train_lipnet = train_lipnet
-    attention = attention
     lstm = lstm
 
     audio_input_data=Input(shape=(t*160,1))#audio_shape=(80000,1)
@@ -261,36 +260,15 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125, attention=Non
 
     #fusion_process
 
-    if attention == True:
-
-        outv=UpSampling1D(size=4)(outv)
-    else:
-        outv = UpSampling1D(size=4*8)(outv)
+    outv = UpSampling1D(size=4*8)(outv)
 
     print('outv:', outv.shape)
     print('outa:', outa.shape)
 
-    if attention == True:
-        outa1=Conv1D(256,16,padding='same',strides=8, activation='relu')(outa)
-        attn_layer = AttentionLayer(name='attention_layer')
-        attn_out, attn_states = attn_layer([outv, outa1], verbose=False)
-        print('attn_out:', attn_out.shape)
-        print('attn_states:', attn_states.shape)
+    #latent_vector = tf.random.normal(shape=tf.shape(outa), name='latent_vector')
+    #latent_vector = Lambda(lambda x: tf.random.normal(shape=tf.shape(x)), name='latent_vector')(outa)
+    fusion = concatenate([outv, outa], axis=-1)
 
-
-        fusion=concatenate([attn_out, outv],axis=-1)  # B, 200, 512
-        #fusion = Conv1D(512, 1)(fusion)
-        fusion = Lambda(lambda x: K.expand_dims(x, axis=2))(fusion)
-        fusion=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(fusion) # B, 1600, 256
-        fusion = Lambda(lambda x: K.squeeze(x, axis=2), name='fusion_out')(fusion)
-
-        fusion=concatenate([fusion, outa],axis=-1)  # B, 200, 512
-        fusion=Conv1D(512,1)(fusion)
-    else:
-        #latent_vector = tf.random.normal(shape=tf.shape(outa), name='latent_vector')
-        #latent_vector = Lambda(lambda x: tf.random.normal(shape=tf.shape(x)), name='latent_vector')(outa)
-        fusion = concatenate([outv, outa], axis=-1)
-        #fusion = Conv1D(512, 1)(fusion)
 
     print('fusion:', fusion.shape)
 
@@ -339,8 +317,24 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125, attention=Non
 
     return model
 
+# Phase shuffle operation
+def apply_phaseshuffle(x, rad, pad_type='reflect'):
+  b, x_len, nch = x.get_shape().as_list()
+
+  phase = tf.random.uniform([], minval=-rad, maxval=rad + 1, dtype=tf.int32)
+  pad_l = tf.math.maximum(phase, 0)
+  pad_r = tf.math.maximum(-phase, 0)
+  phase_start = pad_r
+  x = tf.pad(x, [[0, 0], [pad_l, pad_r], [0, 0]], mode=pad_type)
+
+  x = x[:, phase_start:phase_start+x_len]
+  x.set_shape([b, x_len, nch])
+
+  return x
+
+
 # Discriminator
-def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, attention=None, 
+def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuffle_rad=0, 
                   lstm = False,lipnet_pretrained=None, train_lipnet=None):
             
     t=time_dimensions
@@ -348,8 +342,13 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, attention
     frames=n_frames
     lipnet_pretrained = lipnet_pretrained
     train_lipnet = train_lipnet
-    attention = attention
     lstm = lstm
+
+    # Phase Shuffle layer
+    if phaseshuffle_rad > 0:
+        phaseshuffle = Lambda(lambda x: apply_phaseshuffle(x, phaseshuffle_rad))
+    else:
+        phaseshuffle = Lambda(lambda x: x)
 
     audio_input_data1=Input(shape=(t*160,1))#audio_shape=(80000,1)
 
@@ -358,7 +357,6 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, attention
 
     # Additive noise to the clean/GT speech
     noise_dev_inp = Input(shape=(t*160,1))
-    audio_input_data2_noisy = audio_input_data2 + 500*noise_dev_inp
 
     '''#noise = tf.random.normal(shape=tf.shape(audio_input_data2), stddev=noise_dev, name='instance_noise')
     noise = Lambda(lambda x: tf.random.normal(shape=tf.shape(x[0]), stddev=tf.math.reduce_mean(x[1])), 
@@ -368,17 +366,23 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, attention
     #audio_input_data2 = Lambda(lambda x: tf.math.add(x[0], x[1]), name='add_noise')([audio_input_data2, noise])
 
     norm1 = vec_l2norm(audio_input_data1)
-    norm2 = vec_l2norm(audio_input_data2_noisy)
     audio_normalized1 = audio_input_data1/norm1
-    audio_normalized2 = audio_input_data2_noisy/norm2
+
+    norm2 = vec_l2norm(audio_input_data2)
+    norm_noise = vec_l2norm(noise_dev_inp)
+    audio_input_data2_noisy = audio_input_data2 + (0.05*norm2/(norm_noise+1e-8))*noise_dev_inp
+    print('audio_input_data2_noisy:', audio_input_data2_noisy.shape)
+    norm2_new = vec_l2norm(audio_input_data2_noisy)
+    audio_normalized2 = audio_input_data2_noisy/norm2_new
     
-    audio_normalized = concatenate([audio_normalized1, audio_normalized1],axis=-1)
+    audio_normalized = concatenate([audio_normalized1, audio_normalized2],axis=-1)
 
     print('audio_normalized', audio_normalized.shape)
 
     #audio_encoding
     audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(audio_normalized)
     #audio=Conv1D(256,16,padding='same',strides=2, activation='relu')(audio)
+    audio = phaseshuffle(audio)
 
     print('Audio encode', audio.shape)
 
@@ -398,7 +402,7 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, attention
     else:
         outv = lipnet_model.layers[-4].output
 
-    #video_processing
+    # Video Processing
     video_data=Conv1D(512,1)(outv)
     outv=Conv_Block_Video_disc(video_data,dialation_rate=1)
     outv=Conv_Block_Video_disc(outv,dialation_rate=2)
@@ -407,45 +411,32 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, attention
     outv=Conv_Block_Video_disc(outv,dialation_rate=16)
     outv=Conv1D(256,1)(outv)
 
-    #audio_processing
+    # Audio Processing WITH Phase Shuffle
     outa=Conv_Block_disc(audio,dialation_rate=1)
+    outa = phaseshuffle(outa)
     outa=Conv_Block_disc(outa,dialation_rate=2)
+    outa = phaseshuffle(outa)
     outa=Conv_Block_disc(outa,dialation_rate=4)
+    outa = phaseshuffle(outa)
     outa=Conv_Block_disc(outa,dialation_rate=8)
+    outa = phaseshuffle(outa)
     outa=Conv_Block_disc(outa,dialation_rate=16)
+    outa = phaseshuffle(outa)
     outa=Conv_Block_disc(outa,dialation_rate=32)
+    outa = phaseshuffle(outa)
     outa=Conv_Block_disc(outa,dialation_rate=64)
+    outa = phaseshuffle(outa)
     outa=Conv_Block_disc(outa,dialation_rate=128)
+    outa = phaseshuffle(outa)
 
-    #fusion_process
-
-    if attention == True:
-
-        outv=UpSampling1D(size=4)(outv)
-    else:
-        outv = UpSampling1D(size=4*8)(outv)
+    # Upsample Video frames to Audio frames rate
+    outv = UpSampling1D(size=4*8)(outv)
 
     print('outv:', outv.shape)
     print('outa:', outa.shape)
 
-    if attention == True:
-        outa1=Conv1D(256,16,padding='same',strides=8, activation='relu')(outa)
-        attn_layer = AttentionLayer(name='attention_layer')
-        attn_out, attn_states = attn_layer([outv, outa1], verbose=False)
-        print('attn_out:', attn_out.shape)
-        print('attn_states:', attn_states.shape)
-
-
-        fusion=concatenate([attn_out, outv],axis=-1)  # B, 200, 512
-        #fusion = Conv1D(512, 1)(fusion)
-        fusion = Lambda(lambda x: K.expand_dims(x, axis=2))(fusion)
-        fusion=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(fusion) # B, 1600, 256
-        fusion = Lambda(lambda x: K.squeeze(x, axis=2), name='fusion_out')(fusion)
-
-        fusion=concatenate([fusion, outa],axis=-1)  # B, 200, 512
-        fusion=Conv1D(512,1)(fusion)
-    else:
-        fusion=concatenate([outv,outa],axis=-1)
+    # Concatenate Audio and Video features
+    fusion=concatenate([outv,outa],axis=-1)
 
     print('fusion:', fusion.shape)
 
