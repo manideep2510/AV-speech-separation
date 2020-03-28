@@ -24,7 +24,7 @@ def numericalSort(value):
     parts[1::2] = map(int, parts[1::2])
     return parts
 
-'''gpus = tf.config.experimental.list_physical_devices('GPU')
+gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
     # Currently, memory growth needs to be the same across GPUs
@@ -34,9 +34,9 @@ if gpus:
     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
   except RuntimeError as e:
     # Memory growth must be set before GPUs have been initialized
-    print(e)'''
+    print(e)
 
-gpus = tf.config.experimental.list_physical_devices('GPU')
+'''gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
   try:
@@ -47,7 +47,7 @@ if gpus:
     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
   except RuntimeError as e:
     # Virtual devices must be set before GPUs have been initialized
-    print(e)
+    print(e)'''
 
 # Input arguments
 parser = ArgumentParser()
@@ -64,8 +64,8 @@ epochs = args.epochs
 
 #os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 #os.environ['WANDB_MODE'] = 'dryrun'
-'''wandb.init(name='tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100', notes='BS=6, PhaseShuffle=2, LAMBDA=100 to 1, LSGAN with Instance Noise for 20 epochs, Lr(D) = 2*Lr(G), 0.5 lr after 20 epochs',
-                project="av-speech-seperation", dir='/home/manideepkolla/wandb')'''
+wandb.init(name='tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100', notes='BS=6, PhaseShuffle=2, LAMBDA=100 to 1, LSGAN with Instance Noise for 20 epochs, Lr(D) = 2*Lr(G), 0.5 lr after 20 epochs',
+                resume='2z9u44ut', project="av-speech-seperation", dir='/home/manideepkolla/wandb')
 
 
 # Read training folders
@@ -95,15 +95,15 @@ print('------------Building Generator------------')
 generator = Generator(time_dimensions=200, frequency_bins=257, n_frames=50,
                       lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 
-'''generator.load_weights('/home/manideepkolla/models/tdavss_LSGAN_InstanceNoise_LAMBDA10to0.1_epoch5t040_lr5e-4_exp1/generator-9-8.6701.tf')
-print('Generator weights loaded')'''
+generator.load_weights('/home/manideepkolla/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100lr5e-4_exp1/generator-2-5.6655.tf')
+print('Generator weights loaded')
 
 print('----------Building Discriminator----------')
 discriminator = Discriminator(time_dimensions=200, frequency_bins=257, n_frames=50,
                       phaseshuffle_rad=2, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 
-'''discriminator.load_weights('/home/manideepkolla/models/tdavss_LSGAN_InstanceNoise_LAMBDA10to0.1_epoch5t040_lr5e-4_exp1/discriminator-9-8.6701.tf')
-print('Discriminator weights loaded')'''
+discriminator.load_weights('/home/manideepkolla/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100lr5e-4_exp1/discriminator-2-5.6655.tf')
+print('Discriminator weights loaded')
 
 generator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate/1.414, beta_1=0.5)
 discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate*1.414, beta_1=0.5)
@@ -128,7 +128,7 @@ summary_params = summary_split[-6:]
 summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
-path = 'tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100lr5e-4_exp1'
+path = 'tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1'
 print('Model weights path:', path + '\n')
 
 try:
