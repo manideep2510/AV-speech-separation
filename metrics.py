@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model
 from dataloaders import DataGenerator_test_samples, DataGenerator_val_unsync_attention, DataGenerator_val_unsync_attention_easy, Data_predict_attention, DataGenerator_val_samples
-from pesq import pesq
+#from pesq import pesq
 import wandb
 import random
 import json
@@ -572,7 +572,7 @@ class Metrics_3speak(Callback):
  
     def on_epoch_end(self, epoch, logs={}):
 
-        with open('/data/AV-speech-separation1/lrs2_1dot5k-unsync_audio_val.json') as json_file:
+        '''with open('/data/AV-speech-separation1/lrs2_1dot5k-unsync_audio_val.json') as json_file:
             unsync_dict = json.load(json_file)
     
         unsync_files = unsync_dict['folds']
@@ -581,7 +581,7 @@ class Metrics_3speak(Callback):
         val_folders_pred_all = []
         for item in unsync_files:
             path = '/data/lrs2/train/' + item
-            val_folders_pred_all.append(path)
+            val_folders_pred_all.append(path)'''
 
         '''val_folders_samp_dict = {'/data/lrs2/train/5954958412463581171_00074_6048924136462145896_00033_2':13,  
                                 '/data/lrs2/train/6265355699075927737_00014_5942747390944340934_00018_2':10, 
@@ -618,7 +618,7 @@ class Metrics_3speak(Callback):
 
             lips_ = folder
             samples_ = folder[:-9] + '_samples.npy'
-            samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+            samples_mix_ = '/home/manideepkolla/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
 
             lips.append(lips_)
             samples.append(samples_)

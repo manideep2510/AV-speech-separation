@@ -11,8 +11,8 @@ from scipy.io import wavfile
 from scipy import signal
 import math
 from PIL import Image
-import dlib
-import skvideo.io
+#import dlib
+#import skvideo.io
 import time
 import glob
 import subprocess
@@ -24,7 +24,7 @@ import math
 import matplotlib.pyplot as plt
 from pathlib import Path
 import shutil
-from numba import jit
+#from numba import jit
 home = str(Path.home())
 # Avoid printing TF log messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'

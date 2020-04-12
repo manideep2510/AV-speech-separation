@@ -1,7 +1,7 @@
 from metrics import Metrics_wandb, Metrics_unsync, Metrics_3speak
 import glob
 import os
-from skimage import io, transform
+#from skimage import io, transform
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore")
 plt.ion()   # interactive mode
 
 import math
-
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from tensorflow.keras.layers import *
 from tensorflow.keras import Model
@@ -24,11 +24,10 @@ from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler, C
 from callbacks import earlystopping, LoggingCallback, save_weights
 #from tensorflow.keras.callbacks import CSVLogger
 from plotting import plot_loss_and_acc
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
 #from models.lipnet import LipNet
-from models.tdavss import TasNet
+#from models.tdavss import TasNet
 from models.tdavss_sepconv import TasNet as TasNetSepCon
 from dataloaders import DataGenerator_train_samples, DataGenerator_val_samples, DataGenerator_val_unsync_attention, DataGenerator_train_unsync_attention
 import random
@@ -46,6 +45,19 @@ if gpus:
     # Memory growth must be set before GPUs have been initialized
     print(e)
 
+'''gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=6800)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)'''
+
 from tensorflow.keras.utils import multi_gpu_model
 from argparse import ArgumentParser
 import wandb
@@ -58,10 +70,10 @@ parser.add_argument('-batch_size', action="store", dest="batch_size", type=int)
 parser.add_argument('-lr', action="store", dest="lrate", type=float)
 
 args = parser.parse_args()
-os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
-os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_3speakers_SepConv_1600Frames', notes='3 speakers baseline training,Batch = 5, 20K training folders. TasNet with Resnet without LSTM Lipnet.', 
-           project="av-speech-seperation", dir='/data/wandb')
+#os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
+#os.environ['WANDB_MODE'] = 'dryrun'
+wandb.init(name='tdavss_3speakers_SepConv_1600Frames', notes='3 speakers baseline training,Batch = 6', 
+           resume = 'e4f3ep8b', project="av-speech-seperation", dir='/home/manideepkolla/wandb') #resume = 'e4f3ep8b', 
 
 # To read the images in numerical order
 import re
@@ -109,9 +121,9 @@ folders_list_val = random.sample(folders_list_val_all, 5000)'''
 random.seed(12345)
 random.shuffle(folders_list_train)
 
-#random.seed(30)
-#folders_list_val = random.sample(folders_list_val_, 120)
-#folders_list_train = random.sample(folders_list_train, 180)
+'''random.seed(30)
+folders_list_val = random.sample(folders_list_val_, 120)
+folders_list_train = random.sample(folders_list_train, 180)'''
 #folders_list_train = folders_list[:180]
 #folders_list_val = folders_list[180:300]
 
@@ -126,7 +138,7 @@ epochs = args.epochs
 tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50, 
                     attention=False, lstm = False, lipnet_pretrained=True, train_lipnet=True)
 model = tasnet.model
-#model.load_weights('/data/models/tdavss_freezeLip_batchsize8_Normalize_ResNetLSTMLip_236kTrain_2secondsClips_epochs7to20_lr1e-4_0.35decayNoValDec2epochs_exp3/weights-03--13.8362.hdf5')
+model.load_weights('/home/manideepkolla/models/3speaker_weights/weights-14--6.2669.tf')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
 
 
@@ -139,28 +151,28 @@ summary_params = summary_split[-6:]
 summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
-#model.load_weights('/data/models/tasnet_ResNetLSTMLip_Lips_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1/weights-17-249.6407.hdf5')
+#model.load_weights('/home/manideepkolla/models/tasnet_ResNetLSTMLip_Lips_crm_236kTrain_epochs20_lr1e-4_0.1decay9epochs_exp1/weights-17-249.6407.hdf5')
 
 #model = multi_gpu_model(model, gpus=2)
 
 # Path to save model checkpoints
 
 #path = 'test_tasnet_lipnet_crm_236kTrain_epochs20_lr1e-4_0.46decay3epochs_exp1'
-path = 'tdavss_3speakers_SepConv_400Frames_epochs40_5lr1e-4_exp1'
+path = 'tdavss_3speakers_SepConv_400Frames_epochs16to40_5lr1e-4_exp1'
 print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 
 try:
-    os.mkdir('/data/models/'+ path)
+    os.mkdir('/home/manideepkolla/models/'+ path)
 except OSError:
     pass
 
 try:
-    os.mkdir('/data/results/'+ path)
+    os.mkdir('/home/manideepkolla/results/'+ path)
 except OSError:
     pass
 
-def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
+def log_to_file(msg, file='/home/manideepkolla/results/'+path+'/logs.txt'):
     
     with open(file, "a") as myfile:
         
@@ -170,13 +182,13 @@ def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
 
 
 metrics_unsync = Metrics_3speak(model=model, val_folders=folders_list_val,
-                                batch_size=batch_size, save_path='/data/results/'+path+'/logs.txt')
+                                batch_size=batch_size, save_path='/home/manideepkolla/results/'+path+'/logs.txt')
 metrics_wandb = Metrics_wandb()
 save_weights = save_weights(model, path)
 earlystopping = earlystopping()
 reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, min_lr = 0.00000001)
 
-filepath = '/data/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.tf'
+filepath = '/home/manideepkolla/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.tf'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
 
 # Fit Generator
@@ -193,13 +205,13 @@ try:
 
 except KeyboardInterrupt:
 
-    model.save_weights('/data/models/' + path + '/final_freez.tf')
+    model.save_weights('/home/manideepkolla/models/' + path + '/final_freez.tf')
     print('Final model saved')
 
     for layer in model.layers:
         layer.trainable = True
 
-    model.save_weights('/data/models/' + path + '/final_unfreez.tf')
+    model.save_weights('/home/manideepkolla/models/' + path + '/final_unfreez.tf')
     print('Final model saved')
 
 except Exception as e:
@@ -207,13 +219,13 @@ except Exception as e:
 
 #, WandbCallback(save_model=False, data_type="image")
 
-model.save_weights('/data/models/' + path + '/final_freez.tf')
+model.save_weights('/home/manideepkolla/models/' + path + '/final_freez.tf')
 print('Final model saved')
 
 for layer in model.layers:
     layer.trainable = True
 
-model.save_weights('/data/models/' + path + '/final_unfreez.tf')
+model.save_weights('/home/manideepkolla/models/' + path + '/final_unfreez.tf')
 print('Final unfreezed model saved')
 
 # Plots

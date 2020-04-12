@@ -10,8 +10,8 @@ from scipy.io import wavfile
 from scipy import signal
 import math
 from PIL import Image
-import dlib
-import skvideo.io
+#import dlib
+#import skvideo.io
 import time
 import glob
 import subprocess
@@ -28,8 +28,8 @@ home = str(Path.home())
 # Avoid printing TF log messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor('/data/AV-speech-separation/shape_predictor_68_face_landmarks.dat')
+#detector = dlib.get_frontal_face_detector()
+#predictor = dlib.shape_predictor('/data/AV-speech-separation/shape_predictor_68_face_landmarks.dat')
 
 def get_frames_mouth(detector, predictor, frames):
         MOUTH_WIDTH = 100
@@ -107,7 +107,7 @@ def get_video_frames(path, fmt='rgb'):
     return np.asarray(frames)
 
 
-def get_cropped_video_(input_vid, output_dest, detector = detector, predictor = predictor):
+def get_cropped_video_(input_vid, output_dest, detector , predictor):
     
     frames=get_video_frames(input_vid)
     shape_input = frames.shape    
@@ -134,7 +134,7 @@ def get_cropped_video_(input_vid, output_dest, detector = detector, predictor = 
     except ValueError:
         pass
 
-def get_cropped_video(input_vid, output_dest, detector = detector, predictor = predictor):
+def get_cropped_video(input_vid, output_dest, detector, predictor):
     
     frames=get_video_frames(input_vid)
     shape_input = frames.shape    

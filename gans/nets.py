@@ -127,8 +127,16 @@ def custom_tanh(x):
     
     return Cy
 
+
 # Spectral Norm constraint
-POWER_ITERATIONS = 5
+
+def l2_normalize(x, eps=1e-12):
+  '''
+  Scale input by the inverse of it's euclidean norm
+  '''
+  return x / tf.linalg.norm(x + eps)
+
+POWER_ITERATIONS = 1
 class Spectral_Norm(Constraint):
     '''
     Uses power iteration method to calculate a fast approximation 

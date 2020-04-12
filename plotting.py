@@ -6,9 +6,9 @@ import numpy as np
 import math
 import cv2
 import matplotlib.pyplot as plt
-from sklearn.utils.class_weight import compute_class_weight
-from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, precision_recall_curve, average_precision_score, accuracy_score
-from funcsigs import signature
+#from sklearn.utils.class_weight import compute_class_weight
+#from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, precision_recall_curve, average_precision_score, accuracy_score
+#from funcsigs import signature
 
 #from metrics import get_metrics
 

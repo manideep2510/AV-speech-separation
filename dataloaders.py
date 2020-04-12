@@ -10,8 +10,8 @@ from scipy.io import wavfile
 from scipy import signal
 import math
 from PIL import Image
-import dlib
-import skvideo.io
+#import dlib
+#import skvideo.io
 import time
 import glob
 import subprocess
@@ -25,7 +25,7 @@ from pathlib import Path
 import shutil
 import cv2
 import sys
-sys.path.append('/data/AV-speech-separation/LipNet')
+sys.path.append('/home/manideepkolla/av-speech-separation/LipNet')
 from lipnet.lipreading.helpers import text_to_labels
 from lipnet.lipreading.aligns import Align
 import json
@@ -656,7 +656,7 @@ def DataGenerator_val_samples(folderlist, batch_size, norm=1350.0):
 
                 lips_ = folder
                 samples_ = folder[:-9] + '_samples.npy'
-                samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+                samples_mix_ = '/home/manideepkolla/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
 
                 lips.append(lips_)
                 samples.append(samples_)
@@ -724,7 +724,7 @@ def DataGenerator_train_samples(folderlist, batch_size, norm=1350.0):
 
                 lips_ = folder
                 samples_ = folder[:-9] + '_samples.npy'
-                samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+                samples_mix_ = '/home/manideepkolla/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
 
                 lips.append(lips_)
                 samples.append(samples_)
@@ -1769,7 +1769,7 @@ def Data_predict_attention(folderlist_dict):
 
         lips_ = folder
         samples_ = folder[:-9] + '_samples.npy'
-        samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
+        samples_mix_ = '/home/manideepkolla/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
 
         lips.append(lips_)
         samples.append(samples_)

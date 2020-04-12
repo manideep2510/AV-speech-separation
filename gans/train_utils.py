@@ -86,7 +86,7 @@ def train_step(inputs, target, generator, discriminator, generator_optimizer, di
         gen_output = generator(inputs, training=True)
         
         # std for the instance noise
-        noise_inp = tf.random.normal(shape=tf.shape(inputs[1]), stddev=tf.nn.relu(1-((epoch+3)/20))) #tf.nn.relu(1-(epoch/10))
+        noise_inp = tf.random.normal(shape=tf.shape(inputs[1]), stddev=tf.nn.relu(1-((epoch+18)/20))) #tf.nn.relu(1-(epoch/10))
 
         disc_real_output = discriminator([inputs[0], inputs[1], target, noise_inp], training=True)
         disc_generated_output = discriminator([inputs[0], inputs[1], gen_output, noise_inp], training=True)
@@ -134,7 +134,7 @@ def train_step(inputs, target, generator, discriminator, generator_optimizer, di
 
 
 def fit(folders_list_train, folders_list_val, generator, discriminator, generator_optimizer, 
-        discriminator_optimizer, batch_size, epochs, save_path):
+        discriminator_optimizer, batch_size, epochs, save_path, lr):
 
     metrics_names = ['gen_total_loss','gen_gan_loss', 'gen_SNR_loss', 'disc_loss']
     gen_total_loss_all = []
@@ -144,9 +144,11 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
     disc_real_loss_all = []
     disc_fake_loss_all = []
     for epoch in range(epochs):
+
         start = time.time()
 
-        print("\nEpoch {}/{}".format(epoch+1+3,epochs+3))
+        print("\nEpoch {}/{}".format(epoch+18+1,epochs+18))
+        #print('Generator LR:', generator_optimizer._decayed_lr(tf.float32).numpy(), ' - Discriminator LR:', discriminator_optimizer._decayed_lr(tf.float32).numpy())
 
         pb_i = Progbar(len(folders_list_train), stateful_metrics=metrics_names)
 
@@ -155,12 +157,14 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         elif epoch >= 5:
             lambda_value = 0.1'''
 
-        if epoch+3 < 10:
+        if epoch+18 < 10:
             lambda_value = 100
-        elif epoch+3 >= 10 and epoch+3 < 15:
+        elif epoch+18 >= 10 and epoch+18 < 15:
             lambda_value = 10
-        elif epoch+3 >= 15:
+        elif epoch+18 >= 15 and epoch+18 < 25:
             lambda_value = 1
+        elif epoch+18 >= 25:
+            lambda_value = 0.1
 
         # Train
         gen_total_loss_list = []
@@ -254,13 +258,13 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         print('Val SNR:', val_acc)
 
         # Save Weights
-        generator.save_weights('/home/manideepkolla/models/' + save_path + '/generator-' + str(int(epoch+3)) + '-' + str(np.round(val_acc, 4)) + '.tf')
-        discriminator.save_weights('/home/manideepkolla/models/' + save_path + '/discriminator-' + str(int(epoch+3)) + '-' + str(np.round(val_acc, 4)) + '.tf')
+        generator.save_weights('/home/manideepkolla/models/' + save_path + '/generator-' + str(int(epoch+18)) + '-' + str(np.round(val_acc, 4)) + '.tf')
+        discriminator.save_weights('/home/manideepkolla/models/' + save_path + '/discriminator-' + str(int(epoch+18)) + '-' + str(np.round(val_acc, 4)) + '.tf')
 
         # Wandb Metrics logging
         wandb.log({"gen_total_loss": np.mean(gen_total_loss_list), 'gen_gan_loss':np.mean(gen_gan_loss_list), 
                     'loss_snr':np.mean(loss_snr_list), 'disc_loss':np.mean(disc_loss_list), 'Val_SNR':np.mean(snrs),
-                    'disc_fake_loss':np.mean(disc_fake_loss_list), 'disc_real_loss':np.mean(disc_real_loss_list)}, commit=False)
+                    'disc_fake_loss':np.mean(disc_fake_loss_list), 'disc_real_loss':np.mean(disc_real_loss_list), 'lr':lr}, commit=False)
         
         with open('/home/manideepkolla/results/' + save_path + '/logs.txt', "a") as myfile:
             myfile.write("gen_total_loss: " + str(np.mean(gen_total_loss_list)) + ' - ' + 'gen_gan_loss: ' + 

@@ -1,7 +1,7 @@
 import sys
-sys.path.append('/data/AV-speech-separation1/LipNet')
-sys.path.append('/data/AV-speech-separation1/models')
-sys.path.append('/data/AV-speech-separation1/models/classification_models-master/')
+sys.path.append('/home/manideepkolla/av-speech-separation/LipNet')
+sys.path.append('/home/manideepkolla/av-speech-separation/models')
+sys.path.append('/home/manideepkolla/av-speech-separation/models/classification_models-master/')
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -108,7 +108,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
 
     if pretrain == True:
         model.load_weights(
-            '/data/models/combResnetLSTM_CTCloss_seperableConv_236ktrain_1to3ratio_valWER_epochs11_to_20_lr1e-4_0.1decay9epochs/weights-07-118.8296.hdf5')
+            '/home/manideepkolla/lrs2/sepconv_lipreading_weights.hdf5')
         print('Separable Conv ResNet LSTM Pretrain weights loaded')
 
     return model

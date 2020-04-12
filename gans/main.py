@@ -12,7 +12,7 @@ import glob
 import random
 import wandb
 from argparse import ArgumentParser
-from nets import Generator, Discriminator
+from nets import Generator, Discriminator, Discriminator_SpectNorm
 from train_utils import fit
 import soundfile
 import math
@@ -95,18 +95,20 @@ print('------------Building Generator------------')
 generator = Generator(time_dimensions=200, frequency_bins=257, n_frames=50,
                       lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 
-generator.load_weights('/home/manideepkolla/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100lr5e-4_exp1/generator-2-5.6655.tf')
+generator.load_weights(
+    '/home/manideepkolla/models_old/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1/generator-17-9.4553.tf')
 print('Generator weights loaded')
 
 print('----------Building Discriminator----------')
 discriminator = Discriminator(time_dimensions=200, frequency_bins=257, n_frames=50,
                       phaseshuffle_rad=2, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 
-discriminator.load_weights('/home/manideepkolla/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100lr5e-4_exp1/discriminator-2-5.6655.tf')
+discriminator.load_weights(
+    '/home/manideepkolla/models_old/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1/discriminator-17-9.4553.tf')
 print('Discriminator weights loaded')
 
-generator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate/1.414, beta_1=0.5)
-discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate*1.414, beta_1=0.5)
+generator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate, beta_1=0.5)
+discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate, beta_1=0.5)
 
 from io import StringIO
 
@@ -128,7 +130,7 @@ summary_params = summary_split[-6:]
 summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
-path = 'tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1'
+path = 'tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch18to20_lr5e-4'
 print('Model weights path:', path + '\n')
 
 try:
@@ -144,7 +146,7 @@ except OSError:
 # Training
 fit(folders_list_train, folders_list_val, batch_size=batch_size,
     generator=generator, discriminator=discriminator, generator_optimizer = generator_optimizer, 
-    discriminator_optimizer = discriminator_optimizer, epochs=epochs, save_path=path)
+    discriminator_optimizer=discriminator_optimizer, epochs=epochs, save_path=path, lr=lrate)
 
 
 
