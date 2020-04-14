@@ -60,10 +60,10 @@ parser.add_argument('-batch_size', action="store", dest="batch_size", type=int)
 parser.add_argument('-lr', action="store", dest="lrate", type=float)
 
 args = parser.parse_args()
-os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
+os.environ['WANDB_CONFIG_DIR'] = '/home/ubuntu/.config/wandb'
 os.environ['WANDB_MODE'] = 'dryrun'
 wandb.init(name='tdavss_SepConv_400Frames', notes='400Frames, 50K training folders, Batch size 12, lr = 5e-4, Normalize input with L2 Norm, Loss is Si-SNR',
-                project="av-speech-seperation", dir='/data/wandb')
+                project="av-speech-seperation", dir='/home/ubuntu/wandb')
 
 # To read the images in numerical order
 import re
@@ -74,10 +74,10 @@ def numericalSort(value):
     return parts
 
 # Read training folders
-#folders_list = sorted(glob.glob('/data/lrs2/train/*'), key=numericalSort)
-folders_list = np.loadtxt('/data/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
+#folders_list = sorted(glob.glob('/home/ubuntu/lrs2/train/*'), key=numericalSort)
+#folders_list = np.loadtxt('/home/ubuntu/AV-speech-separation/data_filenames.txt', dtype='object').tolist()
 
-'''folders_list_train2 = np.loadtxt('/data/AV-speech-separation/data_filenames_3comb.txt', dtype='object').tolist()
+'''folders_list_train2 = np.loadtxt('/home/ubuntu/AV-speech-separation/data_filenames_3comb.txt', dtype='object').tolist()
 folders_list_train2_=[]
 for item in folders_list_train2:
     fold = '/data/lrs2/'+item
@@ -92,11 +92,12 @@ folders_list_val = folders_list[91500:93000] + folders_list[238089:]'''
 
 folders_list_val = np.loadtxt('/data/AV-speech-separation1/lrs2_3k_val_split.txt', dtype='object').tolist()'''
 
+
 folders_list_train_all = np.loadtxt(
-    '/data/AV-speech-separation1/lrs2_comb2_train_snr_filter.txt', dtype='object').tolist()
+    '/home/ubuntu/lrs2_train_comb2.txt', dtype='object').tolist()
 
 folders_list_val_all = np.loadtxt(
-    '/data/AV-speech-separation1/lrs2_comb2_val_snr_filter.txt', dtype='object').tolist()
+    '/home/ubuntu/lrs2_val_comb2.txt', dtype='object').tolist()
 
 random.seed(123)
 folders_list_train = random.sample(folders_list_train_all, 50000)
@@ -127,7 +128,7 @@ epochs = args.epochs
 tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50,
                       attention=False, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 model = tasnet.model
-#model.load_weights('/data/models/tdavss_SepConv_400Frames_Attention_epochs40_lr5e-4_exp1/weights-03--3.1715.tf')
+#model.load_weights('/home/ubuntu/models/tdavss_SepConv_400Frames_Attention_epochs40_lr5e-4_exp1/weights-03--3.1715.tf')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
 #parallel_model=tf.keras.utils.multi_gpu_model(model, gpus=2)
 #parallel_model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
@@ -146,16 +147,16 @@ path = 'tdavss_SepConv_400Frames_epochs40_lr5e-4_exp1'
 print('Model weights path:', path + '\n')
 
 try:
-    os.mkdir('/data/models/'+ path)
+    os.mkdir('/home/ubuntu/models/'+ path)
 except OSError:
     pass
 
 try:
-    os.mkdir('/data/results/'+ path)
+    os.mkdir('/home/ubuntu/results/'+ path)
 except OSError:
     pass
 
-def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
+def log_to_file(msg, file='/home/ubuntu/results/'+path+'/logs.txt'):
     
     with open(file, "a") as myfile:
         
@@ -165,13 +166,13 @@ def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
 
 
 metrics_unsync = Metrics_3speak(model=model, val_folders=folders_list_val,
-                                batch_size=batch_size, save_path='/data/results/'+path+'/logs.txt')
+                                batch_size=batch_size, save_path='/home/ubuntu/results/'+path+'/logs.txt')
 metrics_wandb = Metrics_wandb()
 save_weights = save_weights(model, path)
 earlystopping = earlystopping()
 reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, min_lr = 0.00000001)
 
-filepath = '/data/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.tf'
+filepath = '/home/ubuntu/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.tf'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
 
 # Fit Generator
@@ -182,10 +183,10 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
     
 
 try:
-    history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1),
+    history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1350.0),
                 steps_per_epoch = int(np.ceil(len(folders_list_train)/float(batch_size))),
                 epochs=int(epochs),
-                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1),
+                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1350.0),
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),
         callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file), metrics_unsync], verbose=1)
 
@@ -193,7 +194,7 @@ except KeyboardInterrupt:
     for layer in model.layers:
         layer.trainable = True
 
-    model.save_weights('/data/models/' + path + '/final.tf')
+    model.save_weights('/home/ubuntu/models/' + path + '/final.tf')
     print('Final model saved')
 
 except Exception as e:
@@ -205,7 +206,7 @@ except Exception as e:
 for layer in model.layers:
     layer.trainable = True
 
-model.save_weights('/data/models/' + path + '/final.tf')
+model.save_weights('/home/ubuntu/models/' + path + '/final.tf')
 print('Final model saved')
 
 # Plots

@@ -73,7 +73,7 @@ args = parser.parse_args()
 #os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 #os.environ['WANDB_MODE'] = 'dryrun'
 wandb.init(name='tdavss_3speakers_SepConv_1600Frames', notes='3 speakers baseline training,Batch = 6', 
-           resume = 'e4f3ep8b', project="av-speech-seperation", dir='/home/manideepkolla/wandb') #resume = 'e4f3ep8b', 
+           resume = 'e4f3ep8b', project="av-speech-seperation", dir='/home/ubuntu/wandb') #resume = 'e4f3ep8b', 
 
 # To read the images in numerical order
 import re
@@ -109,10 +109,10 @@ folders_list_val = np.loadtxt(
 #folders_list_train = folders_list_train[:16666]'''
 
 folders_list_train = np.loadtxt(
-    '/home/manideepkolla/lrs2_train_comb3.txt', dtype='object').tolist()
+    '/home/ubuntu/lrs2_train_comb3.txt', dtype='object').tolist()
 
 folders_list_val = np.loadtxt(
-    '/home/manideepkolla/lrs2_val_comb3.txt', dtype='object').tolist()
+    '/home/ubuntu/lrs2_val_comb3.txt', dtype='object').tolist()
 
 '''random.seed(123)
 folders_list_train = random.sample(folders_list_train_all, 50000)
@@ -138,7 +138,7 @@ epochs = args.epochs
 tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50, 
                     attention=False, lstm = False, lipnet_pretrained=True, train_lipnet=True)
 model = tasnet.model
-model.load_weights('/home/manideepkolla/models/3speaker_weights/weights-14--6.2669.tf')
+model.load_weights('/home/ubuntu/models/3speaker_weights/weights-14--6.2669.tf')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
 
 
@@ -163,16 +163,16 @@ print('Model weights path:', path + '\n')
 #path = 'tasnet_ResNetLSTMLip_Lips_crm_236kTrain_5secondsClips_RMSLoss_epochs20_lr6e-5_0.1decay10epochs_exp2'
 
 try:
-    os.mkdir('/home/manideepkolla/models/'+ path)
+    os.mkdir('/home/ubuntu/models/'+ path)
 except OSError:
     pass
 
 try:
-    os.mkdir('/home/manideepkolla/results/'+ path)
+    os.mkdir('/home/ubuntu/results/'+ path)
 except OSError:
     pass
 
-def log_to_file(msg, file='/home/manideepkolla/results/'+path+'/logs.txt'):
+def log_to_file(msg, file='/home/ubuntu/results/'+path+'/logs.txt'):
     
     with open(file, "a") as myfile:
         
@@ -182,13 +182,13 @@ def log_to_file(msg, file='/home/manideepkolla/results/'+path+'/logs.txt'):
 
 
 metrics_unsync = Metrics_3speak(model=model, val_folders=folders_list_val,
-                                batch_size=batch_size, save_path='/home/manideepkolla/results/'+path+'/logs.txt')
+                                batch_size=batch_size, save_path='/home/ubuntu/results/'+path+'/logs.txt')
 metrics_wandb = Metrics_wandb()
 save_weights = save_weights(model, path)
 earlystopping = earlystopping()
 reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, min_lr = 0.00000001)
 
-filepath = '/home/manideepkolla/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.tf'
+filepath = '/home/ubuntu/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.tf'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
 
 # Fit Generator
@@ -196,22 +196,22 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
 #folders_per_epoch = int(len(folders_list_train)/3)
 
 try:
-    history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1),
+    history = model.fit_generator(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1950.0),
                 steps_per_epoch = int(np.ceil(len(folders_list_train)/float(batch_size))),
                 epochs=int(epochs),
-                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1), 
+                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1950.0), 
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),
         callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file), metrics_unsync], verbose=1)
 
 except KeyboardInterrupt:
 
-    model.save_weights('/home/manideepkolla/models/' + path + '/final_freez.tf')
+    model.save_weights('/home/ubuntu/models/' + path + '/final_freez.tf')
     print('Final model saved')
 
     for layer in model.layers:
         layer.trainable = True
 
-    model.save_weights('/home/manideepkolla/models/' + path + '/final_unfreez.tf')
+    model.save_weights('/home/ubuntu/models/' + path + '/final_unfreez.tf')
     print('Final model saved')
 
 except Exception as e:
@@ -219,13 +219,13 @@ except Exception as e:
 
 #, WandbCallback(save_model=False, data_type="image")
 
-model.save_weights('/home/manideepkolla/models/' + path + '/final_freez.tf')
+model.save_weights('/home/ubuntu/models/' + path + '/final_freez.tf')
 print('Final model saved')
 
 for layer in model.layers:
     layer.trainable = True
 
-model.save_weights('/home/manideepkolla/models/' + path + '/final_unfreez.tf')
+model.save_weights('/home/ubuntu/models/' + path + '/final_unfreez.tf')
 print('Final unfreezed model saved')
 
 # Plots

@@ -633,8 +633,8 @@ class Metrics_3speak(Callback):
         preds_mask = mask_out_model.predict(Data_predict_attention(val_folders_samp_dict))
 
         preds_audio = self.model.predict(Data_predict_attention(val_folders_samp_dict))
-        #preds_audio = preds_audio/np.mean(np.std(preds_audio, axis=1))
-        #preds_audio = preds_audio*1350
+        preds_audio = preds_audio/np.mean(np.std(preds_audio, axis=1))
+        preds_audio = preds_audio*1350
         preds_audio = preds_audio.astype('int16')
         '''print('Pred max', np.max(preds_audio))
         print('Pred min', np.min(preds_audio))'''

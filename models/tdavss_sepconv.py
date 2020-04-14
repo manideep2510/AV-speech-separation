@@ -102,11 +102,11 @@ class TasNet(object):
         #self.video_input_data=Input(shape=(self.frames,))#video_shape=(125,256)
         self.audio_input_data=Input(shape=(self.t*160,1))#audio_shape=(80000,1)
 
-        self.norm = vec_l2norm(self.audio_input_data)
-        self.audio_normalized = self.audio_input_data/self.norm
+        '''self.norm = vec_l2norm(self.audio_input_data)
+        self.audio_normalized = self.audio_input_data/self.norm'''
         
         #audio_encoding
-        self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_normalized)
+        self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_input_data)
         #self.audio=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.audio)
         
         #video_processing
@@ -127,11 +127,11 @@ class TasNet(object):
         
         #video_processing
         self.video_data=Conv1D(512,1)(self.outv)
-        self.outv=Conv_Block_Video(self.video_data,dialation_rate=1)
+        self.outv=Conv_Block_Video(self.video_data,dialation_rate=0)
+        self.outv=Conv_Block_Video(self.outv,dialation_rate=1)
         self.outv=Conv_Block_Video(self.outv,dialation_rate=2)
+        self.outv=Conv_Block_Video(self.outv,dialation_rate=3)
         self.outv=Conv_Block_Video(self.outv,dialation_rate=4)
-        self.outv=Conv_Block_Video(self.outv,dialation_rate=8)
-        self.outv=Conv_Block_Video(self.outv,dialation_rate=16)
         self.outv=Conv1D(256,1)(self.outv)
         
         #audio_processing
@@ -217,8 +217,8 @@ class TasNet(object):
         self.out = Lambda(lambda x: K.squeeze(x, axis=2), name='out')(self.decode)
         print('Out:', self.out.shape)
         
-        self.out_norm = vec_l2norm(self.out)
+        '''self.out_norm = vec_l2norm(self.out)
         self.out_normalized = self.out/self.out_norm
-        self.out_denormalized = self.out_normalized*self.norm
+        self.out_denormalized = self.out_normalized*self.norm'''
         
-        self.model=Model(inputs=[self.lipnet_model.input,self.audio_input_data],outputs=[self.out_denormalized])
+        self.model=Model(inputs=[self.lipnet_model.input,self.audio_input_data],outputs=[self.out])

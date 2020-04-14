@@ -1,7 +1,7 @@
 import sys
 #sys.path.append('/data/AV-speech-separation1/LipNet')
 #sys.path.append('/data/AV-speech-separation1/models')
-sys.path.append('/home/manideepkolla/av-speech-separation/models/classification_models-master/')
+sys.path.append('/home/ubuntu/av-speech-separation/models/classification_models-master/')
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
@@ -286,11 +286,11 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125,
 
     audio_input_data=Input(shape=(t*160,1))#audio_shape=(80000,1)
 
-    norm = vec_l2norm(audio_input_data)
-    audio_normalized = audio_input_data/norm
+    '''norm = vec_l2norm(audio_input_data)
+    audio_normalized = audio_input_data/norm'''
 
     #audio_encoding
-    audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(audio_normalized)
+    audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(audio_input_data)
     #audio=Conv1D(256,16,padding='same',strides=2, activation='relu')(audio)
 
     #video_processing
@@ -311,11 +311,11 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125,
 
     #video_processing
     video_data=Conv1D(512,1)(outv)
-    outv=Conv_Block_Video(video_data,dialation_rate=1)
+    outv=Conv_Block_Video(video_data,dialation_rate=0)
+    outv=Conv_Block_Video(outv,dialation_rate=1)
     outv=Conv_Block_Video(outv,dialation_rate=2)
+    outv=Conv_Block_Video(outv,dialation_rate=3)
     outv=Conv_Block_Video(outv,dialation_rate=4)
-    outv=Conv_Block_Video(outv,dialation_rate=8)
-    outv=Conv_Block_Video(outv,dialation_rate=16)
     outv=Conv1D(256,1)(outv)
 
     #audio_processing
@@ -379,11 +379,11 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125,
     out = Lambda(lambda x: K.squeeze(x, axis=2), name='out')(decode)
     print('Out:', out.shape)
 
-    out_norm = vec_l2norm(out)
+    '''out_norm = vec_l2norm(out)
     out_normalized = out/out_norm
-    out_denormalized = out_normalized*norm
+    out_denormalized = out_normalized*norm'''
 
-    model=Model(inputs=[lipnet_model.input,audio_input_data],outputs=[out_denormalized])
+    model=Model(inputs=[lipnet_model.input,audio_input_data],outputs=[out])
 
     return model
 
@@ -435,6 +435,7 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuf
 
     #audio_input_data2 = Lambda(lambda x: tf.math.add(x[0], x[1]), name='add_noise')([audio_input_data2, noise])
 
+    #TODO: Normalize the input clean signal (real and fake) with its std
     norm1 = vec_l2norm(audio_input_data1)
     audio_normalized1 = audio_input_data1/norm1
 
@@ -474,11 +475,11 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuf
 
     # Video Processing
     video_data=Conv1D(512,1)(outv)
-    outv=Conv_Block_Video_disc(video_data,dialation_rate=1)
+    outv=Conv_Block_Video_disc(video_data,dialation_rate=0)
+    outv=Conv_Block_Video_disc(outv,dialation_rate=1)
     outv=Conv_Block_Video_disc(outv,dialation_rate=2)
+    outv=Conv_Block_Video_disc(outv,dialation_rate=3)
     outv=Conv_Block_Video_disc(outv,dialation_rate=4)
-    outv=Conv_Block_Video_disc(outv,dialation_rate=8)
-    outv=Conv_Block_Video_disc(outv,dialation_rate=16)
     outv=Conv1D(256,1)(outv)
 
     # Audio Processing WITH Phase Shuffle
@@ -583,6 +584,7 @@ def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125,
 
     #audio_input_data2 = Lambda(lambda x: tf.math.add(x[0], x[1]), name='add_noise')([audio_input_data2, noise])
 
+    #TODO: Normalize the input clean signal (real and fake) with its std
     norm1 = vec_l2norm(audio_input_data1)
     audio_normalized1 = audio_input_data1/norm1
 
@@ -622,11 +624,11 @@ def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125,
 
     # Video Processing
     video_data=Conv1D(512,1)(outv)
-    outv=Conv_Block_Video_disc_SpectNorm(video_data,dialation_rate=1)
+    outv=Conv_Block_Video_disc_SpectNorm(video_data,dialation_rate=0)
+    outv=Conv_Block_Video_disc_SpectNorm(outv,dialation_rate=1)
     outv=Conv_Block_Video_disc_SpectNorm(outv,dialation_rate=2)
+    outv=Conv_Block_Video_disc_SpectNorm(outv,dialation_rate=3)
     outv=Conv_Block_Video_disc_SpectNorm(outv,dialation_rate=4)
-    outv=Conv_Block_Video_disc_SpectNorm(outv,dialation_rate=8)
-    outv=Conv_Block_Video_disc_SpectNorm(outv,dialation_rate=16)
     outv=Conv1D(256,1)(outv)
 
     # Audio Processing WITH Phase Shuffle

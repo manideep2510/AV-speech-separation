@@ -65,15 +65,15 @@ epochs = args.epochs
 #os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 #os.environ['WANDB_MODE'] = 'dryrun'
 wandb.init(name='tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100', notes='BS=6, PhaseShuffle=2, LAMBDA=100 to 1, LSGAN with Instance Noise for 20 epochs, Lr(D) = 2*Lr(G), 0.5 lr after 20 epochs',
-                resume='2z9u44ut', project="av-speech-seperation", dir='/home/manideepkolla/wandb')
+                resume='2z9u44ut', project="av-speech-seperation", dir='/home/ubuntu/wandb')
 
 
 # Read training folders
 folders_list_train = np.loadtxt(
-    '/home/manideepkolla/lrs2_train_comb2.txt', dtype='object').tolist()
+    '/home/ubuntu/lrs2_train_comb2.txt', dtype='object').tolist()
 
 folders_list_val = np.loadtxt(
-    '/home/manideepkolla/lrs2_val_comb2.txt', dtype='object').tolist()
+    '/home/ubuntu/lrs2_val_comb2.txt', dtype='object').tolist()
 
 '''random.seed(123)
 folders_list_train = random.sample(folders_list_train_all, 50000)
@@ -95,17 +95,17 @@ print('------------Building Generator------------')
 generator = Generator(time_dimensions=200, frequency_bins=257, n_frames=50,
                       lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 
-generator.load_weights(
-    '/home/manideepkolla/models_old/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1/generator-17-9.4553.tf')
-print('Generator weights loaded')
+'''generator.load_weights(
+    '/home/ubuntu/models_old/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1/generator-17-9.4553.tf')
+print('Generator weights loaded')'''
 
 print('----------Building Discriminator----------')
-discriminator = Discriminator(time_dimensions=200, frequency_bins=257, n_frames=50,
-                      phaseshuffle_rad=2, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
+discriminator = Discriminator_SpectNorm(time_dimensions=200, frequency_bins=257, n_frames=50,
+                      phaseshuffle_rad=5, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 
-discriminator.load_weights(
-    '/home/manideepkolla/models_old/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1/discriminator-17-9.4553.tf')
-print('Discriminator weights loaded')
+'''discriminator.load_weights(
+    '/home/ubuntu/models_old/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1/discriminator-17-9.4553.tf')
+print('Discriminator weights loaded')'''
 
 generator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate, beta_1=0.5)
 discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate, beta_1=0.5)
@@ -134,12 +134,12 @@ path = 'tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch18to20_lr5e-4'
 print('Model weights path:', path + '\n')
 
 try:
-    os.mkdir('/home/manideepkolla/models/' + path)
+    os.mkdir('/home/ubuntu/models/' + path)
 except OSError:
     pass
 
 try:
-    os.mkdir('/home/manideepkolla/results/' + path)
+    os.mkdir('/home/ubuntu/results/' + path)
 except OSError:
     pass
 

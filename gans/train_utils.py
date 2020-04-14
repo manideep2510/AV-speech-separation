@@ -42,7 +42,10 @@ def media_logging(val_files, generator, batch_size):
             pred = pred.tolist()
             pred_audios = pred_audios + pred
 
-    pred_audios = np.asarray(pred_audios).astype('int16')
+    pred_audios = np.asarray(pred_audios)
+    pred_audios = pred_audios/np.mean(np.std(pred_audios, axis=1))
+    pred_audios = pred_audios*1350
+    pred_audios = pred_audios.astype('int16')
 
     save_name_base = []
     for i, item in enumerate(lips):
@@ -86,10 +89,11 @@ def train_step(inputs, target, generator, discriminator, generator_optimizer, di
         gen_output = generator(inputs, training=True)
         
         # std for the instance noise
-        noise_inp = tf.random.normal(shape=tf.shape(inputs[1]), stddev=tf.nn.relu(1-((epoch+18)/20))) #tf.nn.relu(1-(epoch/10))
+        noise_inp1 = tf.random.normal(shape=tf.shape(inputs[1]), stddev=tf.nn.relu(1-((epoch)/20))) #tf.nn.relu(1-(epoch/10))
+        noise_inp2 = tf.random.normal(shape=tf.shape(inputs[1]), stddev=tf.nn.relu(1-((epoch)/20)))
 
-        disc_real_output = discriminator([inputs[0], inputs[1], target, noise_inp], training=True)
-        disc_generated_output = discriminator([inputs[0], inputs[1], gen_output, noise_inp], training=True)
+        disc_real_output = discriminator([inputs[0], inputs[1], target, noise_inp1], training=True)
+        disc_generated_output = discriminator([inputs[0], inputs[1], gen_output, noise_inp2], training=True)
 
         if gan_type == 'LSGAN':
             gen_total_loss, gen_gan_loss, gen_snr_loss = generator_loss_LSGAN(disc_generated_output, gen_output, target, LAMBDA=LAMBDA)
@@ -147,7 +151,7 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
 
         start = time.time()
 
-        print("\nEpoch {}/{}".format(epoch+18+1,epochs+18))
+        print("\nEpoch {}/{}".format(epoch+1,epoch))
         #print('Generator LR:', generator_optimizer._decayed_lr(tf.float32).numpy(), ' - Discriminator LR:', discriminator_optimizer._decayed_lr(tf.float32).numpy())
 
         pb_i = Progbar(len(folders_list_train), stateful_metrics=metrics_names)
@@ -157,13 +161,13 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         elif epoch >= 5:
             lambda_value = 0.1'''
 
-        if epoch+18 < 10:
+        if epoch < 10:
             lambda_value = 100
-        elif epoch+18 >= 10 and epoch+18 < 15:
+        elif epoch >= 10 and epoch < 15:
             lambda_value = 10
-        elif epoch+18 >= 15 and epoch+18 < 25:
+        elif epoch >= 15 and epoch < 25:
             lambda_value = 1
-        elif epoch+18 >= 25:
+        elif epoch >= 25:
             lambda_value = 0.1
 
         # Train
@@ -173,7 +177,7 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         disc_loss_list = []
         disc_real_loss_list = []
         disc_fake_loss_list = []
-        for n, (inputs, target) in enumerate(DataGenerator_train(folders_list_train, batch_size=batch_size, norm=1)):
+        for n, (inputs, target) in enumerate(DataGenerator_train(folders_list_train, batch_size=batch_size, norm=1350.0)):
 
             # Train on the current batch
             gen_total_loss, gen_gan_loss, loss_snr, disc_loss, disc_real_loss, disc_fake_loss, disc_real_output, disc_generated_output, gradient_penalty = train_step(inputs, target, generator, 
@@ -211,12 +215,12 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         disc_real_loss_all += disc_real_loss_list
         disc_fake_loss_all += disc_fake_loss_list
 
-        np.savetxt('/home/manideepkolla/results/' + save_path + '/gen_total_loss.txt', gen_total_loss_all)
-        np.savetxt('/home/manideepkolla/results/' + save_path + '/gen_gan_loss.txt', gen_gan_loss_all)
-        np.savetxt('/home/manideepkolla/results/' + save_path + '/loss_snr.txt', loss_snr_all)
-        np.savetxt('/home/manideepkolla/results/' + save_path + '/disc_loss.txt', disc_loss_all)
-        np.savetxt('/home/manideepkolla/results/' + save_path + '/disc_real_loss.txt', disc_real_loss_all)
-        np.savetxt('/home/manideepkolla/results/' + save_path + '/disc_fake_loss.txt', disc_fake_loss_all)
+        np.savetxt('/home/ubuntu/results/' + save_path + '/gen_total_loss.txt', gen_total_loss_all)
+        np.savetxt('/home/ubuntu/results/' + save_path + '/gen_gan_loss.txt', gen_gan_loss_all)
+        np.savetxt('/home/ubuntu/results/' + save_path + '/loss_snr.txt', loss_snr_all)
+        np.savetxt('/home/ubuntu/results/' + save_path + '/disc_loss.txt', disc_loss_all)
+        np.savetxt('/home/ubuntu/results/' + save_path + '/disc_real_loss.txt', disc_real_loss_all)
+        np.savetxt('/home/ubuntu/results/' + save_path + '/disc_fake_loss.txt', disc_fake_loss_all)
 
         #plt.plot(gen_total_loss_all)
         plt.plot(gen_gan_loss_all)
@@ -227,7 +231,7 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         plt.xlabel('#iterations')
         plt.legend(['Gen loss', 'Disc loss'])
         #plt.show()
-        plt.savefig('/home/manideepkolla/results/' + save_path + '/loss_gan.png')
+        plt.savefig('/home/ubuntu/results/' + save_path + '/loss_gan.png')
         plt.close()
 
         #plt.plot(gen_total_loss_all)
@@ -239,7 +243,7 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         plt.xlabel('#iterations')
         plt.legend(['SNR loss'])
         #plt.show()
-        plt.savefig('/home/manideepkolla/results/' + save_path + '/loss_snr.png')
+        plt.savefig('/home/ubuntu/results/' + save_path + '/loss_snr.png')
         plt.close()
 
         plt.plot(disc_real_loss_all)
@@ -248,25 +252,25 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         plt.ylabel('loss')
         plt.xlabel('#iterations')
         plt.legend(['Disc real loss', 'Disc fake loss'])
-        plt.savefig('/home/manideepkolla/results/' + save_path + '/disc_losses.png')
+        plt.savefig('/home/ubuntu/results/' + save_path + '/disc_losses.png')
         plt.close()
 
         snrs = []
-        for inputs, target in DataGenerator_val(folders_list_val, batch_size=batch_size, norm=1):
+        for inputs, target in DataGenerator_val(folders_list_val, batch_size=batch_size, norm=1350.0):
             snrs.append(snr_acc(target, generator(inputs, training=True)))
         val_acc = np.mean(snrs)
         print('Val SNR:', val_acc)
 
         # Save Weights
-        generator.save_weights('/home/manideepkolla/models/' + save_path + '/generator-' + str(int(epoch+18)) + '-' + str(np.round(val_acc, 4)) + '.tf')
-        discriminator.save_weights('/home/manideepkolla/models/' + save_path + '/discriminator-' + str(int(epoch+18)) + '-' + str(np.round(val_acc, 4)) + '.tf')
+        generator.save_weights('/home/ubuntu/models/' + save_path + '/generator-' + str(int(epoch)) + '-' + str(np.round(val_acc, 4)) + '.tf')
+        discriminator.save_weights('/home/ubuntu/models/' + save_path + '/discriminator-' + str(int(epoch)) + '-' + str(np.round(val_acc, 4)) + '.tf')
 
         # Wandb Metrics logging
         wandb.log({"gen_total_loss": np.mean(gen_total_loss_list), 'gen_gan_loss':np.mean(gen_gan_loss_list), 
                     'loss_snr':np.mean(loss_snr_list), 'disc_loss':np.mean(disc_loss_list), 'Val_SNR':np.mean(snrs),
                     'disc_fake_loss':np.mean(disc_fake_loss_list), 'disc_real_loss':np.mean(disc_real_loss_list), 'lr':lr}, commit=False)
         
-        with open('/home/manideepkolla/results/' + save_path + '/logs.txt', "a") as myfile:
+        with open('/home/ubuntu/results/' + save_path + '/logs.txt', "a") as myfile:
             myfile.write("gen_total_loss: " + str(np.mean(gen_total_loss_list)) + ' - ' + 'gen_gan_loss: ' + 
                         str(np.mean(gen_gan_loss_list)) + ' - ' + 'loss_snr: ' + str(np.mean(loss_snr_list)) + 
                         ' - ' + 'disc_loss: ' + str(np.mean(disc_loss_list)) + ' - ' + 'Val_SNR: ' + str(np.mean(snrs)) + 
