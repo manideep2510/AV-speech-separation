@@ -1,7 +1,7 @@
 import sys
-sys.path.append('/home/manideepkolla/av-speech-separation/LipNet')
-sys.path.append('/home/manideepkolla/av-speech-separation/models')
-sys.path.append('/home/manideepkolla/av-speech-separation/models/classification_models-master/')
+sys.path.append('/home/ubuntu/av-speech-separation/LipNet')
+sys.path.append('/home/ubuntu/av-speech-separation/models')
+sys.path.append('/home/ubuntu/av-speech-separation/models/classification_models-master/')
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
