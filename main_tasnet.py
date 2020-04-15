@@ -1,7 +1,7 @@
 from metrics import sdr_metric, Metrics_crm, Metrics_samples, Metrics_wandb, Metrics_3speak
 import glob
 import os
-from skimage import io, transform
+#from skimage import io, transform
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -62,7 +62,7 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 args = parser.parse_args()
 #os.environ['WANDB_CONFIG_DIR'] = '/home/ubuntu/.config/wandb'
 #os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_baseline_256dimSepNet_2speakers', notes='TDAVSS exact baseline, 1350.0 input norm, lr = 5e-4',
+wandb.init(name='test_tdavss_baseline_256dimSepNet_2speakers', notes='TDAVSS exact baseline, 1350.0 input norm, lr = 5e-4',
                 project="av-speech-seperation", dir='/home/ubuntu/wandb')
 
 # To read the images in numerical order
@@ -102,14 +102,14 @@ folders_list_val_all = np.loadtxt(
 random.seed(123)
 folders_list_train = random.sample(folders_list_train_all, 50000)
 random.seed(1234)
-folders_list_val = random.sample(folders_list_val_all, 5000)
+folders_list_val_ = random.sample(folders_list_val_all, 5000)
 random.seed(12345)
 random.shuffle(folders_list_train)
 
 
-#random.seed(30)
-#folders_list_val = random.sample(folders_list_val_, 120)
-#folders_list_train = random.sample(folders_list_train, 180)
+random.seed(30)
+folders_list_val = random.sample(folders_list_val_, 120)
+folders_list_train = random.sample(folders_list_train, 180)
 
 print('Training data:', len(folders_list_train))
 print('Validation data:', len(folders_list_val))
@@ -143,7 +143,7 @@ summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
 
-path = 'tdavss_baseline_256dimSepNet_2speakers_epochs40_lr5e-4'
+path = 'test_tdavss_baseline_256dimSepNet_2speakers_epochs40_lr5e-4'
 print('Model weights path:', path + '\n')
 
 try:
@@ -165,7 +165,7 @@ def log_to_file(msg, file='/home/ubuntu/results/'+path+'/logs.txt'):
 # callcack
 
 
-metrics_unsync = Metrics_3speak(model=model, val_folders=folders_list_val,
+metrics_unsync = Metrics_3speak(model=model, val_folders=folders_list_val_,
                                 batch_size=batch_size, save_path='/home/ubuntu/results/'+path+'/logs.txt')
 metrics_wandb = Metrics_wandb()
 save_weights = save_weights(model, path)

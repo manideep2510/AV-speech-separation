@@ -25,7 +25,7 @@ from pathlib import Path
 import shutil
 import cv2
 import sys
-sys.path.append('/home/manideepkolla/av-speech-separation/LipNet')
+sys.path.append('/home/ubuntu/av-speech-separation/LipNet')
 from lipnet.lipreading.helpers import text_to_labels
 from lipnet.lipreading.aligns import Align
 import json
