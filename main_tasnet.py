@@ -60,9 +60,9 @@ parser.add_argument('-batch_size', action="store", dest="batch_size", type=int)
 parser.add_argument('-lr', action="store", dest="lrate", type=float)
 
 args = parser.parse_args()
-os.environ['WANDB_CONFIG_DIR'] = '/home/ubuntu/.config/wandb'
-os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_SepConv_400Frames', notes='400Frames, 50K training folders, Batch size 12, lr = 5e-4, Normalize input with L2 Norm, Loss is Si-SNR',
+#os.environ['WANDB_CONFIG_DIR'] = '/home/ubuntu/.config/wandb'
+#os.environ['WANDB_MODE'] = 'dryrun'
+wandb.init(name='tdavss_baseline_256dimSepNet_2speakers', notes='TDAVSS exact baseline, 1350.0 input norm, lr = 5e-4',
                 project="av-speech-seperation", dir='/home/ubuntu/wandb')
 
 # To read the images in numerical order
@@ -143,7 +143,7 @@ summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
 
-path = 'tdavss_SepConv_400Frames_epochs40_lr5e-4_exp1'
+path = 'tdavss_baseline_256dimSepNet_2speakers_epochs40_lr5e-4'
 print('Model weights path:', path + '\n')
 
 try:

@@ -26,19 +26,20 @@ def custom_tanh(x):
     
     return Cy
 
-def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
-    
-        x = Conv1D(filters,1)(inputs)
-        #x = Mish('Mish')(x)
-        x = Activation('relu')(x)
-        x = BatchNormalization()(x)
-        x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
-        #x = Mish('Mish')(x)
-        x = Activation('relu')(x)
-        x = BatchNormalization()(x)
-        x = Conv1D(int(inputs.shape[-1]),1)(x)
-        x = Add()([inputs,x])
-        return x
+
+def Conv_Block(inputs, dialation_rate=1, stride=1, filters=512, kernel_size=3):
+
+    x = Conv1D(filters, 1)(inputs)
+    #x = Mish('Mish')(x)
+    x = Activation('relu')(x)
+    x = GlobalLayerNorm()(x)
+    x = SeparableConv1D(filters, kernel_size, dilation_rate=dialation_rate, padding='same', strides=stride)(x)
+    #x = Mish('Mish')(x)
+    x = Activation('relu')(x)
+    x = GlobalLayerNorm()(x)
+    x = Conv1D(int(inputs.shape[-1]), 1)(x)
+    x = Add()([inputs, x])
+    return x
 
 
 def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
@@ -46,7 +47,8 @@ def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
     x = Conv1D(filters,1)(inputs)
     #x = Mish('Mish')(x)
     x = Activation('relu')(x)
-    x = BatchNormalization()(x)
+    #x = BatchNormalization()(x)
+    x= GlobalLayerNorm()(x)
     x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
     x = Add()([inputs,x])
     
@@ -63,7 +65,6 @@ def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3)
     
     return x
 
-
 def vec_l2norm(x):
 
     nr = K.sqrt(tf.math.reduce_sum(K.square(x), axis=1))
@@ -71,6 +72,42 @@ def vec_l2norm(x):
     #nr = tf.broadcast_to(nr, (int(x.shape[1]), int(x.shape[0])))
     return nr
 
+class GlobalLayerNorm(Layer):
+    """Global Layer Normalization (gLN)"""
+    def __init__(self,**kwargs):
+        super(GlobalLayerNorm, self).__init__(**kwargs)
+      
+    def build(self,input_shape):
+        
+        self.gamma = self.add_weight(name='gamma',shape=(1,1,input_shape[2]),initializer='Ones',trainable='True')
+        self.beta = self.add_weight(name='beta',shape=(1,1,input_shape[2]),initializer='Zeros',trainable='True')
+        super(GlobalLayerNorm, self).build(input_shape)
+        
+    def call(self,inputs):
+        
+        mean = tf.math.reduce_mean((tf.math.reduce_mean(inputs,axis=2,keepdims=True)),axis=1,keepdims=True)
+        var = tf.math.square((inputs-mean))
+        var = tf.math.reduce_mean((tf.math.reduce_mean(var,axis=2,keepdims=True)),axis=1,keepdims=True)
+        gln = self.gamma*(inputs-mean)*tf.math.rsqrt(var+1e-8)+self.beta
+        return gln
+
+class ChannelwiseLayerNorm(Layer):
+    """Channel-wise Layer Normalization (cLN)"""
+    def __init__(self,**kwargs):
+        super(ChannelwiseLayerNorm, self).__init__(**kwargs)
+    
+    def build(self,input_shape):
+        
+        self.gamma=self.add_weight(name='gamma',shape=(1,1,input_shape[2]),initializer='Ones',trainable='True')
+        self.beta=self.add_weight(name='beta',shape=(1,1,input_shape[2]),initializer='Zeros',trainable='True')
+        super(ChannelwiseLayerNorm, self).build(input_shape)
+        
+    def call(self,inputs):
+        
+        mean = tf.math.reduce_mean(inputs,axis=2,keepdims=True)
+        var = tf.math.square(tf.math.reduce_std(inputs,axis=2,keepdims=True))
+        cln = self.gamma*(inputs-mean)*tf.math.rsqrt(var+1e-8)+self.beta
+        return cln
 
 class TasNet(object):
     
@@ -108,6 +145,7 @@ class TasNet(object):
         #audio_encoding
         self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_input_data)
         #self.audio=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.audio)
+        self.audio = ChannelwiseLayerNorm()(self.audio)
         
         #video_processing
 
@@ -127,22 +165,31 @@ class TasNet(object):
         
         #video_processing
         self.video_data=Conv1D(512,1)(self.outv)
-        self.outv=Conv_Block_Video(self.video_data,dialation_rate=0)
-        self.outv=Conv_Block_Video(self.outv,dialation_rate=1)
-        self.outv=Conv_Block_Video(self.outv,dialation_rate=2)
-        self.outv=Conv_Block_Video(self.outv,dialation_rate=3)
-        self.outv=Conv_Block_Video(self.outv,dialation_rate=4)
+        self.outv=Conv_Block_Video(self.video_data)
+        self.outv=Conv_Block_Video(self.outv)
+        self.outv=Conv_Block_Video(self.outv)
+        self.outv=Conv_Block_Video(self.outv)
+        self.outv=Conv_Block_Video(self.outv)
         self.outv=Conv1D(256,1)(self.outv)
         
         #audio_processing
-        self.outa=Conv_Block(self.audio,dialation_rate=1)
-        self.outa=Conv_Block(self.outa,dialation_rate=2)
-        self.outa=Conv_Block(self.outa,dialation_rate=4)
-        self.outa=Conv_Block(self.outa,dialation_rate=8)
-        self.outa=Conv_Block(self.outa,dialation_rate=16)
-        self.outa=Conv_Block(self.outa,dialation_rate=32)
-        self.outa=Conv_Block(self.outa,dialation_rate=64)
-        self.outa=Conv_Block(self.outa,dialation_rate=128)
+        '''self.outa = Conv_Block(self.audio, dialation_rate=1)
+        self.outa = Conv_Block(self.outa, dialation_rate=2)
+        self.outa = Conv_Block(self.outa, dialation_rate=4)
+        self.outa = Conv_Block(self.outa, dialation_rate=8)
+        self.outa = Conv_Block(self.outa, dialation_rate=16)
+        self.outa = Conv_Block(self.outa, dialation_rate=32)
+        self.outa = Conv_Block(self.outa, dialation_rate=64)
+        self.outa = Conv_Block(self.outa, dialation_rate=128)'''
+
+        self.outa = Conv_Block_Audio(self.audio, dialation_rate=1, filters=256)
+        self.outa = Conv_Block_Audio(self.outa, dialation_rate=2, filters=256)
+        self.outa = Conv_Block_Audio(self.outa, dialation_rate=4, filters=256)
+        self.outa = Conv_Block_Audio(self.outa, dialation_rate=8, filters=256)
+        self.outa = Conv_Block_Audio(self.outa, dialation_rate=16, filters=256)
+        self.outa = Conv_Block_Audio(self.outa, dialation_rate=32, filters=256)
+        self.outa = Conv_Block_Audio(self.outa, dialation_rate=64, filters=256)
+        self.outa = Conv_Block_Audio(self.outa, dialation_rate=128, filters=256)
         
         #fusion_process
         
@@ -180,7 +227,7 @@ class TasNet(object):
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
         print('self attention fusion shape',self.fusion.shape)'''
 
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
+        '''self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=8,filters=512)
@@ -205,10 +252,39 @@ class TasNet(object):
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=16,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=32,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=64,filters=512)
-        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=512)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=512)'''
+
+        self.fusion=Conv1D(256,1)(self.fusion)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=8,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=16,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=32,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=64,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=256)
+
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=8,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=16,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=32,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=64,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=256)
+
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=4,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=8,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=16,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=32,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=64,filters=256)
+        self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=128,filters=256)
         
         #Decoding
-        self.mask=Conv1D(256,1,activation='relu', name='mask')(self.fusion)
+        #self.mask=Conv1D(256,1,activation='relu', name='mask')(self.fusion)
+        self.mask = Activation('relu')(self.fusion)
         self.fusion=Multiply()([self.audio,self.mask])
         self.decode = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
 
