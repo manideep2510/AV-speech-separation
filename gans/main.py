@@ -64,8 +64,8 @@ epochs = args.epochs
 
 #os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
 #os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100', notes='BS=6, PhaseShuffle=2, LAMBDA=100 to 1, LSGAN with Instance Noise for 20 epochs, Lr(D) = 2*Lr(G), 0.5 lr after 20 epochs',
-                resume='2z9u44ut', project="av-speech-seperation", dir='/home/ubuntu/wandb')
+#wandb.init(name='tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100', notes='BS=6, PhaseShuffle=2, LAMBDA=100 to 1, LSGAN with Instance Noise for 20 epochs, Lr(D) = 2*Lr(G), 0.5 lr after 20 epochs',
+#                resume='2z9u44ut', project="av-speech-seperation", dir='/home/ubuntu/wandb')
 
 
 # Read training folders
@@ -84,7 +84,7 @@ random.shuffle(folders_list_train)
 
 '''random.seed(30)
 folders_list_val = random.sample(folders_list_val, 40)
-folders_list_train = random.sample(folders_list_train, 80)'''
+folders_list_train = random.sample(folders_list_train, 1000)'''
 
 print('Training data:', len(folders_list_train))
 print('Validation data:', len(folders_list_val))
@@ -100,7 +100,7 @@ generator = Generator(time_dimensions=200, frequency_bins=257, n_frames=50,
 print('Generator weights loaded')'''
 
 print('----------Building Discriminator----------')
-discriminator = Discriminator_SpectNorm(time_dimensions=200, frequency_bins=257, n_frames=50,
+discriminator = Discriminator(time_dimensions=200, frequency_bins=257, n_frames=50,
                       phaseshuffle_rad=5, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 
 '''discriminator.load_weights(

@@ -618,7 +618,7 @@ class Metrics_3speak(Callback):
 
             lips_ = folder
             samples_ = folder[:-9] + '_samples.npy'
-            samples_mix_ = '/home/manideepkolla/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
+            samples_mix_ = '/home/ubuntu/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
 
             lips.append(lips_)
             samples.append(samples_)

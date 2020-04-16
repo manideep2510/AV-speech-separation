@@ -29,7 +29,7 @@ def media_logging(val_files, generator, batch_size):
     for folder in val_files:
         lips_ = folder
         samples_ = folder[:-9] + '_samples.npy'
-        samples_mix_ = '/home/manideepkolla/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
+        samples_mix_ = '/home/ubuntu/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
 
         lips.append(lips_)
         samples.append(samples_)
@@ -151,7 +151,7 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
 
         start = time.time()
 
-        print("\nEpoch {}/{}".format(epoch+1,epoch))
+        print("\nEpoch {}/{}".format(epoch+1,epochs))
         #print('Generator LR:', generator_optimizer._decayed_lr(tf.float32).numpy(), ' - Discriminator LR:', discriminator_optimizer._decayed_lr(tf.float32).numpy())
 
         pb_i = Progbar(len(folders_list_train), stateful_metrics=metrics_names)
@@ -266,9 +266,9 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
         discriminator.save_weights('/home/ubuntu/models/' + save_path + '/discriminator-' + str(int(epoch)) + '-' + str(np.round(val_acc, 4)) + '.tf')
 
         # Wandb Metrics logging
-        wandb.log({"gen_total_loss": np.mean(gen_total_loss_list), 'gen_gan_loss':np.mean(gen_gan_loss_list), 
-                    'loss_snr':np.mean(loss_snr_list), 'disc_loss':np.mean(disc_loss_list), 'Val_SNR':np.mean(snrs),
-                    'disc_fake_loss':np.mean(disc_fake_loss_list), 'disc_real_loss':np.mean(disc_real_loss_list), 'lr':lr}, commit=False)
+        #wandb.log({"gen_total_loss": np.mean(gen_total_loss_list), 'gen_gan_loss':np.mean(gen_gan_loss_list), 
+        #            'loss_snr':np.mean(loss_snr_list), 'disc_loss':np.mean(disc_loss_list), 'Val_SNR':np.mean(snrs),
+        #            'disc_fake_loss':np.mean(disc_fake_loss_list), 'disc_real_loss':np.mean(disc_real_loss_list), 'lr':lr}, commit=False)
         
         with open('/home/ubuntu/results/' + save_path + '/logs.txt', "a") as myfile:
             myfile.write("gen_total_loss: " + str(np.mean(gen_total_loss_list)) + ' - ' + 'gen_gan_loss: ' + 
@@ -276,9 +276,9 @@ def fit(folders_list_train, folders_list_val, generator, discriminator, generato
                         ' - ' + 'disc_loss: ' + str(np.mean(disc_loss_list)) + ' - ' + 'Val_SNR: ' + str(np.mean(snrs)) + 
                         ' - ' + 'disc_real_loss: ' + str(np.mean(disc_real_loss_list)) + ' - ' + 'disc_fake_loss: ' + str(np.mean(disc_fake_loss_list)) + '\n')
 
-        val_files = [folders_list_val[10], folders_list_val[30], folders_list_val[50], 
+        '''val_files = [folders_list_val[10], folders_list_val[30], folders_list_val[50], 
                     folders_list_val[100], folders_list_val[1600], folders_list_val[1620], 
                     folders_list_val[1640], folders_list_val[1660], folders_list_val[70], 
-                    folders_list_val[1750]]
+                    folders_list_val[1750]]'''
         #val_files = folders_list_val[:8]
-        media_logging(val_files, generator, batch_size)
+        #media_logging(val_files, generator, batch_size)

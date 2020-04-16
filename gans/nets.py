@@ -106,7 +106,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
 
     if pretrain == True:
         model.load_weights(
-            '/home/manideepkolla/lrs2/sepconv_lipreading_weights.hdf5')
+            '/home/ubuntu/lrs2/sepconv_lipreading_weights.hdf5')
         print('Separable Conv ResNet LSTM Pretrain weights loaded')
 
     return model
@@ -161,34 +161,72 @@ class Spectral_Norm(Constraint):
     def get_config(self):
         return {'n_iters': self.n_iters}
 
-def Conv_Block(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
+class GlobalLayerNorm(Layer):
+    """Global Layer Normalization (gLN)"""
+    def __init__(self,**kwargs):
+        super(GlobalLayerNorm, self).__init__(**kwargs)
+      
+    def build(self,input_shape):
+        
+        self.gamma = self.add_weight(name='gamma',shape=(1,1,input_shape[2]),initializer='Ones',trainable='True')
+        self.beta = self.add_weight(name='beta',shape=(1,1,input_shape[2]),initializer='Zeros',trainable='True')
+        super(GlobalLayerNorm, self).build(input_shape)
+        
+    def call(self,inputs):
+        
+        mean = tf.math.reduce_mean((tf.math.reduce_mean(inputs,axis=2,keepdims=True)),axis=1,keepdims=True)
+        var = tf.math.square((inputs-mean))
+        var = tf.math.reduce_mean((tf.math.reduce_mean(var,axis=2,keepdims=True)),axis=1,keepdims=True)
+        gln = self.gamma*(inputs-mean)*tf.math.rsqrt(var+1e-8)+self.beta
+        return gln
+
+class ChannelwiseLayerNorm(Layer):
+    """Channel-wise Layer Normalization (cLN)"""
+    def __init__(self,**kwargs):
+        super(ChannelwiseLayerNorm, self).__init__(**kwargs)
     
-        x = Conv1D(filters,1)(inputs)
-        #x = Mish('Mish')(x)
-        x = Activation('relu')(x)
-        x = BatchNormalization()(x)
-        x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
-        #x = Mish('Mish')(x)
-        x = Activation('relu')(x)
-        x = BatchNormalization()(x)
-        x = Conv1D(int(inputs.shape[-1]),1)(x)
-        x = Add()([inputs,x])
-        return x
+    def build(self,input_shape):
+        
+        self.gamma=self.add_weight(name='gamma',shape=(1,1,input_shape[2]),initializer='Ones',trainable='True')
+        self.beta=self.add_weight(name='beta',shape=(1,1,input_shape[2]),initializer='Zeros',trainable='True')
+        super(ChannelwiseLayerNorm, self).build(input_shape)
+        
+    def call(self,inputs):
+        
+        mean = tf.math.reduce_mean(inputs,axis=2,keepdims=True)
+        var = tf.math.square(tf.math.reduce_std(inputs,axis=2,keepdims=True))
+        cln = self.gamma*(inputs-mean)*tf.math.rsqrt(var+1e-8)+self.beta
+        return cln
+
+def Conv_Block(inputs, dialation_rate=1, stride=1, filters=512, kernel_size=3):
+
+    x = Conv1D(filters, 1)(inputs)
+    #x = Mish('Mish')(x)
+    x = Activation('relu')(x)
+    x = GlobalLayerNorm()(x)
+    x = SeparableConv1D(filters, kernel_size, dilation_rate=dialation_rate, padding='same', strides=stride)(x)
+    #x = Mish('Mish')(x)
+    x = Activation('relu')(x)
+    x = GlobalLayerNorm()(x)
+    x = Conv1D(int(inputs.shape[-1]), 1)(x)
+    x = Add()([inputs, x])
+    return x
+
 
 def Conv_Block_Audio(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
-    
+
     x = Conv1D(filters,1)(inputs)
     #x = Mish('Mish')(x)
     x = Activation('relu')(x)
-    x = BatchNormalization()(x)
+    #x = BatchNormalization()(x)
+    x= GlobalLayerNorm()(x)
     x = SeparableConv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(x)
     x = Add()([inputs,x])
     
     return x
 
 def Conv_Block_Video(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
-    
-    
+
     #x = Mish('Mish')(inputs)
     x = Activation('relu')(inputs)
     x = BatchNormalization()(x)
@@ -292,6 +330,7 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125,
     #audio_encoding
     audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(audio_input_data)
     #audio=Conv1D(256,16,padding='same',strides=2, activation='relu')(audio)
+    audio1 = ChannelwiseLayerNorm()(audio)
 
     #video_processing
 
@@ -311,22 +350,31 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125,
 
     #video_processing
     video_data=Conv1D(512,1)(outv)
-    outv=Conv_Block_Video(video_data,dialation_rate=0)
-    outv=Conv_Block_Video(outv,dialation_rate=1)
-    outv=Conv_Block_Video(outv,dialation_rate=2)
-    outv=Conv_Block_Video(outv,dialation_rate=3)
-    outv=Conv_Block_Video(outv,dialation_rate=4)
+    outv=Conv_Block_Video(video_data)
+    outv=Conv_Block_Video(outv)
+    outv=Conv_Block_Video(outv)
+    outv=Conv_Block_Video(outv)
+    outv=Conv_Block_Video(outv)
     outv=Conv1D(256,1)(outv)
 
     #audio_processing
-    outa=Conv_Block(audio,dialation_rate=1)
+    '''outa=Conv_Block(audio,dialation_rate=1)
     outa=Conv_Block(outa,dialation_rate=2)
     outa=Conv_Block(outa,dialation_rate=4)
     outa=Conv_Block(outa,dialation_rate=8)
     outa=Conv_Block(outa,dialation_rate=16)
     outa=Conv_Block(outa,dialation_rate=32)
     outa=Conv_Block(outa,dialation_rate=64)
-    outa=Conv_Block(outa,dialation_rate=128)
+    outa=Conv_Block(outa,dialation_rate=128)'''
+
+    outa = Conv_Block_Audio(audio1, dialation_rate=1, filters=256)
+    outa = Conv_Block_Audio(outa, dialation_rate=2, filters=256)
+    outa = Conv_Block_Audio(outa, dialation_rate=4, filters=256)
+    outa = Conv_Block_Audio(outa, dialation_rate=8, filters=256)
+    outa = Conv_Block_Audio(outa, dialation_rate=16, filters=256)
+    outa = Conv_Block_Audio(outa, dialation_rate=32, filters=256)
+    outa = Conv_Block_Audio(outa, dialation_rate=64, filters=256)
+    outa = Conv_Block_Audio(outa, dialation_rate=128, filters=256)
 
     #fusion_process
 
@@ -342,7 +390,7 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125,
 
     print('fusion:', fusion.shape)
 
-    fusion=Conv_Block_Audio(fusion,dialation_rate=1,filters=512)
+    '''fusion=Conv_Block_Audio(fusion,dialation_rate=1,filters=512)
     fusion=Conv_Block_Audio(fusion,dialation_rate=2,filters=512)
     fusion=Conv_Block_Audio(fusion,dialation_rate=4,filters=512)
     fusion=Conv_Block_Audio(fusion,dialation_rate=8,filters=512)
@@ -367,10 +415,39 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125,
     fusion=Conv_Block_Audio(fusion,dialation_rate=16,filters=512)
     fusion=Conv_Block_Audio(fusion,dialation_rate=32,filters=512)
     fusion=Conv_Block_Audio(fusion,dialation_rate=64,filters=512)
-    fusion=Conv_Block_Audio(fusion,dialation_rate=128,filters=512)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=128,filters=512)'''
 
+    fusion=Conv1D(256,1)(fusion)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=1,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=2,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=4,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=8,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=16,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=32,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=64,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=128,filters=256)
+
+    fusion=Conv_Block_Audio(fusion,dialation_rate=1,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=2,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=4,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=8,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=16,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=32,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=64,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=128,filters=256)
+
+    fusion=Conv_Block_Audio(fusion,dialation_rate=1,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=2,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=4,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=8,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=16,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=32,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=64,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=128,filters=256)
+    
     #Decoding
-    mask=Conv1D(256,1,activation='relu', name='mask')(fusion)
+    #mask=Conv1D(256,1,activation='relu', name='mask')(fusion)
+    mask = Activation('relu', name='mask')(fusion)
     fusion=Multiply()([audio,mask])
     decode = Lambda(lambda x: K.expand_dims(x, axis=2))(fusion)
 
@@ -473,31 +550,31 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuf
     else:
         outv = lipnet_model.layers[-4].output
 
-    # Video Processing
+    #video_processing
     video_data=Conv1D(512,1)(outv)
-    outv=Conv_Block_Video_disc(video_data,dialation_rate=0)
-    outv=Conv_Block_Video_disc(outv,dialation_rate=1)
-    outv=Conv_Block_Video_disc(outv,dialation_rate=2)
-    outv=Conv_Block_Video_disc(outv,dialation_rate=3)
-    outv=Conv_Block_Video_disc(outv,dialation_rate=4)
+    outv=Conv_Block_Video(video_data)
+    outv=Conv_Block_Video(outv)
+    outv=Conv_Block_Video(outv)
+    outv=Conv_Block_Video(outv)
+    outv=Conv_Block_Video(outv)
     outv=Conv1D(256,1)(outv)
 
     # Audio Processing WITH Phase Shuffle
-    outa=Conv_Block_disc(audio,dialation_rate=1)
+    outa=Conv_Block_Audio_disc(audio,dialation_rate=1,filters=256)
     outa = phaseshuffle(outa)
-    outa=Conv_Block_disc(outa,dialation_rate=2)
+    outa=Conv_Block_Audio_disc(outa,dialation_rate=2,filters=256)
     outa = phaseshuffle(outa)
-    outa=Conv_Block_disc(outa,dialation_rate=4)
+    outa=Conv_Block_Audio_disc(outa,dialation_rate=4,filters=256)
     outa = phaseshuffle(outa)
-    outa=Conv_Block_disc(outa,dialation_rate=8)
+    outa=Conv_Block_Audio_disc(outa,dialation_rate=8,filters=256)
     outa = phaseshuffle(outa)
-    outa=Conv_Block_disc(outa,dialation_rate=16)
+    outa=Conv_Block_Audio_disc(outa,dialation_rate=16,filters=256)
     outa = phaseshuffle(outa)
-    outa=Conv_Block_disc(outa,dialation_rate=32)
+    outa=Conv_Block_Audio_disc(outa,dialation_rate=32,filters=256)
     outa = phaseshuffle(outa)
-    outa=Conv_Block_disc(outa,dialation_rate=64)
+    outa=Conv_Block_Audio_disc(outa,dialation_rate=64,filters=256)
     outa = phaseshuffle(outa)
-    outa=Conv_Block_disc(outa,dialation_rate=128)
+    outa=Conv_Block_Audio_disc(outa,dialation_rate=128,filters=256)
     outa = phaseshuffle(outa)
 
     # Upsample Video frames to Audio frames rate
@@ -513,38 +590,70 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuf
 
     '''conv1 = Conv1D(512,3,dilation_rate=16,padding='same',strides=1, 
                                  activation='relu')(fusion)'''
-    conv1 = Conv_Block_disc(fusion, dialation_rate=16,
+    '''conv1 = Conv_Block_disc(fusion, dialation_rate=16,
                             stride=1, filters=512, kernel_size=3)
     conv1 = BatchNormalization()(conv1)
-    pool1 = AveragePooling1D(pool_size=2)(conv1)
+    pool1 = AveragePooling1D(pool_size=2)(conv1)'''
 
     '''conv2 = Conv1D(1024,3,dilation_rate=8,padding='same',strides=1, 
                                  activation='relu')(pool1)'''
-    conv2 = Conv_Block_disc(pool1, dialation_rate=8,
+    '''conv2 = Conv_Block_disc(pool1, dialation_rate=8,
                             stride=1, filters=1024, kernel_size=3)
     conv2 = BatchNormalization()(conv2)
-    pool2 = AveragePooling1D(pool_size=2)(conv2)
+    pool2 = AveragePooling1D(pool_size=2)(conv2)'''
 
     '''conv3 = Conv1D(2048,3,dilation_rate=4,padding='same',strides=1, 
                                  activation='relu')(pool2)'''
-    conv3 = Conv_Block_disc(pool2, dialation_rate=4,
+    '''conv3 = Conv_Block_disc(pool2, dialation_rate=4,
                             stride=1, filters=2048, kernel_size=3)
     conv3 = BatchNormalization()(conv3)
-    pool3 = AveragePooling1D(pool_size=2)(conv3)
+    pool3 = AveragePooling1D(pool_size=2)(conv3)'''
 
     '''conv4 = Conv1D(4096,3,dilation_rate=2,padding='same',strides=1, 
                                  activation='relu')(pool3)'''
-    conv4 = Conv_Block_disc(pool3, dialation_rate=2,
+    '''conv4 = Conv_Block_disc(pool3, dialation_rate=2,
                             stride=1, filters=4096, kernel_size=3)
     conv4 = BatchNormalization()(conv4)
-    pool4 = AveragePooling1D(pool_size=2)(conv4)
+    pool4 = AveragePooling1D(pool_size=2)(conv4)'''
 
     '''global_pool = GlobalAveragePooling1D(name='global_avgpool_out')(pool3)
 
     out = Dense(512, activation='relu')(global_pool)
     out = Dense(128, activation='relu')(out)'''
     #out = Dense(16, activation='relu')(out)
-    out = Flatten()(pool4)
+
+    fusion=Conv1D(256,1)(fusion)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=1,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=2,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=4,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=8,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=16,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=32,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=64,filters=256)
+    fusion=Conv_Block_Audio(fusion,dialation_rate=128,filters=256)
+
+    '''conv1 = Conv1D(512,3,dilation_rate=16,padding='same',strides=1, 
+                                 activation='relu')(fusion)'''
+    conv1 = Conv_Block_disc(fusion, dialation_rate=16,
+                            stride=1, filters=256, kernel_size=3)
+    conv1 = BatchNormalization()(conv1)
+    pool1 = AveragePooling1D(pool_size=2)(conv1)
+
+    '''conv2 = Conv1D(1024,3,dilation_rate=8,padding='same',strides=1, 
+                                 activation='relu')(pool1)'''
+    conv2 = Conv_Block_disc(pool1, dialation_rate=8,
+                            stride=1, filters=512, kernel_size=3)
+    conv2 = BatchNormalization()(conv2)
+    pool2 = AveragePooling1D(pool_size=2)(conv2)
+
+    '''conv3 = Conv1D(2048,3,dilation_rate=4,padding='same',strides=1, 
+                                 activation='relu')(pool2)'''
+    conv3 = Conv_Block_disc(pool2, dialation_rate=4,
+                            stride=1, filters=1024, kernel_size=3)
+    conv3 = BatchNormalization()(conv3)
+    pool3 = AveragePooling1D(pool_size=2)(conv3)
+
+    out = Flatten()(pool3)
 
     out_class = Dense(1)(out)
 

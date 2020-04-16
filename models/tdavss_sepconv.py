@@ -145,7 +145,7 @@ class TasNet(object):
         #audio_encoding
         self.audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(self.audio_input_data)
         #self.audio=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.audio)
-        self.audio = ChannelwiseLayerNorm()(self.audio)
+        self.audio1 = ChannelwiseLayerNorm()(self.audio)
         
         #video_processing
 
@@ -182,7 +182,7 @@ class TasNet(object):
         self.outa = Conv_Block(self.outa, dialation_rate=64)
         self.outa = Conv_Block(self.outa, dialation_rate=128)'''
 
-        self.outa = Conv_Block_Audio(self.audio, dialation_rate=1, filters=256)
+        self.outa = Conv_Block_Audio(self.audio1, dialation_rate=1, filters=256)
         self.outa = Conv_Block_Audio(self.outa, dialation_rate=2, filters=256)
         self.outa = Conv_Block_Audio(self.outa, dialation_rate=4, filters=256)
         self.outa = Conv_Block_Audio(self.outa, dialation_rate=8, filters=256)
@@ -284,7 +284,7 @@ class TasNet(object):
         
         #Decoding
         #self.mask=Conv1D(256,1,activation='relu', name='mask')(self.fusion)
-        self.mask = Activation('relu')(self.fusion)
+        self.mask = Activation('relu', name='mask')(self.fusion)
         self.fusion=Multiply()([self.audio,self.mask])
         self.decode = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
 
