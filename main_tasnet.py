@@ -29,14 +29,14 @@ import cv2
 from losses import l2_loss, mse, l1_loss, mag_phase_loss, snr_loss, snr_acc
 #from models.lipnet import LipNet
 #from models.tdavss import TasNet
+#from models.tdavss_attn1 import TasNet as TasNetSepCon
 from models.tdavss_sepconv import TasNet as TasNetSepCon
-#from models.tdavss_sepconv1 import TasNet as TasNetSepCon
 #from models.tasnet_lipnet import TasNet
 from dataloaders import DataGenerator_val_samples, DataGenerator_train_samples
 import random
 #from dataloaders_aug import DataGenerator_train_crm, DataGenerator_sampling_crm, DataGenerator_test_crm
 
-'''gpus = tf.config.experimental.list_physical_devices('GPU')
+gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
     # Currently, memory growth needs to be the same across GPUs
@@ -46,9 +46,9 @@ if gpus:
     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
   except RuntimeError as e:
     # Memory growth must be set before GPUs have been initialized
-    print(e)'''
+    print(e)
 
-gpus = tf.config.experimental.list_physical_devices('GPU')
+'''gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
   try:
@@ -59,7 +59,7 @@ if gpus:
     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
   except RuntimeError as e:
     # Virtual devices must be set before GPUs have been initialized
-    print(e)
+    print(e)'''
 
 from tensorflow.keras.utils import multi_gpu_model
 from argparse import ArgumentParser
@@ -75,8 +75,8 @@ parser.add_argument('-lr', action="store", dest="lrate", type=float)
 args = parser.parse_args()
 #os.environ['WANDB_CONFIG_DIR'] = '/home/ubuntu/.config/wandb'
 #os.environ['WANDB_MODE'] = 'dryrun'
-wandb.init(name='tdavss_baseline_256dimSepNet_2speakers_lr1e-3', notes='Batch size = 12, TDAVSS exact baseline, 256dimSepNe, 1350.0 input norm, lr = 5e-4',
-                project="av-speech-seperation", dir='/home/ubuntu/wandb') #resume = '2fb8mx5o', 
+wandb.init(name='tdavss_PerInputMeanSTDNorm_baseline_2speakers', notes='Batch size = 8, TDAVSS exact baseline, 256 dim SepNet, Per example mean and std input norm, lr = 5e-4',
+                resume='3drke3ko', project="av-speech-seperation", dir='/home/ubuntu/wandb') #resume = '2fb8mx5o', 
 
 # To read the images in numerical order
 import re
@@ -122,7 +122,7 @@ random.shuffle(folders_list_train)
 
 '''random.seed(30)
 folders_list_val = random.sample(folders_list_val_, 120)
-folders_list_train = random.sample(folders_list_train, 360)'''
+folders_list_train = random.sample(folders_list_train, 180)'''
 
 print('Training data:', len(folders_list_train))
 print('Validation data:', len(folders_list_val))
@@ -141,7 +141,8 @@ epochs = args.epochs
 tasnet = TasNetSepCon(time_dimensions=200, frequency_bins=257, n_frames=50,
                       attention=False, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 model = tasnet.model
-#model.load_weights('/home/ubuntu/models/tdavss_baseline_256dimSepNet_2speakers_epochsfrom30_lr5e-4/weights-29--10.8356.tf')
+model.load_weights(
+    '/home/ubuntu/models/tdavss_PerInputMeanSTDNorm_baseline_2speakers_epochs80_from7_lr5e-4/weights-44--11.5932.tf')
 model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
 #parallel_model=tf.keras.utils.multi_gpu_model(model, gpus=2)
 #parallel_model.compile(optimizer=Adam(lr=lrate), loss=snr_loss, metrics=[snr_acc])
@@ -156,7 +157,8 @@ summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
 
-path = 'tdavss_baseline_256dimSepNet_2speakers_epochs40_lr1e-3_exp4'
+#path = 'tdavss_baseline_256dimSepNet_2speakers_epochs40_lr1e-3_exp4'
+path='tdavss_PerInputMeanSTDNorm_baseline_2speakers_epochs80_from51_lr5e-4'
 print('Model weights path:', path + '\n')
 
 try:
@@ -183,7 +185,7 @@ metrics_unsync = Metrics_3speak(model=model, val_folders=folders_list_val,
 metrics_wandb = Metrics_wandb()
 save_weights = save_weights(model, path)
 earlystopping = earlystopping()
-reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, min_lr = 0.00000001)
+reducelronplateau = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr = 0.00000001)
 
 filepath = '/home/ubuntu/models/' + path + '/weights-{epoch:02d}-{val_loss:.4f}.tf'
 checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_best_only=False, save_weights_only=True, mode='min')
@@ -196,10 +198,10 @@ checkpoint_save_weights = ModelCheckpoint(filepath, monitor='val_loss', save_bes
     
 
 try:
-    history = model.fit(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1350.0),
+    history = model.fit(DataGenerator_train_samples(folders_list_train, int(batch_size), norm=1),
                 steps_per_epoch = int(np.ceil(len(folders_list_train)/float(batch_size))),
                 epochs=int(epochs),
-                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1350.0),
+                validation_data=DataGenerator_val_samples(folders_list_val, int(batch_size), norm=1),
                 validation_steps = int(np.ceil((len(folders_list_val))/float(batch_size))),
         callbacks=[reducelronplateau, checkpoint_save_weights, metrics_wandb, LoggingCallback(print_fcn=log_to_file), metrics_unsync], verbose=1)
 

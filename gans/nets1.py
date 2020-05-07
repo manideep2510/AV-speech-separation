@@ -136,7 +136,7 @@ def l2_normalize(x, eps=1e-12):
   '''
   return x / tf.linalg.norm(x + eps)
 
-POWER_ITERATIONS = 3
+POWER_ITERATIONS = 1
 class Spectral_Norm(Constraint):
     '''
     Uses power iteration method to calculate a fast approximation 
@@ -263,12 +263,31 @@ def Conv_Block_disc(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
         x = Conv1D(filters,kernel_size,dilation_rate=dialation_rate,padding='same',strides=stride)(inputs)
         #x = Mish('Mish')(x)
         x = LeakyReLU(alpha=0.3)(x)
-        #x = BatchNormalization()(x)
         x=GlobalLayerNorm()(x)
         x = Conv1D(int(inputs.shape[-1]),1)(x)
         x = Add()([inputs,x])
         x = LeakyReLU(alpha=0.3)(x)
         return x
+
+def ResBlock_disc(inputs,stride=3,filters=512,kernel_size=5):
+    x = Conv1D(filters,1,padding='same',strides=1)(inputs)
+    x = LeakyReLU(alpha=0.3)(x)
+    x = GlobalLayerNorm()(x)
+    x = Conv1D(filters,kernel_size,padding='same',strides=stride)(x)
+    x = LeakyReLU(alpha=0.3)(x)
+    x = GlobalLayerNorm()(x)
+    x = Conv1D(filters,1,padding='same',strides=1)(x)
+    x = LeakyReLU(alpha=0.3)(x)
+    x = GlobalLayerNorm()(x)
+
+    x1 = AveragePooling1D(pool_size=2)(inputs)
+    x1 = Conv1D(filters,1,padding='same',strides=1)(x1)
+    x1 = LeakyReLU(alpha=0.3)(x1)
+    x1 = GlobalLayerNorm()(x1)
+
+    out = Add()([x,x1])
+
+    return out
 
 
 def Conv_Block_Audio_disc_SpectNorm(inputs,dialation_rate=1,stride=1,filters=512,kernel_size=3):
@@ -313,24 +332,6 @@ def vec_l2norm(x):
     return nr
 
 
-# Noise input.
-
-class NoiseInputs(Layer):
-    """Noise Inputs to each layer"""
-    def __init__(self,**kwargs):
-        super(NoiseInputs, self).__init__(**kwargs)
-      
-    def build(self,input_shape):
-        
-        self.noise_weight = self.add_weight(name='noise_weight',shape=(input_shape[-1]),initializer='Zeros',trainable='True')
-        super(NoiseInputs, self).build(input_shape)
-        
-    def call(self,inputs):
-        
-        noise = tf.random.normal([tf.shape(inputs)[0], inputs.shape[1], 1], dtype=inputs.dtype)
-        out = inputs + self.noise_weight*noise
-        return out
-
 # Generator
 def Generator(time_dimensions=500,frequency_bins=257,n_frames=125, 
                 lstm = False,lipnet_pretrained=None, train_lipnet=None):
@@ -343,22 +344,15 @@ def Generator(time_dimensions=500,frequency_bins=257,n_frames=125,
     lstm = lstm
 
     audio_input_data=Input(shape=(t*160,1))#audio_shape=(80000,1)
-    '''input_std = tf.math.reduce_std(audio_input_data,axis=1,keepdims=True)
+    input_std = tf.math.reduce_std(audio_input_data,axis=1,keepdims=True)
     input_mean = tf.math.reduce_mean(audio_input_data,axis=1,keepdims=True)
-    audio_input_data_normalized = (audio_input_data-input_mean)/input_std'''
-    #latent_noise = tf.random.normal(shape=tf.shape(audio_input_data_normalized), mean=0.0, stddev=1.0, name='latent_noise')
-    #audio_input_data_normalized_latent = concatenate([audio_input_data_normalized, latent_noise],axis=-1)
+    audio_input_data_normalized = (audio_input_data-input_mean)/input_std
 
     '''norm = vec_l2norm(audio_input_data)
     audio_normalized = audio_input_data/norm'''
 
     #audio_encoding
-    audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(audio_input_data)
-
-    '''latent_noise = tf.random.normal(shape=tf.shape(audio), mean=0.0, stddev=1.0, name='latent_noise')
-    audio_WlatentZ = concatenate([audio, latent_noise],axis=-1)
-    audio_WlatentZ=Conv1D(256,1)(audio_WlatentZ)'''
-
+    audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(audio_input_data_normalized)
     #audio=Conv1D(256,16,padding='same',strides=2, activation='relu')(audio)
     audio1 = ChannelwiseLayerNorm()(audio)
 
@@ -525,9 +519,9 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuf
         phaseshuffle = Lambda(lambda x: x)
 
     audio_input_data1=Input(shape=(t*160,1))#audio_shape=(80000,1)
-    '''input_std = tf.math.reduce_std(audio_input_data1,axis=1,keepdims=True)
+    input_std = tf.math.reduce_std(audio_input_data1,axis=1,keepdims=True)
     input_mean = tf.math.reduce_mean(audio_input_data1,axis=1,keepdims=True)
-    audio_input_data1_normalized = (audio_input_data1-input_mean)/input_std'''
+    audio_input_data1_normalized = (audio_input_data1-input_mean)/input_std
 
     # Clean/GT speech
     audio_input_data2=Input(shape=(t*160,1))
@@ -540,13 +534,13 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuf
     audio_input_data2_noisy = audio_input_data2 + (0.1*norm2/(180))*noise_dev_inp
     print('audio_input_data2_noisy:', audio_input_data2_noisy.shape)
 
-    '''audio_mean2=tf.reduce_mean(audio_input_data2_noisy,-2,keepdims=True)
-    std2=tf.math.reduce_std(audio_input_data2_noisy,-2,keepdims=True)
-    audio_normalized2=(audio_input_data2_noisy-audio_mean2)/std2'''
+    #audio_mean2=tf.reduce_mean(audio_input_data2_noisy,-2,keepdims=True)
+    #std2=tf.math.reduce_std(audio_input_data2_noisy,-2,keepdims=True)
+    #audio_normalized2=(audio_input_data2_noisy-audio_mean2)/std2
     audio_normalized2=audio_input_data2_noisy
 
     
-    audio_normalized = concatenate([audio_input_data1, audio_normalized2],axis=-1)
+    audio_normalized = concatenate([audio_input_data1_normalized, audio_normalized2],axis=-1)
 
     print('audio_normalized', audio_normalized.shape)
 
@@ -614,20 +608,24 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuf
 
     fusion=Conv1D(256,1)(fusion)
 
-    conv1 = Conv1D(256, 3, padding='same', strides=1)(fusion)
+    conv1 = Conv1D(256,3,padding='same',strides=1)(fusion)
     conv1 = LeakyReLU(alpha=0.3)(conv1)
     conv1 = GlobalLayerNorm()(conv1)
     pool1 = AveragePooling1D(pool_size=2)(conv1)
 
-    conv2 = Conv1D(512, 3, padding='same', strides=1)(pool1)
+    conv2 = Conv1D(512,3,padding='same',strides=1,)(pool1)
     conv2 = LeakyReLU(alpha=0.3)(conv2)
     conv2 = GlobalLayerNorm()(conv2)
     pool2 = AveragePooling1D(pool_size=2)(conv2)
 
-    conv3 = Conv1D(1024, 3, padding='same', strides=1)(pool2)
+    conv3 = Conv1D(1024,3,padding='same',strides=1)(pool2)
     conv3 = LeakyReLU(alpha=0.3)(conv3)
     conv3 = GlobalLayerNorm()(conv3)
     pool3 = AveragePooling1D(pool_size=2)(conv3)
+
+    '''conv1 = ResBlock_disc(fusion,stride=2,filters=256,kernel_size=5)
+    conv2 = ResBlock_disc(fusion,stride=2,filters=512,kernel_size=5)
+    conv3 = ResBlock_disc(fusion,stride=2,filters=1024,kernel_size=5)'''
 
     out = Flatten()(pool3)
 
@@ -637,8 +635,8 @@ def Discriminator(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuf
 
     return model
 
-# Discriminator
-def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuffle_rad=5, 
+# Discriminator with Spectral Norm
+def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125, phaseshuffle_rad=0, 
                   lstm = False,lipnet_pretrained=None, train_lipnet=None):
             
     t=time_dimensions
@@ -651,14 +649,10 @@ def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125,
     # Phase Shuffle layer
     if phaseshuffle_rad > 0:
         phaseshuffle = Lambda(lambda x: apply_phaseshuffle(x, phaseshuffle_rad))
-        print('Using Phase Shuffle')
     else:
         phaseshuffle = Lambda(lambda x: x)
 
     audio_input_data1=Input(shape=(t*160,1))#audio_shape=(80000,1)
-    '''input_std = tf.math.reduce_std(audio_input_data1,axis=1,keepdims=True)
-    input_mean = tf.math.reduce_mean(audio_input_data1,axis=1,keepdims=True)
-    audio_input_data1_normalized = (audio_input_data1-input_mean)/input_std'''
 
     # Clean/GT speech
     audio_input_data2=Input(shape=(t*160,1))
@@ -666,16 +660,33 @@ def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125,
     # Additive noise to the clean/GT speech
     noise_dev_inp = Input(shape=(t*160,1))
 
+    '''#noise = tf.random.normal(shape=tf.shape(audio_input_data2), stddev=noise_dev, name='instance_noise')
+    noise = Lambda(lambda x: tf.random.normal(shape=tf.shape(x[0]), stddev=tf.math.reduce_mean(x[1])), 
+                                            name='instance_noise')([audio_input_data2, noise_dev_inp])
+    print('Noise:', noise.shape)'''
+
+    #audio_input_data2 = Lambda(lambda x: tf.math.add(x[0], x[1]), name='add_noise')([audio_input_data2, noise])
+
+    #TODO: Normalize the input clean signal (real and fake) with its std
+
+    #audio_mean1=tf.reduce_mean(audio_input_data1,keepdims=True)
+    #std1=tf.math.std_dev(audio_input_data1,keepdims=True)
+
+    #audio_normalized1=(audio_input_data1-audio_mean1)/std1
+
+    '''norm1 = vec_l2norm(audio_input_data1)
+    audio_normalized1 = audio_input_data1/norm1'''
+
     norm2 = vec_l2norm(audio_input_data2)
     norm_noise = vec_l2norm(noise_dev_inp)
-    audio_input_data2_noisy = audio_input_data2 + (0.1*norm2/(180))*noise_dev_inp
+    audio_input_data2_noisy = audio_input_data2 + (0.1*norm2/(norm_noise+1e-8))*noise_dev_inp
+    #audio_normalized2=audio_input_data2_noisy
     print('audio_input_data2_noisy:', audio_input_data2_noisy.shape)
-
-    '''audio_mean2=tf.reduce_mean(audio_input_data2_noisy,-2,keepdims=True)
-    std2=tf.math.reduce_std(audio_input_data2_noisy,-2,keepdims=True)
-    audio_normalized2=(audio_input_data2_noisy-audio_mean2)/std2'''
-    audio_normalized2=audio_input_data2_noisy
-
+    '''norm2_new = vec_l2norm(audio_input_data2_noisy)
+    audio_normalized2 = audio_input_data2_noisy/norm2_new'''
+    audio_mean2=tf.reduce_mean(audio_input_data2_noisy,axis=1,keepdims=True)
+    std2=tf.math.reduce_std(audio_input_data2_noisy,axis=1,keepdims=True)
+    audio_normalized2=(audio_input_data2_noisy-audio_mean2)/std2
     
     audio_normalized = concatenate([audio_input_data1, audio_normalized2],axis=-1)
 
@@ -684,7 +695,7 @@ def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125,
     #audio_encoding
     audio=Conv1D(256,40,padding='same',strides=20, activation='relu')(audio_normalized)
     #audio=Conv1D(256,16,padding='same',strides=2, activation='relu')(audio)
-    audio = ChannelwiseLayerNorm()(audio)
+    audio=ChannelwiseLayerNorm()(audio)
     audio = phaseshuffle(audio)
 
     print('Audio encode', audio.shape)
@@ -705,7 +716,7 @@ def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125,
     else:
         outv = lipnet_model.layers[-4].output
 
-    #video_processing
+    # Video Processing
     video_data=Conv1D(512,1)(outv)
     outv=Conv_Block_Video_disc_SpectNorm(video_data)
     outv=Conv_Block_Video_disc_SpectNorm(outv)
@@ -743,24 +754,36 @@ def Discriminator_SpectNorm(time_dimensions=500,frequency_bins=257,n_frames=125,
 
     print('fusion:', fusion.shape)
 
-    fusion=Conv1D(256,1)(fusion)
-
-    conv1 = Conv1D(256, 3, padding='same', strides=1,kernel_constraint=Spectral_Norm())(fusion)
-    conv1 = LeakyReLU(alpha=0.3)(conv1)
-    #conv1 = GlobalLayerNorm()(conv1)
+    '''conv1 = Conv1D(512,3,dilation_rate=16,padding='same',strides=1, 
+                                 activation='relu')(fusion)'''
+    conv1 = Conv_Block_disc_SpectNorm(fusion,
+                            stride=1, filters=512, kernel_size=5)
     pool1 = AveragePooling1D(pool_size=2)(conv1)
 
-    conv2 = Conv1D(512, 3, padding='same', strides=1,kernel_constraint=Spectral_Norm())(pool1)
-    conv2 = LeakyReLU(alpha=0.3)(conv2)
-    #conv2 = GlobalLayerNorm()(conv2)
+    '''conv2 = Conv1D(1024,3,dilation_rate=8,padding='same',strides=1, 
+                                 activation='relu')(pool1)'''
+    conv2 = Conv_Block_disc_SpectNorm(pool1,
+                            stride=1, filters=1024, kernel_size=5)
     pool2 = AveragePooling1D(pool_size=2)(conv2)
 
-    conv3 = Conv1D(1024, 3, padding='same', strides=1,kernel_constraint=Spectral_Norm())(pool2)
-    conv3 = LeakyReLU(alpha=0.3)(conv3)
-    #conv3 = GlobalLayerNorm()(conv3)
+    '''conv3 = Conv1D(2048,3,dilation_rate=4,padding='same',strides=1, 
+                                 activation='relu')(pool2)
+    conv3 = Conv_Block_disc_SpectNorm(pool2, dialation_rate=4,
+                            stride=1, filters=2048, kernel_size=3)
     pool3 = AveragePooling1D(pool_size=2)(conv3)
 
-    out = Flatten()(pool3)
+    conv4 = Conv1D(4096,3,dilation_rate=2,padding='same',strides=1, 
+                                 activation='relu')(pool3)
+    conv4 = Conv_Block_disc_SpectNorm(pool3, dialation_rate=2,
+                            stride=1, filters=4096, kernel_size=3)
+    pool4 = AveragePooling1D(pool_size=2)(conv4)
+
+    global_pool = GlobalAveragePooling1D(name='global_avgpool_out')(pool3)
+
+    out = Dense(512, activation='relu')(global_pool)
+    out = Dense(128, activation='relu')(out)'''
+    #out = Dense(16, activation='relu')(out)
+    out = Flatten()(pool2)
 
     out_class = Dense(1)(out)
 

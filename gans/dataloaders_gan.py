@@ -57,11 +57,14 @@ def numericalSort(value):
     parts[1::2] = map(int, parts[1::2])
     return parts
 
-def DataGenerator_train(folderlist, batch_size, norm=1):
+def DataGenerator_train(folderlist, batch_size, norm, epoch):
     
     L = len(folderlist)
     #print('L len:', L)
     steps_per_epoch = int(np.ceil(L/float(batch_size)))
+
+    random.seed(125*(epoch+1))
+    random.shuffle(folderlist)
     
     steps = 0
     #this line is just to make the generator infinite, keras needs that
@@ -112,9 +115,10 @@ def DataGenerator_train(folderlist, batch_size, norm=1):
 
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
-            X_samples_targ = X_samples_targ
+            
             if norm != 1:
                 X_samples_mix = X_samples_mix/norm
+                X_samples_targ = X_samples_targ/norm
 
             yield [X_lips, X_samples_mix], X_samples_targ
 
@@ -173,9 +177,10 @@ def DataGenerator_val(folderlist, batch_size, norm=1):
 
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
-            X_samples_targ = X_samples_targ
+
             if norm != 1:
                 X_samples_mix = X_samples_mix/norm
+                X_samples_targ = X_samples_targ/norm
 
             yield [X_lips, X_samples_mix], X_samples_targ
 

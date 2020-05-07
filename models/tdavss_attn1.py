@@ -138,9 +138,6 @@ class TasNet(object):
         
         #self.video_input_data=Input(shape=(self.frames,))#video_shape=(125,256)
         self.audio_input_data=Input(shape=(self.t*160,1))#audio_shape=(80000,1)
-        '''self.input_std = tf.math.reduce_std(self.audio_input_data,axis=1,keepdims=True)
-        self.input_mean = tf.math.reduce_mean(self.audio_input_data,axis=1,keepdims=True)
-        self.audio_input_data_normalized = (self.audio_input_data-self.input_mean)/self.input_std'''
 
         '''self.norm = vec_l2norm(self.audio_input_data)
         self.audio_normalized = self.audio_input_data/self.norm'''
@@ -196,39 +193,48 @@ class TasNet(object):
         
         #fusion_process
         
-        self.outv=UpSampling1D(size=4*8)(self.outv)
+        #self.outv=UpSampling1D(size=4)(self.outv)
 
         print('outv:', self.outv.shape)
         print('outa:', self.outa.shape)
 
         if self.attention == True:
-            #self.outa1=Conv1D(256,16,padding='same',strides=8, activation='relu')(self.outa)
+
+            self.outa = Conv1D(2048,16,padding='same',strides=8, activation='relu')(self.outa) # 800, 512
+            #self.outa = Conv1D(1024,4,padding='same',strides=2, activation='relu')(self.outa) # 400, 1024
+            #self.outa = Conv1D(2048,4,padding='same',strides=2, activation='relu')(self.outa) # 200, 2048
+
+            self.outv = Lambda(lambda x: K.expand_dims(x, axis=2))(self.outv) # 50, 1, 256
+            self.outv = Conv2DTranspose(2048,(8,1),strides=(4,1),padding='same',data_format='channels_last')(self.outv) # 200, 1, 2048
+            self.outv = Lambda(lambda x: K.squeeze(x, axis=2), name='outv_squeeze')(self.outv) # 200, 2048
+
+            print('outv attn:', self.outv.shape)
+            print('outa attn:', self.outa.shape)
+
             self.attn_layer = AttentionLayer(name='attention_layer')
-            self.attn_out, self.attn_states = self.attn_layer([self.outv, self.outa], verbose=False)
+            self.attn_out, self.attn_states = self.attn_layer([self.outa, self.outv], verbose=False)
             print('attn_out:', self.attn_out.shape)
             print('attn_states:', self.attn_states.shape)
 
             
-            self.fusion=concatenate([self.attn_out, self.outv, self.outa],axis=-1)  # B, 200, 512
-            #self.fusion = Conv1D(512, 1)(self.fusion)
-            #self.fusion = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion)
-            #self.fusion=Conv2DTranspose(256,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.fusion) # B, 1600, 256
-            #self.fusion = Lambda(lambda x: K.squeeze(x, axis=2), name='fusion_out')(self.fusion)
-            
-            #self.fusion=concatenate([self.fusion, self.outa],axis=-1)  # B, 200, 512
-            self.fusion=Conv1D(512,1)(self.fusion)
+            self.fusion=concatenate([self.attn_out, self.outv],axis=-1)  # B, 200, 4096
+            self.fusion = Lambda(lambda x: K.expand_dims(x, axis=2))(self.fusion) # 200, 1, 2096
+            self.fusion = Conv2DTranspose(512,(16,1),strides=(8,1),padding='same',data_format='channels_last')(self.fusion) # 1600, 1, 512
+            self.fusion = Lambda(lambda x: K.squeeze(x, axis=2), name='fusion_squeeze')(self.fusion) # 1600, 512
+
         else:
+            self.outv=UpSampling1D(size=4)(self.outv)
             self.fusion=concatenate([self.outv,self.outa],axis=-1)
         
         print('fusion:', self.fusion.shape)
-
+        
+        #self.fusion=multi_head_self_attention(8,512)(self.fusion)
         '''self.fusion=multi_head_self_attention(8,512)(self.fusion)
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
         self.fusion=multi_head_self_attention(8,512)(self.fusion)
-        self.fusion=multi_head_self_attention(8,512)(self.fusion)
-        self.fusion=multi_head_self_attention(8,512)(self.fusion)
-        print('self attention fusion shape',self.fusion.shape)'''
+        self.fusion=multi_head_self_attention(8,512)(self.fusion)'''
+        #print('self attention fusion shape',self.fusion.shape)
 
         '''self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=1,filters=512)
         self.fusion=Conv_Block_Audio(self.fusion,dialation_rate=2,filters=512)

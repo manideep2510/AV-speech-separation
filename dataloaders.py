@@ -674,7 +674,7 @@ def DataGenerator_val_samples(folderlist, batch_size, norm=1350.0):
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = 2)
                 X_lips.append(x_lips)
 
-            X_lips = np.asarray(X_lips)
+            X_lips = np.asarray(X_lips).astype('float32')
 
             X_samples_targ = X_samples.reshape(X_samples.shape[0], 32000, 1).astype('float32')
             X_samples_mix = X_samples_mix.reshape(X_samples_mix.shape[0], 32000, 1).astype('float32')
@@ -764,7 +764,7 @@ def DataGenerator_train_samples(folderlist, batch_size, norm=1350.0):
                 X_lips.append(x_lips)
 
 
-            X_lips = np.asarray(X_lips)
+            X_lips = np.asarray(X_lips).astype('float32')
            # print(X_lips.shape)
             #X = seq.augment_images(X)
             
