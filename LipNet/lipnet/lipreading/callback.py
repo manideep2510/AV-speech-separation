@@ -15,7 +15,7 @@ import cv2
 from LipNet.lipnet.lipreading.aligns import Align, Align_1
 from LipNet.lipnet.lipreading.helpers import text_to_labels,text_to_labels_original,pad
 
-def labels_to_text(labels):
+'''def labels_to_text(labels):
     # 26 is space, 27 is CTC blank char
     text = ''
     for c in labels:
@@ -24,6 +24,21 @@ def labels_to_text(labels):
             text += chr(c1 + ord('a'))
         elif c1 == 26:
             text += ' '
+    return text'''
+
+def labels_to_text(labels):
+    text = ''
+    for c in labels:
+        if c >= 0 and c < 26:
+            text += chr(int(c) + ord('a'))
+        elif c >=26 and c<36:
+            text += chr(int(c) + ord('0')-26)
+        elif c == 36: text+='?'
+        elif c == 37: text+=','
+        elif c == 38: text+='.'
+        elif c == 39: text+='!'
+        elif c == 40: text+=':'
+        elif c == 41: text+=' '
     return text
 
 import re
@@ -72,6 +87,21 @@ def crop_pad_frames(frames, fps, seconds):
 
     elif num_frames == req_frames:
         frames = frames
+
+    mid_ht=frames.shape[1]//2
+    mid_wd=frames.shape[2]//2
+
+    frames=frames[:,mid_ht-35:mid_ht+35, mid_wd-35:mid_wd+35,:]
+    #frames=tf.image.resize(frames,[112,112])
+    frames=np.asarray(list(map( lambda x: cv2.resize(x, (112, 112),interpolation = cv2.INTER_CUBIC), frames)))
+    frames = frames.reshape(frames.shape[0], frames.shape[1], frames.shape[2], 1)
+
+    '''frames1 = []
+    for frame in frames:
+        frame = cv2.resize(frame, (112, 112),interpolation = cv2.INTER_CUBIC)
+        frames1.append(frame)
+    frames = np.asarray(frames1)'''
+    #print(frames.shape)
 
     return frames
 
@@ -209,7 +239,7 @@ def split(data):
 
 
 
-class Metrics_softmask(Callback):
+class Metrics(Callback):
 
     def __init__(self, model, val_folders, batch_size, save_path, rule, time):
         self.model_container = model
@@ -224,7 +254,7 @@ class Metrics_softmask(Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         num = len(self.val_folders)
-        div_num = 8
+        div_num = 16
         num_100s = int(num/div_num)
 
         total_list=[]
@@ -252,8 +282,8 @@ class Metrics_softmask(Callback):
             time = 5
             augment = True'''
 
-        rule = 4
-        time = 4
+        rule = 2
+        time = 2
 	
         for n in range(num_100s):
             val_folders_100 = self.val_folders[n*div_num:(n+1)*div_num]
@@ -266,7 +296,7 @@ class Metrics_softmask(Callback):
                 #transcripts_ = sorted(glob.glob(folder + '/*.txt'), key=numericalSort)
 
                 lips_ = folder
-                transcripts_ = folder[:-9]+'.txt'
+                transcripts_ = folder[:-4]+'.txt'
 
                 lips.append(lips_)
                 #lips.append(lips_[1])
@@ -318,8 +348,8 @@ class Metrics_softmask(Callback):
                 index=0
 
             for i in range(len(transcripts)):
-                a=Align_1(absolute_max_string_len, text_to_labels,length,index).from_file(transcripts[i])
-                if(a.label_length!=0 and a.label_length <= length*25):
+                a=Align_1(absolute_max_string_len, text_to_labels_original,length,index).from_file(transcripts[i])
+                if(a.label_length!=0 and 2*a.label_length <= length*25):
                     align.append(a)
                     start,end=a.video_range()
                     spliced_lips.append(pad(X_lips[i][start:end+1],length*25))
@@ -332,10 +362,23 @@ class Metrics_softmask(Callback):
             for i in range(len(spliced_lips)):
                Y_data.append(align[i].padded_label)
                label_length.append(align[i].label_length)
-               input_length.append(length*75)
+               input_length.append(length*25)
                source_str.append(align[i].sentence)
+           
             Y_data = np.array(Y_data)
             spliced_lips=np.asarray(spliced_lips)
+            
+            '''if(spliced_lips.shape[0]==0):
+               spliced_lips=np.zeros([1,time*25,112,112,1])
+               Y_data=np.array([41]*absolute_max_string_len)
+               label_length=[12]
+               input_length=[length*25]'''
+            
+            
+
+            #print('spliced_lips shape:', spliced_lips.shape)
+
+            #print(spliced_lips.shape[0])
 
             #for i in range(len(transcripts)):align.append(Align(128, text_to_labels).from_file(transcripts[i]))
            # for i in range(X_lips.shape[0]):

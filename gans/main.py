@@ -12,8 +12,8 @@ import glob
 import random
 import wandb
 from argparse import ArgumentParser
-from nets import Generator, Discriminator, Discriminator_SpectNorm
-from train_utils import fit
+from nets3 import Generator, Discriminator
+from train_utils1 import fit
 import soundfile
 import math
 # To read the images in numerical order
@@ -62,29 +62,55 @@ lrate = args.lrate
 batch_size = args.batch_size
 epochs = args.epochs
 
-#os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
-#os.environ['WANDB_MODE'] = 'dryrun'
-#wandb.init(name='tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100', notes='BS=6, PhaseShuffle=2, LAMBDA=100 to 1, LSGAN with Instance Noise for 20 epochs, Lr(D) = 2*Lr(G), 0.5 lr after 20 epochs',
-#                resume='2z9u44ut', project="av-speech-seperation", dir='/home/ubuntu/wandb')
+os.environ['WANDB_CONFIG_DIR'] = '/data/.config/wandb'
+os.environ['WANDB_MODE'] = 'dryrun'
+wandb.init(name='tdavss_LSGAN_FreezeGen_UnFreezeDisc_2speakers_exp2', notes='Negartive SNR Loss, BS=8, PhaseShuffle=2, LAMBDA=100 to 0.1, LSGAN with Instance Noise for 10 epochs, Lr(D) = Lr(G)',
+                project="av-speech-seperation", dir='/data/wandb')
 
+#tdavss_LSGAN_BestVidEmbed_3speakers
+#tdavss_LSGAN_L1Loss_BestVidEmbed_2speakers_exp2
+#tdavss_LSGAN_Lambda0.1_BestVidEmbed_2speakers
 
 # Read training folders
 folders_list_train = np.loadtxt(
-    '/home/ubuntu/lrs2_train_comb2.txt', dtype='object').tolist()
+    '/data/lrs2_train_comb2.txt', dtype='object').tolist()
+
+#folders_list_train = folders_list_train[:-16]
+
+a = np.loadtxt('/data/deep_lip_reading/train_lips.txt', dtype='object', delimiter=',').tolist()
+train_vids = []
+for i in a:
+    train_vids.append(i[0])
 
 folders_list_val = np.loadtxt(
-    '/home/ubuntu/lrs2_val_comb2.txt', dtype='object').tolist()
+    '/data/lrs2_val_comb2.txt', dtype='object').tolist()
+
+#folders_list_val = folders_list_val[:-8]
+
+folders_list_test = np.loadtxt(
+    '/data/lrs2_val_comb2.txt', dtype='object').tolist()
+
+folders_list_test = folders_list_test[:-8]
 
 '''random.seed(123)
 folders_list_train = random.sample(folders_list_train_all, 50000)
 random.seed(1234)
 folders_list_val = random.sample(folders_list_val_all, 5000)'''
+'''random.seed(1234)
+random.shuffle(folders_list_train)'''
+
 random.seed(12345)
-random.shuffle(folders_list_train)
+zipped = list(zip(folders_list_train, train_vids))
+random.shuffle(zipped)
+folders_list_train, train_vids = zip(*zipped)
+
+'''folders_list_val = folders_list_val[:40]
+folders_list_train = folders_list_train[:80]
+train_vids = train_vids[:80]'''
 
 '''random.seed(30)
 folders_list_val = random.sample(folders_list_val, 40)
-folders_list_train = random.sample(folders_list_train, 1000)'''
+folders_list_train = random.sample(folders_list_train, 80)'''
 
 print('Training data:', len(folders_list_train))
 print('Validation data:', len(folders_list_val))
@@ -96,15 +122,15 @@ generator = Generator(time_dimensions=200, frequency_bins=257, n_frames=50,
                       lstm=False, lipnet_pretrained=True,  train_lipnet=True)
 
 '''generator.load_weights(
-    '/home/ubuntu/models_old/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1/generator-17-9.4553.tf')
+    '/data/models/tdavss_LSGAN_L1Loss_BestVidEmbed_2speakers_exp2/generator-23-10.0823.tf')
 print('Generator weights loaded')'''
 
 print('----------Building Discriminator----------')
 discriminator = Discriminator(time_dimensions=200, frequency_bins=257, n_frames=50,
-                      phaseshuffle_rad=5, lstm=False, lipnet_pretrained=True,  train_lipnet=True)
+                      phaseshuffle_rad=2, lstm=False, lipnet_pretrained=False,  train_lipnet=True)
 
 '''discriminator.load_weights(
-    '/home/ubuntu/models_old/models/tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch4t040_lr5e-4_exp1/discriminator-17-9.4553.tf')
+    '/data/models/tdavss_LSGAN_L1Loss_BestVidEmbed_2speakers_exp2/discriminator-23-10.0823.tf')
 print('Discriminator weights loaded')'''
 
 generator_optimizer = tf.keras.optimizers.Adam(learning_rate=lrate, beta_1=0.5)
@@ -130,23 +156,37 @@ summary_params = summary_split[-6:]
 summary_params = '\n'.join(summary_params)
 print('\n'+summary_params)
 
-path = 'tdavss_LSGAN_PhaseShuffle_InstanceNoise_Lambda100_epoch18to20_lr5e-4'
+path = 'tdavss_LSGAN_FreezeGen_UNFreezeDisc_2speakers_exp2'
 print('Model weights path:', path + '\n')
 
 try:
-    os.mkdir('/home/ubuntu/models/' + path)
+    os.mkdir('/data/models/' + path)
 except OSError:
     pass
 
 try:
-    os.mkdir('/home/ubuntu/results/' + path)
+    os.mkdir('/data/results/' + path)
 except OSError:
     pass
 
 # Training
-fit(folders_list_train, folders_list_val, batch_size=batch_size,
-    generator=generator, discriminator=discriminator, generator_optimizer = generator_optimizer, 
-    discriminator_optimizer=discriminator_optimizer, epochs=epochs, save_path=path, lr=lrate)
+try:
+    fit(folders_list_train, folders_list_val, folders_list_test, train_vids, batch_size=batch_size,
+        generator=generator, discriminator=discriminator, generator_optimizer = generator_optimizer, 
+        discriminator_optimizer=discriminator_optimizer, epochs=epochs, save_path=path, lr=lrate, epoch_start=0)
+
+except KeyboardInterrupt:
+
+    generator.save_weights('/data/models/' + path + '/gen_final.tf')
+    discriminator.save_weights('/data/models/' + path + '/disc_final.tf')
+    print('Final model saved')
+
+except Exception as e:
+    print(e)
+
+generator.save_weights('/data/models/' + path + '/gen_final.tf')
+discriminator.save_weights('/data/models/' + path + '/disc_final.tf')
+print('Final model saved')
 
 
 
@@ -162,8 +202,8 @@ fit(folders_list_train, folders_list_val, batch_size=batch_size,
 #learningratescheduler_gen = tf.keras.optimizers.schedules.LearningRateSchedule(step_decay_gen)
 
 def step_decay_disc(epoch):
-    initial_lrate = 0.0005*1.414
-    drop = 0.5
+    initial_lrate = 0.0005*1.414'''
+'''    drop = 0.5
     epochs_drop = 1
     lrate = initial_lrate * math.pow(drop,
            math.floor((1+epoch)/epochs_drop))

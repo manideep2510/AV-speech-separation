@@ -278,6 +278,37 @@ def snr_acc(s, x):
 
     return tf.reduce_mean(snr_loss_batch)
 
+
+def snr_loss_new(s, x):
+    """
+    Compute SI-SNR
+    Arguments:
+        x: vector, enhanced/separated signal
+        s: vector, reference signal(ground truth)
+    """
+
+    x = x[:,:,0]
+
+    #print(x.shape[0])
+    #s = x[:,:,1]
+
+    x = tf.reshape(x, (-1, 32000))
+    s = tf.reshape(s, (-1, 32000))
+
+    '''print('Pred:', x.shape)
+    print('GT:', s.shape)'''
+
+    # zero mean, seems do not hurt results
+    x_zm = x - tf.reshape(tf.math.reduce_mean(x, axis=1), (-1, 1))
+    s_zm = s - tf.reshape(tf.math.reduce_mean(s, axis=1), (-1, 1))
+    t = tf.reshape(tf.math.reduce_sum(x_zm*s_zm, axis=1), (-1, 1)) * s_zm / vec_l2norm(s_zm)**2
+    n = x_zm - t
+
+    snr_loss_batch = 20 * log10((vec_l2norm(n) / vec_l2norm(t))+1)
+
+    return tf.reduce_mean(snr_loss_batch)
+
+
 '''# zero mean, seems do not hurt results
 if remove_dc:
     x_zm = x - np.mean(x)

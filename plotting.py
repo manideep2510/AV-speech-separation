@@ -16,7 +16,7 @@ def plot_loss_and_acc(history, path):
 
 
     try:
-        os.mkdir('/home/ubuntu/results/'+ path)
+        os.mkdir('/data/results/'+ path)
     except OSError:
         pass
 
@@ -39,7 +39,7 @@ def plot_loss_and_acc(history, path):
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
     #plt.show()
-    plt.savefig('/home/ubuntu/AV-speech-separation/results/' + path + '/accuracy.png')
+    plt.savefig('/data/AV-speech-separation/results/' + path + '/accuracy.png')
     plt.close()
 
     print ('Saved Accuracy plot')'''
@@ -53,7 +53,7 @@ def plot_loss_and_acc(history, path):
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'])
     #plt.show()
-    plt.savefig('/home/ubuntu/results/' + path + '/loss.png')
+    plt.savefig('/data/results/' + path + '/loss.png')
     plt.close()
 
     print ('Saved Loss plot')

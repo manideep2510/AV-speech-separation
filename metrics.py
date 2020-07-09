@@ -561,9 +561,10 @@ class Metrics_unsync(Callback):
 
 class Metrics_3speak(Callback):
 
-    def __init__(self, model, val_folders, batch_size, save_path):
+    def __init__(self, model, val_folders, test_folders, batch_size, save_path):
         self.model = model
         self.val_folders = val_folders
+        self.test_folders = test_folders
         self.batch_size = batch_size
         self.save_path = save_path
 
@@ -571,6 +572,12 @@ class Metrics_3speak(Callback):
         self.val_snr = []
  
     def on_epoch_end(self, epoch, logs={}):
+
+        '''if (epoch+1)%5 == 0:
+            _, test_snr = self.model.evaluate_generator(DataGenerator_val_samples(self.test_folders, int(self.batch_size), norm=1350.0), 
+                                                        steps = int(np.ceil((len(self.test_folders))/float(self.batch_size))))
+            print('\nTest SNR:', test_snr)
+            wandb.log({'Test SNR':test_snr}, commit=False)'''
 
         '''with open('/data/AV-speech-separation1/lrs2_1dot5k-unsync_audio_val.json') as json_file:
             unsync_dict = json.load(json_file)
@@ -589,18 +596,18 @@ class Metrics_3speak(Callback):
                                 '/data/lrs2/train/5954958412463581171_00078_6049708826987126376_00037_2':8,
                                 '/data/lrs2/train/5954958412463581171_00085_6092785631109560111_00001_2':13,
                                 '/data/lrs2/train/6265243600299093383_00045_5942747390944340934_00018_2':8,
-                                self.val_folders[10]:0, self.val_folders[20]:0, self.val_folders[50]:0, 
-                                self.val_folders[100]:0, self.val_folders[1600]:0, self.val_folders[1610]:0, 
-                                self.val_folders[1620]:0, self.val_folders[1630]:0, self.val_folders[60]:0, 
-                                self.val_folders[1750]:0}'''
+                                self.val_folders[10], self.val_folders[20], self.val_folders[50], 
+                                self.val_folders[100], self.val_folders[1600], self.val_folders[1610], 
+                                self.val_folders[1620], self.val_folders[1630], self.val_folders[60], 
+                                self.val_folders[1750]}'''
 
-        val_folders_samp_dict = {self.val_folders[10]:0, self.val_folders[30]:0, self.val_folders[50]:0, 
-                                self.val_folders[100]:0, self.val_folders[1600]:0, self.val_folders[1620]:0, 
-                                self.val_folders[1640]:0, self.val_folders[1660]:0, self.val_folders[70]:0, 
-                                self.val_folders[1750]:0}
-        val_folders_samp = list(val_folders_samp_dict.keys())
+        val_folders_samp = [self.val_folders[10], self.val_folders[30], self.val_folders[50], 
+                                self.val_folders[100], self.val_folders[1600], self.val_folders[1620], 
+                                self.val_folders[1640], self.val_folders[1660], self.val_folders[70], 
+                                self.val_folders[1750]]
+        #val_folders_samp = list(val_folders_samp_dict.keys())
 
-        folderlist = list(val_folders_samp_dict.keys())
+        folderlist = val_folders_samp
         lips = []
         samples = []
         samples_mix = []
@@ -618,7 +625,7 @@ class Metrics_3speak(Callback):
 
             lips_ = folder
             samples_ = folder[:-9] + '_samples.npy'
-            samples_mix_ = '/home/ubuntu/lrs2/mixed_audios/' + folder.split('/')[-2] + '.wav'
+            samples_mix_ = '/data/mixed_audio_files/' + folder.split('/')[-2] + '.wav'
 
             lips.append(lips_)
             samples.append(samples_)
@@ -627,12 +634,12 @@ class Metrics_3speak(Callback):
         #attn_states_out_model = Model(inputs=self.model.input, outputs=self.model.get_layer('attention_layer').output)
         mask_out_model = Model(inputs=self.model.input, outputs=self.model.get_layer('mask').output)
 
-        #pred_weights = attn_states_out_model.predict(Data_predict_attention(val_folders_samp_dict))
+        #pred_weights = attn_states_out_model.predict(Data_predict_attention(val_folders_samp))
         #pred_weights = pred_weights[1]
 
-        preds_mask = mask_out_model.predict(Data_predict_attention(val_folders_samp_dict))
+        preds_mask = mask_out_model.predict(Data_predict_attention(val_folders_samp))
 
-        preds_audio = self.model.predict(Data_predict_attention(val_folders_samp_dict))
+        preds_audio = self.model.predict(Data_predict_attention(val_folders_samp))
         preds_audio = preds_audio/np.mean(np.std(preds_audio, axis=1))
         preds_audio = preds_audio*1350
         preds_audio = preds_audio.astype('int16')
@@ -645,8 +652,10 @@ class Metrics_3speak(Callback):
         save_name_base = []
         for i, item in enumerate(lips):
 
-            offset_ = val_folders_samp_dict[val_folders_samp[i]]
-            aud_offset_ = int(abs((offset_/25)*16000))
+            #offset_ = val_folders_samp[val_folders_samp[i]]
+            #aud_offset_ = int(abs((offset_/25)*16000))
+            offset_ = 0
+            aud_offset_ = 0
             save_name_base_ = str(i) + '_' + item.split('/')[-1][:-9] + '_' + 'off' + str(offset_)
             offset.append(offset_)
             aud_offset.append(aud_offset_)

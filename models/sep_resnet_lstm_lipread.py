@@ -1,7 +1,7 @@
 import sys
-sys.path.append('/home/ubuntu/av-speech-separation/LipNet')
-sys.path.append('/home/ubuntu/av-speech-separation/models')
-sys.path.append('/home/ubuntu/av-speech-separation/models/classification_models-master/')
+sys.path.append('/data/av-speech-separation/LipNet')
+sys.path.append('/data/av-speech-separation/models')
+sys.path.append('/data/av-speech-separation/models/classification_models-master/')
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -32,14 +32,13 @@ def gru(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
 def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, absolute_max_string_len=128, every_frame=True, pretrain=None):
 
     frontend3D = Sequential([
-                ZeroPadding3D(padding=(2, 3, 3)),
-                Conv3D(64, kernel_size=(5, 7, 7), strides=(1, 2, 2), padding='valid', use_bias=False),
-                BatchNormalization(),
-                #Mish('Mish'),
-                Activation('relu'),
-                ZeroPadding3D(padding=((0, 4, 8))),
-                MaxPooling3D(pool_size=(1, 2, 3), strides=(1, 1, 2))
-                ])
+                    ZeroPadding3D(padding=(2, 3, 3)),
+                    Conv3D(64, kernel_size=(5, 7, 7), strides=(1, 2, 2), padding='valid', use_bias=False, name='conv3d'),
+                    BatchNormalization(),
+                    ReLU(),
+                    ZeroPadding3D(padding=((0, 5, 5))),
+                    MaxPooling3D(pool_size=(1, 3, 3), strides=(1, 2, 2))
+                    ])
 
     backend_conv1 = Sequential([
                 Conv1D(2*inputDim, 5, strides=2, use_bias=False),
@@ -65,7 +64,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
 
     # Forward pass
 
-    input_frames = Input(shape=(frameLen,50,100,1), name='frames_input')
+    input_frames = Input(shape=(frameLen,112,112,1), name='frames_input')
     x = frontend3D(input_frames)
     print('3D Conv Out:', x.shape)
     #x = Lambda(lambda x : tf.transpose(x, [0, 2, 1, 3, 4]), name='lambda1')(x)  #x.transpose(1, 2) tf.tens
@@ -108,7 +107,7 @@ def Lipreading(mode, inputDim=256, hiddenDim=512, nClasses=500, frameLen=29, abs
 
     if pretrain == True:
         model.load_weights(
-            '/home/ubuntu/lrs2/sepconv_lipreading_weights.hdf5')
+            '/data/lrs2/sepconv_lipreading_weights.hdf5')
         print('Separable Conv ResNet LSTM Pretrain weights loaded')
 
     return model

@@ -574,11 +574,9 @@ def gen_comb_folders_3comb(combined_pairs, dest_folder):
     texts=[]
     
     for item in videos:
-        audio = item[:-9] + '.wav'
+        audio = item[:-4] + '.wav'
+        txt = item[:-4] + '.txt'
         audios.append(audio)
-
-    for item in videos:
-        txt = item[:-9] + '.txt'
         texts.append(txt)
     
     
@@ -645,9 +643,9 @@ def gen_comb_folders_3comb(combined_pairs, dest_folder):
 
         # Save lips.mp4
         
-        file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_lips.mp4'
+        '''file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_lips.mp4'
             
-        shutil.copy(lips_file, save_path + '/' + file_name)
+        shutil.copy(lips_file, save_path + '/' + file_name)'''
 
         # Save Samples
         file_name = audio_file_split[-2] + '_' + audio_file_split[-1][:-4] + '_samples.npy'

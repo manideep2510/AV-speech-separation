@@ -93,10 +93,10 @@ a = time.time()
 combinations_list = pair_files(files_req, combination_no = combination_no, count = count)
 b = time.time()'''
 
-dest_folder = '/data/lrs2/voxceleb_2comb'
-combinations_list = np.loadtxt('/data/lrs2/combs_voxceleb_2faces.txt', dtype='object')
+dest_folder = '/data/lrs2/val_3comb_new'
+combinations_list = np.loadtxt('/data/val_3comb_new_fromTrain.txt', dtype='object')
 
-with open("/data/AV-speech-separation/data_preparation/log_create_vox_2comb.txt", "w") as myfile:
+with open("/data/AV-speech-separation/data_preparation/log_val_3comb_new.txt", "w") as myfile:
     myfile.write(str(len(combinations_list)) + ' pairs generated')
 
 print(len(combinations_list), 'pairs generated')
@@ -116,5 +116,5 @@ for combination in combinations_list:
         b = time.time()
         times.append(b)
         print(c, '/', len(combinations_list), 'folders created in ', times[-1] - times[-2], 'seconds')
-        with open("/data/AV-speech-separation/data_preparation/log_create_vox_2comb.txt", "a") as myfile:
+        with open("/data/AV-speech-separation/data_preparation/log_val_3comb_new.txt", "a") as myfile:
             myfile.write(str(c) + ' / ' + str(len(combinations_list)) + ' folders created in ' + str(times[-1] - times[-2]) + ' seconds \n')

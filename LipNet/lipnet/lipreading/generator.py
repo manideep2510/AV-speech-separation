@@ -4,6 +4,8 @@ import glob
 import random
 import shutil
 import numpy as np
+import numpy
+numpy.random.bit_generator = numpy.random._bit_generator
 from pydub import AudioSegment
 import tensorflow as tf
 from scipy.io import wavfile
@@ -65,9 +67,24 @@ def crop_pad_frames(frames, fps, seconds):
     elif num_frames == req_frames:
         frames = frames
 
+    mid_ht=frames.shape[1]//2
+    mid_wd=frames.shape[2]//2
+
+    frames=frames[:,mid_ht-35:mid_ht+35, mid_wd-35:mid_wd+35,:]
+    #frames=tf.image.resize(frames,[112,112])
+    frames=np.asarray(list(map( lambda x: cv2.resize(x, (112, 112),interpolation = cv2.INTER_CUBIC), frames)))
+    frames = frames.reshape(frames.shape[0], frames.shape[1], frames.shape[2], 1)
+
+    '''frames1 = []
+    for frame in frames:
+        frame = cv2.resize(frame, (112, 112),interpolation = cv2.INTER_CUBIC)
+        frames1.append(frame)
+    frames = np.asarray(frames1)'''
+    #print(frames.shape)
+
     return frames
 
-import imgaug as ia
+'''import imgaug as ia
 import imgaug.augmenters as iaa
 
 sometimes = lambda aug: iaa.Sometimes(1, aug)
@@ -126,7 +143,7 @@ seq6 = iaa.Sequential(
         #iaa.Fliplr(1),
         sometimes(iaa.Affine(translate_px={"x": (-10), "y": (-5)}, mode='constant', cval=0))
     ]
-)
+)'''
 
 def DataGenerator_train_softmask(folderlist, batch_size, time, augment):
 
@@ -279,7 +296,7 @@ def DataGenerator_train_softmask(folderlist, batch_size, time, augment):
 def DataGenerator_train(folderlist, batch_size):
 
     L = len(folderlist)
-    epoch_number = 26
+    epoch_number = 0
 
     #this line is just to make the generator infinite, keras needs that
     while True:
@@ -291,7 +308,7 @@ def DataGenerator_train(folderlist, batch_size):
             if batch_start == 0:
                 epoch_number += 1
 
-            if epoch_number<=5:
+            '''if epoch_number<=5:
                 rule = 1
                 time = 1
                 augment = False
@@ -310,12 +327,12 @@ def DataGenerator_train(folderlist, batch_size):
             else:
                 rule = 4
                 time = 4
-                augment = True
+                augment = True'''
 
             limit = min(batch_end, L)
-            #rule = 2
-            #time = 2
-            #augment = True
+            rule = 2
+            time = 2
+            augment = False
 
             folders_batch = folderlist[batch_start:limit]
 
@@ -328,7 +345,7 @@ def DataGenerator_train(folderlist, batch_size):
             for folder in folders_batch:
 
                 lips_ = folder
-                transcripts_ = folder[:-9]+'.txt'
+                transcripts_ = folder[:-4]+'.txt'
 
                 lips.append(lips_)
                 transcripts.append(transcripts_)
@@ -343,11 +360,11 @@ def DataGenerator_train(folderlist, batch_size):
                 #print(lips[i])
                 x_lips = get_video_frames(lips[i], fmt = 'grey')
                 
-                if augment == True:
+                '''if augment == True:
                     choices = [1,2,3,4]
                     choice = random.choice(choices)
                     if choice == 1:
-                        x_lips = seq2.augment_images(x_lips)
+                        x_lips = seq2.augment_images(x_lips)'''
 
                 x_lips = crop_pad_frames(frames = x_lips, fps = 25, seconds = time)
                 x_lips = x_lips/255.0
@@ -386,8 +403,8 @@ def DataGenerator_train(folderlist, batch_size):
 
             for i in range(len(transcripts)):
                 #print('Train trans:', transcripts[i])
-                a=Align_1(absolute_max_string_len, text_to_labels,length,index).from_file(transcripts[i])
-                if(a.label_length!=0 and a.label_length <= length*25):
+                a=Align_1(absolute_max_string_len, text_to_labels_original,length,index).from_file(transcripts[i])
+                if(a.label_length!=0 and 2*a.label_length <= length*25):
                     align.append(a)
                     start,end=a.video_range()
                     spliced_lips.append(pad(X_lips[i][start:end+1],length*25))
@@ -397,11 +414,20 @@ def DataGenerator_train(folderlist, batch_size):
             for i in range(len(spliced_lips)):
                Y_data.append(align[i].padded_label)
                label_length.append(align[i].label_length)
-               input_length.append(length*75)
+               input_length.append(length*25)
                source_str.append(align[i].sentence)
+            
             Y_data = np.array(Y_data)
             spliced_lips=np.asarray(spliced_lips)
 
+            '''if(spliced_lips.shape[0]==0):
+                     spliced_lips=np.zeros([1,time*25,112,112,1])
+                     Y_data=np.array([41]*absolute_max_string_len)
+                     label_length=[12]
+                     input_length=[length*25]'''
+            
+            #print(spliced_lips.shape[0])
+            #if(spliced_lips.shape[0]==0):continue
             yield [spliced_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([spliced_lips.shape[0]])
             batch_start += batch_size
             batch_end += batch_size
@@ -409,7 +435,7 @@ def DataGenerator_train(folderlist, batch_size):
 def DataGenerator_val(folderlist, batch_size):
     
     L = len(folderlist)
-    epoch_number = 26
+    epoch_number = 0
 
     #this line is just to make the generator infinite, keras needs that
     while True:
@@ -422,7 +448,7 @@ def DataGenerator_val(folderlist, batch_size):
             if batch_start == 0:
                 epoch_number += 1
 
-            if epoch_number <= 5:
+            '''if epoch_number <= 5:
                 rule = 1
                 time = 1
                 augment = False
@@ -441,11 +467,12 @@ def DataGenerator_val(folderlist, batch_size):
             else:
                 rule = 4
                 time = 4
-                augment = True
+                augment = True'''
 
             folders_batch = folderlist[batch_start:limit]
-            #rule = 2
-            #time = 2
+            rule = 2
+            time = 2
+            augment = False
 
             lips = []
             mask = []
@@ -456,7 +483,7 @@ def DataGenerator_val(folderlist, batch_size):
             for folder in folders_batch:
 
                 lips_ = folder
-                transcripts_ = folder[:-9]+'.txt'
+                transcripts_ = folder[:-4]+'.txt'
 
                 lips.append(lips_)
                
@@ -509,8 +536,8 @@ def DataGenerator_val(folderlist, batch_size):
 
             for i in range(len(transcripts)):
                 #print('Val trans:', transcripts[i])
-                a=Align_1(absolute_max_string_len, text_to_labels,length,index).from_file(transcripts[i])
-                if(a.label_length!=0 and a.label_length <= length*25):
+                a=Align_1(absolute_max_string_len, text_to_labels_original,length,index).from_file(transcripts[i])
+                if(a.label_length!=0 and 2*a.label_length <= length*25):
                     align.append(a)
                     start,end=a.video_range()
                     spliced_lips.append(pad(X_lips[i][start:end+1],length*25))
@@ -523,12 +550,21 @@ def DataGenerator_val(folderlist, batch_size):
             for i in range(len(spliced_lips)):
                Y_data.append(align[i].padded_label)
                label_length.append(align[i].label_length)
-               input_length.append(length*75)
+               input_length.append(length*25)
                source_str.append(align[i].sentence)
+            
             Y_data = np.array(Y_data)
             spliced_lips=np.asarray(spliced_lips)
 
-
+            '''if(spliced_lips.shape[0]==0):
+                     print('hidfafd')
+                     spliced_lips=np.zeros([1,time*25,112,112,1])
+                     Y_data=np.array([41]*absolute_max_string_len)
+                     print(Y_data.shape)
+                     label_length=[12]
+                     input_length=[length*25]'''
+            #print(spliced_lips.shape[0])
+            
             #for i in range(len(transcripts)):align.append(Align(frame_length, text_to_labels_original).from_file(transcripts[i]))
             #for i in range(X_lips.shape[0]):
             #   Y_data.append(align[i].padded_label)
@@ -545,6 +581,9 @@ def DataGenerator_val(folderlist, batch_size):
             # outputs = {'ctc': np.zeros([X_lips.shape[0]])}  # dummy data for dummy loss function
             #
             # yield (inputs,outputs)
+            #batch_start += batch_size
+            #batch_end += batch_size
+            #if(spliced_lips.shape[0]!=0):
             yield [spliced_lips,Y_data,np.array(input_length),np.array(label_length)],np.zeros([spliced_lips.shape[0]])
             batch_start += batch_size
             batch_end += batch_size

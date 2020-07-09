@@ -11,8 +11,8 @@ import keras.backend as K
 from keras.optimizers import Adam
 from keras.models import load_model
 from keras.layers.core import Lambda
-#from classification_models.keras import Classifiers as Separable_Classifiers
-from sep_classification_models.keras import Classifiers as Separable_Classifiers
+from classification_models.keras import Classifiers as Separable_Classifiers
+#from sep_classification_models.keras import Classifiers as Separable_Classifiers
 from lipnet.core.layers import CTC
 from .mish import Mish
 
@@ -42,8 +42,8 @@ class Lipreading(object):
                     Conv3D(64, kernel_size=(5, 7, 7), strides=(1, 2, 2), padding='valid', use_bias=False, name='conv3d'),
                     BatchNormalization(),
                     ReLU(),
-                    ZeroPadding3D(padding=((0, 4, 8))),
-                    MaxPooling3D(pool_size=(1, 2, 3), strides=(1, 1, 2))
+                    ZeroPadding3D(padding=((0, 5, 5))),
+                    MaxPooling3D(pool_size=(1, 3, 3), strides=(1, 2, 2))
                     ])
 
         self.backend_conv1 = Sequential([
@@ -60,7 +60,7 @@ class Lipreading(object):
                     Dense(inputDim),
                     BatchNormalization(),
                     ReLU(),
-                    Dense(nClasses)
+                    Dense(nClasses, activation='softmax')
                     ])
         
         self.frames_to_batch = Lambda(lambda x : tf.reshape(x, [-1, x.shape[2], x.shape[3], x.shape[4]]), name='lambda2')
@@ -72,7 +72,7 @@ class Lipreading(object):
 
         # Forward pass
 
-        self.input_frames = Input(shape=(self.frameLen,50,100,1), name='frames_input')
+        self.input_frames = Input(shape=(self.frameLen,112,112,1), name='frames_input')
         self.x = self.frontend3D(self.input_frames)
         print('3D Conv Out:', self.x.shape)
         self.x = self.frames_to_batch(self.x)   #x.view(-1, 64, x.size(3), x.size(4))
@@ -91,22 +91,38 @@ class Lipreading(object):
         self.x = Dense(self.inputDim)(self.x)
         self.x = BatchNormalization()(self.x)
         print('Resnet18 Linear Out:', self.x.shape)
+        self.x = Lambda(lambda x : tf.reshape(x, [-1, self.frameLen, self.inputDim]), name='lambda6')(self.x)    #x.view(-1, frameLen, inputDim)
+        print('Reshape layer:', self.x.shape)
+        self.y_pred = Dense(self.nClasses, activation='softmax')(self.x)
+        print('y_pred Out:', self.y_pred.shape)
 
-        if self.mode == 'temporalConv':
+        self.labels = Input(name='the_labels', shape=[self.absolute_max_string_len], dtype='float32')
+        self.input_length = Input(name='input_length', shape=[1], dtype='int64')
+        self.label_length = Input(name='label_length', shape=[1], dtype='int64')
+
+        self.loss_out = CTC('ctc', [self.y_pred, self.labels, self.input_length, self.label_length])
+        
+
+        '''if self.mode == 'temporalConv':
             self.x = Lambda(lambda x : tf.reshape(x, [-1, self.frameLen, self.inputDim]), name='lambda3')(self.x)   #x.view(-1, frameLen, inputDim)
 
             self.x = Lambda(lambda x : tf.transpose(x, [0, 2, 1]), name='lambda4')(self.x)   #x.transpose(1, 2)
-            self.x = backend_conv1(self.x)
+            self.x = self.backend_conv1(self.x)
             self.x = Lambda(lambda x : tf.reduce_mean(x, 2), name='lambda5')(self.x)
-            self.x = backend_conv2(self.x)
-            #print(self.x.shape)
+            self.y_pred = self.backend_conv2(self.x)
+            print('y_pred:', self.y_pred.shape)
+            self.labels = Input(name='the_labels', shape=[self.absolute_max_string_len], dtype='float32')
+            self.input_length = Input(name='input_length', shape=[1], dtype='int64')
+            self.label_length = Input(name='label_length', shape=[1], dtype='int64')
+
+            self.loss_out = CTC('ctc', [self.y_pred, self.labels, self.input_length, self.label_length])
         elif self.mode == 'backendGRU' or mode == 'finetuneGRU':
             self.x = Lambda(lambda x : tf.reshape(x, [-1, self.frameLen, self.inputDim]), name='lambda6')(self.x)    #x.view(-1, frameLen, inputDim)
             print('Input to GRU:', self.x.shape)
-            self.x = Lambda(lambda x: K.expand_dims(x, axis=2))(self.x)
-            self.x=Conv2DTranspose(self.inputDim,(3,1),strides=(3,1),padding='same',data_format='channels_last')(self.x)
-            self.x = Lambda(lambda x: K.squeeze(x, axis=2))(self.x)
-            print('upsample dim:',self.x.shape)
+            #self.x = Lambda(lambda x: K.expand_dims(x, axis=2))(self.x)
+            #self.x=Conv2DTranspose(self.inputDim,(3,1),strides=(3,1),padding='same',data_format='channels_last')(self.x)
+            #self.x = Lambda(lambda x: K.squeeze(x, axis=2))(self.x)
+            #print('upsample dim:',self.x.shape)
             self.y_pred = GRU(self.x, self.inputDim, self.hiddenDim, self.nLayers, self.nClasses, self.every_frame)
             print('GRU Out:', self.y_pred.shape)
 
@@ -117,7 +133,7 @@ class Lipreading(object):
             self.loss_out = CTC('ctc', [self.y_pred, self.labels, self.input_length, self.label_length])
 
         else:
-            raise Exception('No model is selected')
+            raise Exception('No model is selected')'''
 
         self.model = Model(inputs=[self.input_frames, self.labels, self.input_length, self.label_length], outputs=self.loss_out)
 

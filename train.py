@@ -25,8 +25,8 @@ from plotting import plot_loss_and_acc
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import cv2
 from losses import l2_loss, sparse_categorical_crossentropy_loss, cross_entropy_loss, categorical_crossentropy, mse
-from LipNet.lipnet.lipreading.callback import Metrics_softmask
-from LipNet.lipnet.lipreading.generator import DataGenerator_train_softmask, DataGenerator_val_softmask, DataGenerator_train, DataGenerator_val
+from LipNet.lipnet.lipreading.callback import Metrics
+from LipNet.lipnet.lipreading.generator import DataGenerator_train, DataGenerator_val
 #from LipNet.lipnet.model2 import LipNet
 from models.resnet_lstm_lipread_ctc import lipreading
 #from models.resnet_lstm_lipread_initial import lipreading
@@ -79,9 +79,9 @@ print('Folders_list Done')
 '''with open("/data/AV-speech-separation/folder_filter_1.txt", "rb") as fp:  
        folders_list = pickle.load(fp) '''
 
-time = 4
+time = 2
 
-folders_list = np.loadtxt('/data/AV-speech-separation1/lipread_filenames.txt', dtype='object').tolist()
+folders_list = np.loadtxt('/data/av-speech-separation/all_lipvideos.txt', dtype='object').tolist()
 
 '''folders_list_1s = np.loadtxt('/data/AV-speech-separation1/lipreading_trainset_above_1sec.txt', dtype='object').tolist()
 preprocess_collapse_repeated=Truerandom.seed(123)
@@ -102,8 +102,12 @@ if time == 3:
 if time == 5:
     folders_list_train = folders_list[:-1000]'''
 
-folders_list_train = folders_list[:-1000]
-folders_list_val=folders_list[-1000:]
+random.seed(123)
+random.shuffle(folders_list)
+print(len(folders_list))
+#folders_list=folders_list[:88000]
+folders_list_train = folders_list[0:88000]
+folders_list_val=folders_list[88000:96000]
 
 #random.seed(30)
 #folders_list_val = random.sample(folders_list_val, 120)
@@ -137,11 +141,11 @@ else:
     absolute_max_string_len=128
 
 #lip=LipNet(pretrained=True,weights_path='/data/models/lip_net_236k-train_1to3ratio_valSDR_epochs10-20_lr1e-4_0.1decay10epochs/weights-04-125.3015.hdf5')
-lip = lipreading(mode='backendGRU', inputDim=256, hiddenDim=512, nClasses=29,
+lip = lipreading(mode='temporalConv', inputDim=256, hiddenDim=512, nClasses=43,
                  frameLen=time*25, AbsoluteMaxStringLen=absolute_max_string_len, every_frame=True)
 model = lip.model
-model.load_weights(
-    '/data/models/combResnetLSTM_CTCloss_seperableConv_3sTrain_NoAug_epochs40_5lr1e-4/weights-04-110.0346.hdf5')
+#model.load_weights(
+#    '/data/models/combResnetLSTM_CTCloss_seperableConv_3sTrain_NoAug_epochs40_5lr1e-4/weights-04-110.0346.hdf5')
 #model.load_weights('/data/models/combResnetLSTM_CTCloss_seperableConv_236ktrain_1to3ratio_valWER_epochs20_lr1e-4_0.1decay9epochs/weights-10-116.9441.hdf5')
 #print('Weights after 7 epochs loaded')
 from io import StringIO
@@ -161,7 +165,7 @@ adam = Adam(lr=lrate)
 #model = multi_gpu_model(lip.model, gpus=2)
 model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=adam)
 
-#model.load_weights('/data/models/test_Lipnet+cocktail_1in_1out_20k-train_valSDR_epochs20_lr1e-4_0.322decay5epochs/weights-12-0.4127.hdf5')
+model.load_weights('/data/models/FullConvs_NoGRUs_CombResNetLSTMs/weights-02-28.0938.hdf5')
 
 #model.compile(optimizer = Adam(lr=lrate), loss = l2_loss)
 
@@ -177,7 +181,7 @@ epochs = args.epochs
 
 # Path to save model checkpoints
 
-path = 'combResnetLSTM_CTCloss_seperableConv_4sTrain_NoAug_epochs40_5lr1e-4'
+path = 'FullConvs_NoGRUs_CombResNetLSTMs'
 
 try:
     os.mkdir('/data/models/'+ path)
@@ -197,7 +201,7 @@ def log_to_file(msg, file='/data/results/'+path+'/logs.txt'):
 
 
 # callcack
-metrics_wer = Metrics_softmask(model= lip, val_folders = folders_list_val, 
+metrics_wer = Metrics(model= lip, val_folders = folders_list_val, 
                             batch_size = batch_size, save_path = '/data/results/'+path+'/logs.txt', 
                             rule = time, time=time)
 

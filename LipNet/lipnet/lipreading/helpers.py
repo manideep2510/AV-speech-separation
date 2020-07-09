@@ -23,8 +23,14 @@ def text_to_labels_original(text):
     for char in temp:
         if char >= 'a' and char <= 'z':
             ret.append(ord(char) - ord('a'))
-        elif char == ' ':
-            ret.append(26)
+        elif char >='0' and char<='9':
+            ret.append(ord(char) - ord('0')+26)
+        elif char == '?': ret.append(36)
+        elif char == ',': ret.append(37)
+        elif char == '.': ret.append(38)
+        elif char == '!': ret.append(39)
+        elif char == ':': ret.append(40)
+        elif char == ' ': ret.append(41)
     return ret
 
 def labels_to_text(labels):
