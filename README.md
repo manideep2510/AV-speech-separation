@@ -1,2 +1,2 @@
-# Attention Based Audio-Visual Speech Separation with Optical Flow
-Audio-Visual Speech Separation with Optical Flow and Temporal Attention.
+# Generative Adversarial Networks for Audio-Visual Speech Separation
+Generative adversarial Networks for Audio-Visual Speech Separation.
